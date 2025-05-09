@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Architecture
+- Nextjs 15 with App Router
+- Drizzle ORM for Database Schema
+- Postgres Database
+- OpenAI for AI functionality
+- NextAuth for Authentication
+
+- Tailwind & ShadCN for styling
