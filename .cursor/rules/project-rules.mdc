@@ -11,3 +11,11 @@ alwaysApply: true
 - NextAuth for Authentication (with Google Provider)
 - Tailwind & ShadCN for styling
 - Use Server Actions over Route Handlers (APIs)
+- Use Vercel Blob storage with files
+
+# Important
+When making schema changes, remind the user to run the following commands.
+npm run db:generate
+npm run db:migrate
+
+If possible, run these commands yourself.
