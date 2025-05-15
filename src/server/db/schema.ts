@@ -4,7 +4,7 @@ import {
   index,
   integer,
   pgEnum,
-  pgTableCreator,
+  pgTable,
   text,
   timestamp,
   uuid,
@@ -14,11 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
-const TABLE_PREFIX = process.env.DB_PREFIX;
-
-export const createTable = pgTableCreator((name) => `${TABLE_PREFIX}_${name}`);
-
-export const users = createTable("user", {
+export const users = pgTable("user", {
   id: varchar("id", { length: 255 })
     .notNull()
     .primaryKey()
@@ -32,7 +28,7 @@ export const users = createTable("user", {
   image: varchar("image", { length: 255 }),
 });
 
-export const accounts = createTable(
+export const accounts = pgTable(
   "account",
   {
     userId: varchar("user_id", { length: 255 })
@@ -57,11 +53,11 @@ export const accounts = createTable(
     primaryKey({
       columns: [account.provider, account.providerAccountId],
     }),
-    index(`${TABLE_PREFIX}account_user_id_idx`).on(account.userId),
+    index("account_user_id_idx").on(account.userId),
   ]
 );
 
-export const sessions = createTable(
+export const sessions = pgTable(
   "session",
   {
     sessionToken: varchar("session_token", { length: 255 })
@@ -75,10 +71,10 @@ export const sessions = createTable(
       withTimezone: true,
     }).notNull(),
   },
-  (session) => [index(`${TABLE_PREFIX}session_user_id_idx`).on(session.userId)]
+  (session) => [index("session_user_id_idx").on(session.userId)]
 );
 
-export const verificationTokens = createTable(
+export const verificationTokens = pgTable(
   "verification_token",
   {
     identifier: varchar("identifier", { length: 255 }).notNull(),

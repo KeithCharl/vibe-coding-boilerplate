@@ -14,4 +14,17 @@ Rename example.env to .env and fill in the variables
 
 ## Database
 
-Change the table prefix by editing drizzle.config.ts and schema.ts
+Change the table prefix in .env
+
+To create the DB, go to vercel.com and sign in. Go to storage, create a neon database and copy the POSTGRES_URL value.
+Add this to .env.
+
+Go to vercel...
+
+# AUTH
+
+Go to Google Cloud Platform...
+
+# FILE STORAGE
+
+BLOB_READ_WRITE_TOKEN=
