@@ -23,7 +23,14 @@ Go to vercel...
 
 # AUTH
 
-Go to Google Cloud Platform...
+Go to Google Cloud Platform.
+https://cloud.google.com/
+
+Create project
+
+Set up concent screen
+
+Create OAuth
 
 # FILE STORAGE
 
