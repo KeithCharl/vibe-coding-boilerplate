@@ -12,6 +12,13 @@ alwaysApply: true
 - Tailwind & ShadCN for styling
 - Use Server Actions over Route Handlers (APIs)
 - Use Vercel Blob storage with files
+- 
+# Project structure
+src/
+src/app/
+src/server/db/ (for all database config and schema)
+src/server/auth.ts (for auth config)
+src/server/actions/ (for all server action logic)
 
 # Important
 When making schema changes, remind the user to run the following commands.
