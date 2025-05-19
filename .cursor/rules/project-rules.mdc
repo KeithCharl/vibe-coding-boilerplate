@@ -28,8 +28,8 @@ npm run db:migrate
 If possible, run these commands yourself.
 
 # Additional rules
-- DO NOT install lucide-react directly. Use shadcn components only.
-- DO NOT use Toaster! Use shadcn Sonner for notifications.
+- DO NOT install @radix-ui directly. Use shadcn components only.
+- DO NOT use Toast for notifications! Use shadcn Sonner for notifications.
 - The database connection var is called POSTGRES_URL, not DATABASE_URL.
 - DO NOT create a middleware file.  Protect the backend logic within the routes and server actions.
 - Use the existing AUTH config file (src/server/auth.ts). Do not create a new file.
