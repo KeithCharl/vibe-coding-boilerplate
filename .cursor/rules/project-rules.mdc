@@ -25,3 +25,4 @@ If possible, run these commands yourself.
 - DO NOT use Toaster! Use shadcn Sonner for notifications.
 - The database connection var is called POSTGRES_URL, not DATABASE_URL.
 - DO NOT create a middleware file.  Protect the backend logic within the routes and server actions.
+- Use the existing AUTH config file (src/server/auth.ts). Do not create a new file.
