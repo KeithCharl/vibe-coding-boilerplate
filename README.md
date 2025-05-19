@@ -13,13 +13,17 @@ This boilerplate comes with everything you need to start your web application:
 
 ## Getting Started (For Non-Coders)
 
+### Step 0: Prerequisites
+
+1. Install [Node.js](https://nodejs.org/) (LTS version)
+2. Install [Cursor](https://www.cursor.com/)
+
 ### Step 1: Set Up Your Project
 
 1. Download this project to your computer
 2. Open a terminal/command prompt in the project folder
-3. Install the required tools:
-   - Install [Node.js](https://nodejs.org/) (LTS version)
-   - Run `npm install` in the terminal
+3. Run `npm install` in the terminal
+4. Run `npm run dev` to start the development server
 
 ### Step 2: Set Up Your Environment Variables
 
@@ -30,40 +34,64 @@ This boilerplate comes with everything you need to start your web application:
 
 1. Go to [Vercel](https://vercel.com/) and create an account or sign in
 2. Go to "Storage" in the left sidebar
-3. Click "Create" and select "Postgres"
+3. Click "Create" and select "Neon Serverless Postgres"
 4. Follow the setup wizard and create your database
-5. Once created, click on your new database and find the "Connection String"
-6. Copy the connection string and paste it as your `POSTGRES_URL` in the `.env` file
+5. Under quick start, look for the .env.local environment variables.
+6. Click on Show Secret.
+7. Copy the POSTGRES_URL variable and value.
+8. Paste the POSTGRES_URL variable and value into your .env file as the value for the POSTGRES_URL variable.
 
-### Step 4: Authentication Setup
-
-1. Go to [Google Cloud Platform](https://cloud.google.com/)
-2. Create a new project
-3. Set up the OAuth consent screen:
-   - Go to "APIs & Services" > "OAuth consent screen"
-   - Select "External" and click "Create"
-   - Fill in the required information
-   - Add "/api/auth/callback/google" to the authorized redirect URIs
-4. Create OAuth credentials:
-   - Go to "APIs & Services" > "Credentials"
-   - Click "Create Credentials" and select "OAuth client ID"
-   - Select "Web application" as the application type
-   - Add your development URL (typically `http://localhost:3000`) to authorized JavaScript origins
-   - Add `http://localhost:3000/api/auth/callback/google` to redirect URIs
-   - Click "Create"
-5. Copy the Client ID and Client Secret to your `.env` file as:
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-6. Also add a `NEXTAUTH_SECRET` (you can generate one by running `openssl rand -base64 32` in your terminal or just use a complex password)
-
-### Step 5: File Storage Setup
+### Step 4: File Storage Setup
 
 1. Go back to [Vercel](https://vercel.com/)
 2. Go to "Storage" in the left sidebar
 3. Click "Create" and select "Blob"
 4. Follow the setup wizard to create your blob storage
-5. Once created, find the "Read & Write Token" under the "Tokens" tab
-6. Copy this token and paste it as `BLOB_READ_WRITE_TOKEN` in your `.env` file
+5. Under quick start, look for the .env.local environment variables.
+6. Click on Show Secret.
+7. Copy the BLOB_READ_WRITE_TOKEN variable and value.
+8. Paste the BLOB_READ_WRITE_TOKEN variable and value into your .env file as the value for the BLOB_READ_WRITE_TOKEN variable.
+
+### Step 5: Authentication Setup
+
+1. Go to [Google Cloud Platform](https://cloud.google.com/)
+2. Click on "Console" in the top right corner
+3. Create a new project (click on projects dropdown and select "Create project")
+4. Give your project a name and click "Create"
+5. Select the project that you created
+6. On the left sidebar, click on "APIs & Services"
+7. Set up the OAuth consent screen:
+   - Go to "APIs & Services" > "OAuth consent screen"
+   - Click on "Get Started"
+   - Enter your app name and select your support email
+   - Click "Next"
+   - Select "External" and click "Next"
+   - Fill in the contact information and click "Next"
+   - Agree to terms and conditions and click "Continue"
+   - Then click "Create"
+   - Add "/api/auth/callback/google" to the authorized redirect URIs
+8. Create OAuth Client:
+
+   - Click on "Create OAuth Client"
+   - Application type, select "Web application"
+   - Give your application a name
+   - Authorised JavaScript origins: http://localhost:3000
+   - Authorised redirect URIs: http://localhost:3000/api/auth/callback/google
+   - Click "Create"
+   - Click OK to close the popup
+
+9. Click on Audience
+
+   - Click on "Publish App".
+   - Click Confirm
+
+10. Get Client ID and Client Secret
+
+- Click on Clients
+- Click on the OAuth client that you created in the previous step
+- Copy the Client ID and Client Secret over to .env
+
+11. Also add a `NEXTAUTH_SECRET` (you can generate one by running `openssl rand -base64 32` in your terminal or just use a complex password)
 
 ### Step 6: AI Setup (Optional)
 
