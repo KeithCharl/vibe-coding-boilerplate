@@ -21,7 +21,7 @@ export default function SignIn() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
-            Sign in to Plushify
+            Sign in using one of the following methods
           </CardTitle>
           <CardDescription>
             Continue with Google to sign in or create an account

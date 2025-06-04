@@ -19,6 +19,7 @@ src/app/
 src/server/db/ (for all database config and schema)
 src/server/auth.ts (for auth config)
 src/server/actions/ (for all server action logic)
+src/components/ (for all components)
 
 # Important
 When making schema changes, remind the user to run the following commands.
