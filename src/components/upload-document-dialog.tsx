@@ -78,6 +78,7 @@ export function UploadDocumentDialog({
       return;
     }
 
+    console.log("🔄 Starting upload process...");
     setIsUploading(true);
 
     try {
@@ -85,22 +86,28 @@ export function UploadDocumentDialog({
       formData.append("file", selectedFile);
       formData.append("name", documentName.trim());
 
+      console.log("📤 Calling uploadDocument server action...");
       const result = await uploadDocument(tenantId, formData);
+      console.log("📥 Upload result:", result);
       
       if (result.success) {
+        console.log("✅ Upload successful, closing dialog...");
         toast.success("Document uploaded successfully!");
         setOpen(false);
         setSelectedFile(null);
         setDocumentName("");
+        console.log("📞 Calling onUploadComplete...");
         onUploadComplete?.();
+        console.log("🎯 Upload flow completed");
       } else {
         throw new Error("Upload failed");
       }
     } catch (error: any) {
-      console.error("Upload error:", error);
+      console.error("❌ Upload error:", error);
       const errorMessage = error.message || "Failed to upload document. Please try again.";
       toast.error(errorMessage);
     } finally {
+      console.log("🏁 Setting isUploading to false");
       setIsUploading(false);
     }
   };

@@ -30,10 +30,14 @@ export async function uploadDocument(
   tenantId: string,
   formData: FormData
 ) {
+  console.log("🚀 Starting upload for tenantId:", tenantId);
   const user = await requireAuth(tenantId, "contributor");
+  console.log("✅ User authenticated:", user.id);
   
   const file = formData.get("file") as File;
   const name = formData.get("name") as string || file.name;
+  
+  console.log("📁 File details:", { name: file.name, size: file.size, type: file.type });
   
   if (!file) {
     throw new Error("No file provided");
@@ -62,16 +66,19 @@ export async function uploadDocument(
   }
 
   try {
+    console.log("☁️ Uploading to Vercel Blob...");
     // Upload file to Vercel Blob with random suffix to avoid duplicates
     const blob = await put(file.name, file, {
       access: "public",
       addRandomSuffix: true,
     });
+    console.log("✅ Blob uploaded:", blob.url);
 
     // Extract text content (for now, assume plain text - can extend for PDF, etc.)
     let content: string;
     try {
       content = await file.text();
+      console.log("📄 Content extracted, length:", content.length);
     } catch (error) {
       throw new Error("Failed to extract text from file. Please ensure the file is a valid text document.");
     }
@@ -90,12 +97,14 @@ export async function uploadDocument(
       throw new Error("Document contains no valid text content after cleaning.");
     }
 
+    console.log("🧠 Generating embeddings...");
     // Generate embeddings for document chunks
     const chunks = await chunkAndEmbedDocument(content, {
       fileName: file.name,
       fileType: file.type,
       tenantId,
     });
+    console.log("✅ Generated", chunks.length, "chunks with embeddings");
 
     if (chunks.length === 0) {
       throw new Error("Failed to process document content.");
@@ -114,10 +123,13 @@ export async function uploadDocument(
       uploadedBy: user.id,
     }));
 
+    console.log("💾 Inserting", documentInserts.length, "documents into database...");
     const insertedDocs = await db
       .insert(documents)
       .values(documentInserts)
       .returning();
+
+    console.log("✅ Documents inserted:", insertedDocs.length);
 
     if (insertedDocs.length === 0) {
       throw new Error("Failed to save document to database.");
@@ -137,9 +149,10 @@ export async function uploadDocument(
     });
 
     revalidatePath(`/t/${tenantId}/kb`);
+    console.log("🎉 Upload completed successfully!");
     return { success: true, documentId: insertedDocs[0]?.id };
   } catch (error: any) {
-    console.error("Upload error:", error);
+    console.error("❌ Upload error:", error);
     
     // If error has a message, use it, otherwise provide a generic message
     const errorMessage = error.message || "Failed to upload document";
@@ -151,6 +164,7 @@ export async function uploadDocument(
  * Get documents for a tenant
  */
 export async function getDocuments(tenantId: string) {
+  console.log("📋 Getting documents for tenantId:", tenantId);
   await requireAuth(tenantId, "viewer");
 
   const docs = await db
@@ -172,6 +186,8 @@ export async function getDocuments(tenantId: string) {
     .from(documents)
     .where(and(eq(documents.tenantId, tenantId), eq(documents.isActive, true)))
     .orderBy(desc(documents.createdAt));
+
+  console.log("📊 Found", docs.length, "document chunks from database");
 
   // Group chunks by base document name
   const groupedDocs = docs.reduce((acc, doc) => {
@@ -198,7 +214,9 @@ export async function getDocuments(tenantId: string) {
     return acc;
   }, {} as Record<string, any>);
 
-  return Object.values(groupedDocs);
+  const result = Object.values(groupedDocs);
+  console.log("📚 Returning", result.length, "grouped documents");
+  return result;
 }
 
 /**
