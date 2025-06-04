@@ -11,6 +11,7 @@ import {
   varchar,
   jsonb,
   primaryKey,
+  real,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -86,3 +87,221 @@ export const verificationTokens = pgTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
+
+// Knowledge Base Tables
+
+// Role enum for RBAC
+export const roleEnum = pgEnum("role", ["viewer", "contributor", "admin"]);
+
+// Tenants table for multi-tenancy
+export const tenants = pgTable("tenants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  systemPrompt: text("system_prompt").default("You are a helpful AI assistant with access to the knowledge base."),
+  tokenCap: integer("token_cap").default(2000000),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User roles within tenants
+export const userTenantRoles = pgTable(
+  "user_tenant_roles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    role: roleEnum("role").notNull().default("viewer"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("user_tenant_roles_user_id_idx").on(table.userId),
+    index("user_tenant_roles_tenant_id_idx").on(table.tenantId),
+  ]
+);
+
+// Documents table with embeddings
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    content: text("content").notNull(),
+    summary: text("summary"),
+    fileUrl: text("file_url"),
+    fileType: varchar("file_type", { length: 50 }),
+    fileSize: integer("file_size"),
+    chunkIndex: integer("chunk_index").default(0),
+    embedding: text("embedding"), // Store as JSON array string for now
+    version: integer("version").default(1),
+    isActive: boolean("is_active").default(true),
+    uploadedBy: varchar("uploaded_by", { length: 255 })
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("documents_tenant_id_idx").on(table.tenantId),
+    index("documents_uploaded_by_idx").on(table.uploadedBy),
+    index("documents_is_active_idx").on(table.isActive),
+  ]
+);
+
+// Chat sessions
+export const chatSessions = pgTable(
+  "chat_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("chat_sessions_tenant_id_idx").on(table.tenantId),
+    index("chat_sessions_user_id_idx").on(table.userId),
+  ]
+);
+
+// Chat messages
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 20 }).notNull(), // 'user' or 'assistant'
+    content: text("content").notNull(),
+    metadata: jsonb("metadata"), // Store context docs, tokens used, etc.
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("chat_messages_session_id_idx").on(table.sessionId),
+    index("chat_messages_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// Feedback for improving responses
+export const feedback = pgTable(
+  "feedback",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => chatMessages.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(), // 1-5 or thumbs up/down
+    comment: text("comment"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("feedback_message_id_idx").on(table.messageId),
+    index("feedback_user_id_idx").on(table.userId),
+  ]
+);
+
+// Analytics table
+export const analytics = pgTable(
+  "analytics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "set null" }),
+    eventType: varchar("event_type", { length: 50 }).notNull(), // 'query', 'upload', 'feedback'
+    eventData: jsonb("event_data"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("analytics_tenant_id_idx").on(table.tenantId),
+    index("analytics_event_type_idx").on(table.eventType),
+    index("analytics_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  userTenantRoles: many(userTenantRoles),
+  chatSessions: many(chatSessions),
+  documents: many(documents),
+  feedback: many(feedback),
+}));
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  userTenantRoles: many(userTenantRoles),
+  documents: many(documents),
+  chatSessions: many(chatSessions),
+  analytics: many(analytics),
+}));
+
+export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userTenantRoles.userId],
+    references: [users.id],
+  }),
+  tenant: one(tenants, {
+    fields: [userTenantRoles.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [documents.tenantId],
+    references: [tenants.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [documents.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [chatSessions.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [chatSessions.userId],
+    references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one, many }) => ({
+  session: one(chatSessions, {
+    fields: [chatMessages.sessionId],
+    references: [chatSessions.id],
+  }),
+  feedback: many(feedback),
+}));
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [feedback.messageId],
+    references: [chatMessages.id],
+  }),
+  user: one(users, {
+    fields: [feedback.userId],
+    references: [users.id],
+  }),
+}));
