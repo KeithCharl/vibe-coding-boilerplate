@@ -171,6 +171,9 @@ export async function sendMessage(sessionId: string, message: string) {
       )
       .limit(20); // Get more docs to find best matches
 
+    console.log(`🔍 Found ${relevantDocs.length} documents in tenant`);
+    console.log(`📝 Query: "${message}"`);
+
     // Find most similar documents
     const docsWithEmbeddings = relevantDocs
       .filter(doc => doc.embedding)
@@ -178,12 +181,22 @@ export async function sendMessage(sessionId: string, message: string) {
         id: doc.id,
         content: doc.content,
         embedding: parseEmbedding(doc.embedding!),
+        name: doc.name,
       }));
+
+    console.log(`🧠 ${docsWithEmbeddings.length} documents have embeddings`);
 
     const similarDocs = findSimilarDocuments(
       queryEmbedding,
       docsWithEmbeddings,
       5 // Top 5 most relevant chunks
+    );
+
+    console.log(`🎯 Top ${similarDocs.length} similar docs:`, 
+      similarDocs.map(doc => ({ 
+        similarity: doc.similarity.toFixed(3), 
+        preview: doc.content.substring(0, 100) + "..."
+      }))
     );
 
     // Prepare context for the prompt

@@ -55,14 +55,12 @@ export async function uploadDocument(
   // Validate file type
   const allowedTypes = [
     'text/plain', 
-    'text/markdown', 
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'text/markdown',
+    'application/pdf'
   ];
   
-  if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|md|pdf|doc|docx)$/i)) {
-    throw new Error("Unsupported file type. Please upload TXT, MD, PDF, DOC, or DOCX files.");
+  if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|md|pdf)$/i)) {
+    throw new Error("Unsupported file type. Please upload TXT, MD, or PDF files.");
   }
 
   try {
@@ -74,13 +72,36 @@ export async function uploadDocument(
     });
     console.log("✅ Blob uploaded:", blob.url);
 
-    // Extract text content (for now, assume plain text - can extend for PDF, etc.)
+    // Extract text content based on file type
     let content: string;
     try {
-      content = await file.text();
-      console.log("📄 Content extracted, length:", content.length);
+      if (file.type === "application/pdf") {
+        // Use Langchain PDFLoader for PDF files
+        const { PDFLoader } = await import("@langchain/community/document_loaders/fs/pdf");
+        
+        // Convert File to Buffer
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        
+        // Create a temporary blob URL for the PDFLoader
+        const blob = new Blob([buffer], { type: 'application/pdf' });
+        
+        // PDFLoader expects a path, but we can pass it buffer data
+        // We'll use a workaround by creating the loader with buffer data
+        const loader = new PDFLoader(blob);
+        const docs = await loader.load();
+        
+        // Combine all pages into single content
+        content = docs.map(doc => doc.pageContent).join('\n');
+        console.log("📄 PDF content extracted, length:", content.length, "pages:", docs.length);
+      } else {
+        // Use text() for other file types
+        content = await file.text();
+        console.log("📄 Text content extracted, length:", content.length);
+      }
     } catch (error) {
-      throw new Error("Failed to extract text from file. Please ensure the file is a valid text document.");
+      console.error("Content extraction error:", error);
+      throw new Error(`Failed to extract text from ${file.type} file. Please ensure the file is valid.`);
     }
 
     if (!content.trim()) {
@@ -91,7 +112,20 @@ export async function uploadDocument(
     content = content
       .replace(/\0/g, '') // Remove null bytes
       .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ') // Replace other control characters with spaces
+      .replace(/[^\x20-\x7E\s]/g, ' ') // Replace non-printable characters with spaces
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
+
+    // Validate that we have readable content
+    const readableCharCount = (content.match(/[a-zA-Z0-9]/g) || []).length;
+    const totalCharCount = content.length;
+    const readableRatio = totalCharCount > 0 ? readableCharCount / totalCharCount : 0;
+    
+    console.log(`📊 Content analysis: ${readableCharCount}/${totalCharCount} readable chars (${(readableRatio * 100).toFixed(1)}%)`);
+    
+    if (readableRatio < 0.5) {
+      throw new Error("Document appears to contain mostly non-readable content. Please ensure it's a valid text-based PDF.");
+    }
 
     if (!content) {
       throw new Error("Document contains no valid text content after cleaning.");
@@ -494,13 +528,35 @@ export async function replaceDocument(
     });
     console.log("✅ Replacement blob uploaded:", blob.url);
 
-    // Extract text content
+    // Extract text content based on file type
     let content: string;
     try {
-      content = await file.text();
-      console.log("📄 Replacement content extracted, length:", content.length);
+      if (file.type === "application/pdf") {
+        // Use Langchain PDFLoader for PDF files
+        const { PDFLoader } = await import("@langchain/community/document_loaders/fs/pdf");
+        
+        // Convert File to Buffer
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        
+        // Create a temporary blob URL for the PDFLoader
+        const blob = new Blob([buffer], { type: 'application/pdf' });
+        
+        // PDFLoader expects a path, but we can pass it buffer data
+        const loader = new PDFLoader(blob);
+        const docs = await loader.load();
+        
+        // Combine all pages into single content
+        content = docs.map(doc => doc.pageContent).join('\n');
+        console.log("📄 PDF replacement content extracted, length:", content.length, "pages:", docs.length);
+      } else {
+        // Use text() for other file types
+        content = await file.text();
+        console.log("📄 Text replacement content extracted, length:", content.length);
+      }
     } catch (error) {
-      throw new Error("Failed to extract text from file. Please ensure the file is a valid text document.");
+      console.error("Replacement content extraction error:", error);
+      throw new Error(`Failed to extract text from ${file.type} file. Please ensure the file is valid.`);
     }
 
     if (!content.trim()) {
@@ -511,7 +567,20 @@ export async function replaceDocument(
     content = content
       .replace(/\0/g, '')
       .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
+      .replace(/[^\x20-\x7E\s]/g, ' ') // Replace non-printable characters with spaces
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
+
+    // Validate that we have readable content
+    const readableCharCount = (content.match(/[a-zA-Z0-9]/g) || []).length;
+    const totalCharCount = content.length;
+    const readableRatio = totalCharCount > 0 ? readableCharCount / totalCharCount : 0;
+    
+    console.log(`📊 Replacement content analysis: ${readableCharCount}/${totalCharCount} readable chars (${(readableRatio * 100).toFixed(1)}%)`);
+    
+    if (readableRatio < 0.5) {
+      throw new Error("Document appears to contain mostly non-readable content. Please ensure it's a valid text-based PDF.");
+    }
 
     if (!content) {
       throw new Error("Document contains no valid text content after cleaning.");
