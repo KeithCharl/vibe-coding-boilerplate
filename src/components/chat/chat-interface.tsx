@@ -11,6 +11,7 @@ import { sendMessage } from "@/server/actions/chat";
 import { submitFeedback } from "@/server/actions/feedback";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PersonaSelector } from "./persona-selector";
 
 interface Message {
   id: string;
@@ -89,12 +90,15 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
       <div className="border-b p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Chat Session</h1>
-          <Button 
-            variant="outline" 
-            onClick={() => router.push(`/t/${tenantId}/chat`)}
-          >
-            Back to Sessions
-          </Button>
+          <div className="flex items-center gap-4">
+            <PersonaSelector tenantId={tenantId} sessionId={sessionId} />
+            <Button 
+              variant="outline" 
+              onClick={() => router.push(`/t/${tenantId}/chat`)}
+            >
+              Back to Sessions
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -156,6 +156,31 @@ export const documents = pgTable(
   ]
 );
 
+// Personas table for AI personalities
+export const personas = pgTable(
+  "personas",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    systemPrompt: text("system_prompt").notNull(),
+    isActive: boolean("is_active").default(true),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("personas_tenant_id_idx").on(table.tenantId),
+    index("personas_created_by_idx").on(table.createdBy),
+    index("personas_is_active_idx").on(table.isActive),
+  ]
+);
+
 // Chat sessions
 export const chatSessions = pgTable(
   "chat_sessions",
@@ -174,6 +199,25 @@ export const chatSessions = pgTable(
   (table) => [
     index("chat_sessions_tenant_id_idx").on(table.tenantId),
     index("chat_sessions_user_id_idx").on(table.userId),
+  ]
+);
+
+// Junction table for chat sessions and personas (many-to-many)
+export const chatSessionPersonas = pgTable(
+  "chat_session_personas",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    personaId: uuid("persona_id")
+      .notNull()
+      .references(() => personas.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("chat_session_personas_session_id_idx").on(table.sessionId),
+    index("chat_session_personas_persona_id_idx").on(table.personaId),
   ]
 );
 
@@ -251,6 +295,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   documents: many(documents),
   chatSessions: many(chatSessions),
   analytics: many(analytics),
+  personas: many(personas),
 }));
 
 export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => ({
@@ -285,6 +330,7 @@ export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => 
     references: [users.id],
   }),
   messages: many(chatMessages),
+  sessionPersonas: many(chatSessionPersonas),
 }));
 
 export const chatMessagesRelations = relations(chatMessages, ({ one, many }) => ({
@@ -303,5 +349,28 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
   user: one(users, {
     fields: [feedback.userId],
     references: [users.id],
+  }),
+}));
+
+export const personasRelations = relations(personas, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [personas.tenantId],
+    references: [tenants.id],
+  }),
+  createdByUser: one(users, {
+    fields: [personas.createdBy],
+    references: [users.id],
+  }),
+  sessionPersonas: many(chatSessionPersonas),
+}));
+
+export const chatSessionPersonasRelations = relations(chatSessionPersonas, ({ one }) => ({
+  session: one(chatSessions, {
+    fields: [chatSessionPersonas.sessionId],
+    references: [chatSessions.id],
+  }),
+  persona: one(personas, {
+    fields: [chatSessionPersonas.personaId],
+    references: [personas.id],
   }),
 }));

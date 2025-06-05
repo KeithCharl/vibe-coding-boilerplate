@@ -13,6 +13,7 @@ import {
   Plus,
   LogOut,
   Menu,
+  UserCog,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -76,6 +77,12 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
       roles: ["viewer", "contributor", "admin"],
     },
     {
+      title: "Personas",
+      icon: UserCog,
+      href: `/t/${currentTenantId}/personas`,
+      roles: ["viewer", "contributor", "admin"],
+    },
+    {
       title: "Users",
       icon: Users,
       href: `/t/${currentTenantId}/users`,
@@ -117,6 +124,13 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuItem asChild>
+                  <Link href="/">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    View All Tenants
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {userTenants.map((tenant) => (
                   <DropdownMenuItem key={tenant.tenantId} asChild>
                     <Link href={`/t/${tenant.tenantId}`}>

@@ -11,6 +11,7 @@ import {
   tenants,
   analytics 
 } from "@/server/db/schema";
+import { getCombinedSystemPrompt } from "./personas";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import { 
@@ -144,12 +145,19 @@ export async function sendMessage(sessionId: string, message: string) {
       content: message,
     });
 
-    // Get tenant system prompt
-    const [tenant] = await db
-      .select({ systemPrompt: tenants.systemPrompt })
-      .from(tenants)
-      .where(eq(tenants.id, session.tenantId))
-      .limit(1);
+    // Get combined system prompt from personas or fallback to tenant prompt
+    let systemPrompt: string;
+    try {
+      systemPrompt = await getCombinedSystemPrompt(session.tenantId, sessionId);
+    } catch (error) {
+      console.log("No personas applied, using tenant system prompt");
+      const [tenant] = await db
+        .select({ systemPrompt: tenants.systemPrompt })
+        .from(tenants)
+        .where(eq(tenants.id, session.tenantId))
+        .limit(1);
+      systemPrompt = tenant?.systemPrompt || "You are a helpful AI assistant.";
+    }
 
     // Generate embedding for the query
     const queryEmbedding = await embedQuery(message);
@@ -206,7 +214,7 @@ export async function sendMessage(sessionId: string, message: string) {
 
     // Generate AI response using RAG
     const prompt = await ragPromptTemplate.format({
-      systemPrompt: tenant?.systemPrompt || "You are a helpful AI assistant.",
+      systemPrompt: systemPrompt,
       context: context || "No relevant context found in the knowledge base.",
       question: message,
     });
