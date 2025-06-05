@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   UserCog,
+  Globe,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -74,6 +75,12 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
       title: "Knowledge Base",
       icon: BookOpen,
       href: `/t/${currentTenantId}/kb`,
+      roles: ["viewer", "contributor", "admin"],
+    },
+    {
+      title: "Web Analysis",
+      icon: Globe,
+      href: `/t/${currentTenantId}/web-analysis`,
       roles: ["viewer", "contributor", "admin"],
     },
     {

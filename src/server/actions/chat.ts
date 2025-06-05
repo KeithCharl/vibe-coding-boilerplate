@@ -9,7 +9,8 @@ import {
   chatMessages, 
   documents, 
   tenants,
-  analytics 
+  analytics,
+  webAnalysis 
 } from "@/server/db/schema";
 import { getCombinedSystemPrompt } from "./personas";
 import { eq, and, desc } from "drizzle-orm";
@@ -17,7 +18,8 @@ import { requireAuth } from "./auth";
 import { 
   embedQuery, 
   parseEmbedding, 
-  findSimilarDocuments 
+  findSimilarDocuments,
+  cosineSimilarity 
 } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 
@@ -177,39 +179,84 @@ export async function sendMessage(sessionId: string, message: string) {
           eq(documents.isActive, true)
         )
       )
-      .limit(20); // Get more docs to find best matches
+      .limit(15); // Get docs
 
-    console.log(`🔍 Found ${relevantDocs.length} documents in tenant`);
-    console.log(`📝 Query: "${message}"`);
+    // Retrieve relevant web analyses
+    const relevantWebAnalyses = await db
+      .select({
+        id: webAnalysis.id,
+        content: webAnalysis.content,
+        embedding: webAnalysis.embedding,
+        name: webAnalysis.title,
+      })
+      .from(webAnalysis)
+      .where(
+        and(
+          eq(webAnalysis.tenantId, session.tenantId),
+          eq(webAnalysis.status, "success")
+        )
+      )
+      .limit(10); // Get web analyses
 
-    // Find most similar documents
-    const docsWithEmbeddings = relevantDocs
-      .filter(doc => doc.embedding)
-      .map(doc => ({
+    // Combine all sources with type information
+    const allSources = [
+      ...relevantDocs.map(doc => ({ 
         id: doc.id,
         content: doc.content,
-        embedding: parseEmbedding(doc.embedding!),
+        embedding: doc.embedding,
         name: doc.name,
+        type: "document" as const 
+      })),
+      ...relevantWebAnalyses.map(analysis => ({ 
+        id: analysis.id,
+        content: analysis.content,
+        embedding: analysis.embedding,
+        name: analysis.name || "Web Analysis",
+        type: "web-analysis" as const 
+      }))
+    ];
+
+    console.log(`🔍 Found ${relevantDocs.length} documents and ${relevantWebAnalyses.length} web analyses in tenant`);
+    console.log(`📝 Query: "${message}"`);
+
+    // Find most similar content from all sources
+    const sourcesWithEmbeddings = allSources
+      .filter(source => source.embedding)
+      .map(source => ({
+        id: source.id,
+        content: source.content,
+        embedding: parseEmbedding(source.embedding!),
+        name: source.name,
+        type: source.type,
       }));
 
-    console.log(`🧠 ${docsWithEmbeddings.length} documents have embeddings`);
+    console.log(`🧠 ${sourcesWithEmbeddings.length} sources have embeddings`);
 
-    const similarDocs = findSimilarDocuments(
-      queryEmbedding,
-      docsWithEmbeddings,
-      5 // Top 5 most relevant chunks
-    );
+    // Calculate similarities and preserve metadata
+    const similarities = sourcesWithEmbeddings.map(source => ({
+      ...source,
+      similarity: cosineSimilarity(queryEmbedding, source.embedding),
+    }));
 
-    console.log(`🎯 Top ${similarDocs.length} similar docs:`, 
-      similarDocs.map(doc => ({ 
-        similarity: doc.similarity.toFixed(3), 
-        preview: doc.content.substring(0, 100) + "..."
+    // Sort by similarity and take top 5
+    const similarSources = similarities
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 5);
+
+    console.log(`🎯 Top ${similarSources.length} similar sources:`, 
+      similarSources.map(source => ({ 
+        type: source.type,
+        similarity: source.similarity.toFixed(3), 
+        preview: source.content.substring(0, 100) + "..."
       }))
     );
 
-    // Prepare context for the prompt
-    const context = similarDocs
-      .map((doc, index) => `[${index + 1}] ${doc.content}`)
+    // Prepare context for the prompt with source type information
+    const context = similarSources
+      .map((source, index) => {
+        const sourceLabel = source.type === "web-analysis" ? "Web Content" : "Document";
+        return `[${index + 1}] ${sourceLabel} - ${source.name}:\n${source.content}`;
+      })
       .join("\n\n");
 
     // Generate AI response using RAG
@@ -230,8 +277,8 @@ export async function sendMessage(sessionId: string, message: string) {
         role: "assistant",
         content: aiResponse,
         metadata: {
-          contextDocs: similarDocs.map(doc => doc.id),
-          similarities: similarDocs.map(doc => doc.similarity),
+          contextDocs: similarSources.map(source => source.id),
+          similarities: similarSources.map(source => source.similarity),
           model: "gpt-4o-mini",
         },
       })
@@ -247,7 +294,7 @@ export async function sendMessage(sessionId: string, message: string) {
         messageId: aiMessage.id,
         queryLength: message.length,
         responseLength: aiResponse.length,
-        docsRetrieved: similarDocs.length,
+        docsRetrieved: similarSources.length,
       },
     });
 
@@ -262,7 +309,7 @@ export async function sendMessage(sessionId: string, message: string) {
     return {
       success: true,
       message: aiMessage,
-      contextDocs: similarDocs,
+      contextDocs: similarSources,
     };
 
   } catch (error) {

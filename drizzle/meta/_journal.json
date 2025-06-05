@@ -15,6 +15,13 @@
       "when": 1749125407793,
       "tag": "0001_glamorous_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749127181529,
+      "tag": "0002_amazing_ezekiel",
+      "breakpoints": true
     }
   ]
 }

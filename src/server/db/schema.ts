@@ -282,12 +282,44 @@ export const analytics = pgTable(
   ]
 );
 
+// Web analysis results table
+export const webAnalysis = pgTable(
+  "web_analysis",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    title: text("title"),
+    content: text("content").notNull(),
+    summary: text("summary"),
+    metadata: jsonb("metadata"), // Store additional data like domain, links, images, etc.
+    embedding: text("embedding"), // Store embedding for similarity search
+    status: varchar("status", { length: 50 }).notNull().default("success"), // 'success', 'failed', 'processing'
+    errorMessage: text("error_message"),
+    analyzedBy: varchar("analyzed_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("web_analysis_tenant_id_idx").on(table.tenantId),
+    index("web_analysis_url_idx").on(table.url),
+    index("web_analysis_analyzed_by_idx").on(table.analyzedBy),
+    index("web_analysis_status_idx").on(table.status),
+    index("web_analysis_created_at_idx").on(table.createdAt),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userTenantRoles: many(userTenantRoles),
   chatSessions: many(chatSessions),
   documents: many(documents),
   feedback: many(feedback),
+  webAnalysis: many(webAnalysis),
 }));
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
@@ -296,6 +328,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   chatSessions: many(chatSessions),
   analytics: many(analytics),
   personas: many(personas),
+  webAnalysis: many(webAnalysis),
 }));
 
 export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => ({
@@ -372,5 +405,16 @@ export const chatSessionPersonasRelations = relations(chatSessionPersonas, ({ on
   persona: one(personas, {
     fields: [chatSessionPersonas.personaId],
     references: [personas.id],
+  }),
+}));
+
+export const webAnalysisRelations = relations(webAnalysis, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [webAnalysis.tenantId],
+    references: [tenants.id],
+  }),
+  analyzedByUser: one(users, {
+    fields: [webAnalysis.analyzedBy],
+    references: [users.id],
   }),
 }));
