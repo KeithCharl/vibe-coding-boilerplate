@@ -124,16 +124,50 @@ export async function getChatMessages(sessionId: string) {
  */
 export async function generateChatTitle(message: string): Promise<string> {
   try {
-    // Use a simple approach - take first few words or summarize
-    const words = message.trim().split(/\s+/);
-    
-    if (words.length <= 4) {
-      return message.substring(0, 50);
+    // For very short messages, use them directly
+    if (message.length <= 50) {
+      return message.trim();
     }
-    
-    // For longer messages, try to create a meaningful title
-    const shortTitle = words.slice(0, 4).join(" ");
-    return shortTitle.length > 50 ? shortTitle.substring(0, 47) + "..." : shortTitle;
+
+    // Use AI to generate a concise, meaningful title
+    const titlePrompt = `Generate a concise, meaningful title (max 8 words) for a chat conversation that starts with this user message. The title should capture the main topic or intent. Only return the title, nothing else.
+
+User message: "${message}"
+
+Title:`;
+
+    try {
+      const response = await llm.invoke(titlePrompt);
+      const aiTitle = (response.content as string).trim();
+      
+      // Clean up the AI response - remove quotes and ensure reasonable length
+      const cleanTitle = aiTitle
+        .replace(/^["']|["']$/g, '') // Remove surrounding quotes
+        .replace(/^Title:\s*/i, '') // Remove "Title:" prefix if present
+        .trim();
+      
+      // Fallback to simple title if AI response is too long or empty
+      if (cleanTitle.length > 80 || cleanTitle.length === 0) {
+        throw new Error("AI title too long or empty");
+      }
+      
+      return cleanTitle;
+    } catch (aiError) {
+      console.warn("AI title generation failed, using fallback:", aiError);
+      
+      // Fallback: Extract first sentence or first few meaningful words
+      const sentences = message.split(/[.!?]+/);
+      const firstSentence = sentences[0]?.trim();
+      
+      if (firstSentence && firstSentence.length <= 60) {
+        return firstSentence;
+      }
+      
+      // Final fallback: First few words
+      const words = message.trim().split(/\s+/);
+      const shortTitle = words.slice(0, 6).join(" ");
+      return shortTitle.length > 60 ? shortTitle.substring(0, 57) + "..." : shortTitle;
+    }
   } catch (error) {
     console.error("Failed to generate title:", error);
     return "New Chat";

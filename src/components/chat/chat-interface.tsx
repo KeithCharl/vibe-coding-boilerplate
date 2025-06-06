@@ -80,12 +80,15 @@ export function ChatInterface({ sessionId, tenantId, initialMessages, initialTit
       createdAt: new Date(),
     };
 
+    const isFirstMessage = messages.length === 0;
+    const currentInput = input;
+
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      const result = await sendMessage(sessionId, input);
+      const result = await sendMessage(sessionId, currentInput);
       
       if (result.success && result.message) {
         const assistantMessage: Message = {
@@ -97,8 +100,14 @@ export function ChatInterface({ sessionId, tenantId, initialMessages, initialTit
         };
         setMessages(prev => [...prev, assistantMessage]);
         
-        // If this was the first message, the title might have been auto-generated
-        // We'll refresh the page data on next navigation to pick up the new title
+        // If this was the first message and title was auto-generated, update the display
+        if (isFirstMessage && title === "New Chat") {
+          // Refresh the page to get the updated title
+          // We could also make an API call to get just the title, but a full refresh is simpler
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
       }
     } catch (error) {
       console.error("Failed to send message:", error);
