@@ -13,7 +13,7 @@ import {
   webAnalysis 
 } from "@/server/db/schema";
 import { getCombinedSystemPrompt } from "./personas";
-import { eq, and, desc, sql, isNotNull } from "drizzle-orm";
+import { eq, and, desc, sql, isNotNull, lt } from "drizzle-orm";
 import { requireAuth, getUserRole } from "./auth";
 import { embedQuery } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
@@ -335,6 +335,45 @@ export async function deleteChatSession(sessionId: string) {
 
   revalidatePath(`/t/${session[0].tenantId}/chat`);
   return { success: true };
+}
+
+/**
+ * Bulk delete old chat sessions
+ */
+export async function deleteOldChatSessions(tenantId: string, cutoffDate: Date) {
+  const user = await requireAuth(tenantId, "viewer");
+  const userRole = await getUserRole(tenantId);
+  
+  // Build the where clause based on user permissions
+  let whereClause;
+  if (userRole === "admin") {
+    // Admins can delete any old sessions in their tenant
+    whereClause = and(
+      eq(chatSessions.tenantId, tenantId),
+      lt(chatSessions.updatedAt, cutoffDate)
+    );
+  } else {
+    // Regular users can only delete their own old sessions
+    whereClause = and(
+      eq(chatSessions.tenantId, tenantId),
+      eq(chatSessions.userId, user.id),
+      lt(chatSessions.updatedAt, cutoffDate)
+    );
+  }
+
+  // Get sessions to be deleted for counting
+  const sessionsToDelete = await db
+    .select({ id: chatSessions.id })
+    .from(chatSessions)
+    .where(whereClause);
+
+  const deletedCount = sessionsToDelete.length;
+
+  // Delete the sessions
+  await db.delete(chatSessions).where(whereClause);
+
+  revalidatePath(`/t/${tenantId}/chat`);
+  return { success: true, deletedCount };
 }
 
 /**

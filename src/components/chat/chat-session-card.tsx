@@ -23,9 +23,9 @@ import {
 
 interface ChatSession {
   id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
+  title: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 interface ChatSessionCardProps {
@@ -34,11 +34,12 @@ interface ChatSessionCardProps {
 }
 
 export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
-  const [title, setTitle] = useState(session.title);
+  const [title, setTitle] = useState(session.title || "Untitled Chat");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitleValue, setEditTitleValue] = useState(session.title);
+  const [editTitleValue, setEditTitleValue] = useState(session.title || "Untitled Chat");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const titleInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -108,14 +109,18 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
   };
 
   const handleDeleteSession = async () => {
+    console.log("🗑️ Attempting to delete session:", session.id);
     try {
       setIsDeleting(true);
-      await deleteChatSession(session.id);
+      const result = await deleteChatSession(session.id);
+      console.log("✅ Delete result:", result);
       toast.success("Chat session deleted");
+      setIsDeleteDialogOpen(false);
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete session:", error);
-      toast.error("Failed to delete session");
+      console.error("❌ Failed to delete session:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete session");
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -167,14 +172,17 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
               >
                 <Edit2 className="h-3 w-3" />
               </Button>
-              <AlertDialog>
+              <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                     title="Delete session"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsDeleteDialogOpen(true);
+                    }}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -187,7 +195,9 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+                      Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteSession}
                       disabled={isDeleting}

@@ -6,6 +6,7 @@ import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChatSessionCard } from "@/components/chat/chat-session-card";
+import { DeleteOldSessionsDialog } from "@/components/chat/delete-old-sessions-dialog";
 
 interface ChatPageProps {
   params: Promise<{ tenantId: string }>;
@@ -26,16 +27,21 @@ export default async function ChatPage({ params }: ChatPageProps) {
             Start conversations with your AI knowledge base
           </p>
         </div>
-        <form action={async () => {
-          "use server";
-          const session = await createChatSession(tenantId);
-          redirect(`/t/${tenantId}/chat/${session.id}`);
-        }}>
-          <Button type="submit">
-            <Plus className="h-4 w-4 mr-2" />
-            New Chat
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          {sessions.length > 0 && (
+            <DeleteOldSessionsDialog tenantId={tenantId} />
+          )}
+          <form action={async () => {
+            "use server";
+            const session = await createChatSession(tenantId);
+            redirect(`/t/${tenantId}/chat/${session.id}`);
+          }}>
+            <Button type="submit">
+              <Plus className="h-4 w-4 mr-2" />
+              New Chat
+            </Button>
+          </form>
+        </div>
       </div>
 
       {sessions.length === 0 ? (
