@@ -13,14 +13,9 @@ import {
   webAnalysis 
 } from "@/server/db/schema";
 import { getCombinedSystemPrompt } from "./personas";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, isNotNull } from "drizzle-orm";
 import { requireAuth } from "./auth";
-import { 
-  embedQuery, 
-  parseEmbedding, 
-  findSimilarDocuments,
-  cosineSimilarity 
-} from "@/lib/embeddings";
+import { embedQuery } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 
 // Initialize OpenAI Chat model
@@ -63,10 +58,10 @@ export async function createChatSession(tenantId: string, title?: string) {
 }
 
 /**
- * Get chat sessions for a tenant/user
+ * Get chat sessions for a tenant
  */
 export async function getChatSessions(tenantId: string) {
-  const user = await requireAuth(tenantId, "viewer");
+  await requireAuth(tenantId, "viewer");
 
   const sessions = await db
     .select({
@@ -76,33 +71,32 @@ export async function getChatSessions(tenantId: string) {
       updatedAt: chatSessions.updatedAt,
     })
     .from(chatSessions)
-    .where(
-      and(
-        eq(chatSessions.tenantId, tenantId),
-        eq(chatSessions.userId, user.id)
-      )
-    )
+    .where(eq(chatSessions.tenantId, tenantId))
     .orderBy(desc(chatSessions.updatedAt));
 
   return sessions;
 }
 
 /**
- * Get messages for a chat session
+ * Get a specific chat session with messages
  */
-export async function getChatMessages(sessionId: string) {
-  const user = await requireAuth();
-
-  // Verify user owns this session
-  const [session] = await db
-    .select({ userId: chatSessions.userId, tenantId: chatSessions.tenantId })
+export async function getChatSession(sessionId: string) {
+  const session = await db
+    .select({
+      id: chatSessions.id,
+      tenantId: chatSessions.tenantId,
+      title: chatSessions.title,
+      createdAt: chatSessions.createdAt,
+    })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
     .limit(1);
 
-  if (!session || session.userId !== user.id) {
-    throw new Error("Access denied");
+  if (!session[0]) {
+    throw new Error("Chat session not found");
   }
+
+  await requireAuth(session[0].tenantId, "viewer");
 
   const messages = await db
     .select({
@@ -116,305 +110,199 @@ export async function getChatMessages(sessionId: string) {
     .where(eq(chatMessages.sessionId, sessionId))
     .orderBy(chatMessages.createdAt);
 
-  return messages;
+  return {
+    ...session[0],
+    messages,
+  };
 }
 
 /**
- * Generate a title for a chat session based on the first user message
- */
-export async function generateChatTitle(message: string): Promise<string> {
-  try {
-    // For very short messages, use them directly
-    if (message.length <= 50) {
-      return message.trim();
-    }
-
-    // Use AI to generate a concise, meaningful title
-    const titlePrompt = `Generate a concise, meaningful title (max 8 words) for a chat conversation that starts with this user message. The title should capture the main topic or intent. Only return the title, nothing else.
-
-User message: "${message}"
-
-Title:`;
-
-    try {
-      const response = await llm.invoke(titlePrompt);
-      const aiTitle = (response.content as string).trim();
-      
-      // Clean up the AI response - remove quotes and ensure reasonable length
-      const cleanTitle = aiTitle
-        .replace(/^["']|["']$/g, '') // Remove surrounding quotes
-        .replace(/^Title:\s*/i, '') // Remove "Title:" prefix if present
-        .trim();
-      
-      // Fallback to simple title if AI response is too long or empty
-      if (cleanTitle.length > 80 || cleanTitle.length === 0) {
-        throw new Error("AI title too long or empty");
-      }
-      
-      return cleanTitle;
-    } catch (aiError) {
-      console.warn("AI title generation failed, using fallback:", aiError);
-      
-      // Fallback: Extract first sentence or first few meaningful words
-      const sentences = message.split(/[.!?]+/);
-      const firstSentence = sentences[0]?.trim();
-      
-      if (firstSentence && firstSentence.length <= 60) {
-        return firstSentence;
-      }
-      
-      // Final fallback: First few words
-      const words = message.trim().split(/\s+/);
-      const shortTitle = words.slice(0, 6).join(" ");
-      return shortTitle.length > 60 ? shortTitle.substring(0, 57) + "..." : shortTitle;
-    }
-  } catch (error) {
-    console.error("Failed to generate title:", error);
-    return "New Chat";
-  }
-}
-
-/**
- * Send a message and get AI response with RAG
+ * Send a message in a chat session with RAG
  */
 export async function sendMessage(sessionId: string, message: string) {
-  const user = await requireAuth();
-
   // Get session and verify access
-  const [session] = await db
-    .select({ 
-      userId: chatSessions.userId, 
+  const session = await db
+    .select({
+      id: chatSessions.id,
       tenantId: chatSessions.tenantId,
-      title: chatSessions.title 
+      userId: chatSessions.userId,
     })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
     .limit(1);
 
-  if (!session || session.userId !== user.id) {
-    throw new Error("Access denied");
+  if (!session[0]) {
+    throw new Error("Chat session not found");
   }
 
-  // Check if this is the first message (session still has default title)
-  const isFirstMessage = session.title === "New Chat";
+  await requireAuth(session[0].tenantId, "viewer");
 
-  try {
-    // Store user message
-    await db.insert(chatMessages).values({
+  // Store user message
+  const [userMessage] = await db
+    .insert(chatMessages)
+    .values({
       sessionId,
       role: "user",
       content: message,
-    });
+    })
+    .returning();
 
-    // If this is the first message, generate a title
-    if (isFirstMessage) {
-      const title = await generateChatTitle(message);
-      await db
-        .update(chatSessions)
-        .set({ title })
-        .where(eq(chatSessions.id, sessionId));
-    }
+  // Get system prompt for this tenant
+  const tenant = await db
+    .select({ systemPrompt: tenants.systemPrompt })
+    .from(tenants)
+    .where(eq(tenants.id, session[0].tenantId))
+    .limit(1);
 
-    // Get combined system prompt from personas or fallback to tenant prompt
-    let systemPrompt: string;
-    try {
-      systemPrompt = await getCombinedSystemPrompt(session.tenantId, sessionId);
-    } catch (error) {
-      console.log("No personas applied, using tenant system prompt");
-      const [tenant] = await db
-        .select({ systemPrompt: tenants.systemPrompt })
-        .from(tenants)
-        .where(eq(tenants.id, session.tenantId))
-        .limit(1);
-      systemPrompt = tenant?.systemPrompt || "You are a helpful AI assistant.";
-    }
+  const systemPrompt = await getCombinedSystemPrompt(session[0].tenantId, sessionId) || 
+    tenant[0]?.systemPrompt || 
+    "You are a helpful AI assistant with access to the knowledge base.";
 
-    // Generate embedding for the query
-    const queryEmbedding = await embedQuery(message);
-
-    // Retrieve relevant documents
-    const relevantDocs = await db
-      .select({
-        id: documents.id,
-        content: documents.content,
-        embedding: documents.embedding,
-        name: documents.name,
-      })
-      .from(documents)
-      .where(
-        and(
-          eq(documents.tenantId, session.tenantId),
-          eq(documents.isActive, true)
-        )
-      )
-      .limit(15); // Get docs
-
-    // Retrieve relevant web analyses
-    const relevantWebAnalyses = await db
-      .select({
-        id: webAnalysis.id,
-        content: webAnalysis.content,
-        embedding: webAnalysis.embedding,
-        name: webAnalysis.title,
-      })
-      .from(webAnalysis)
-      .where(
-        and(
-          eq(webAnalysis.tenantId, session.tenantId),
-          eq(webAnalysis.status, "success")
-        )
-      )
-      .limit(10); // Get web analyses
-
-    // Combine all sources with type information
-    const allSources = [
-      ...relevantDocs.map(doc => ({ 
-        id: doc.id,
-        content: doc.content,
-        embedding: doc.embedding,
-        name: doc.name,
-        type: "document" as const 
-      })),
-      ...relevantWebAnalyses.map(analysis => ({ 
-        id: analysis.id,
-        content: analysis.content,
-        embedding: analysis.embedding,
-        name: analysis.name || "Web Analysis",
-        type: "web-analysis" as const 
-      }))
-    ];
-
-    console.log(`🔍 Found ${relevantDocs.length} documents and ${relevantWebAnalyses.length} web analyses in tenant`);
-    console.log(`📝 Query: "${message}"`);
-
-    // Find most similar content from all sources
-    const sourcesWithEmbeddings = allSources
-      .filter(source => source.embedding)
-      .map(source => ({
-        id: source.id,
-        content: source.content,
-        embedding: parseEmbedding(source.embedding!),
-        name: source.name,
-        type: source.type,
-      }));
-
-    console.log(`🧠 ${sourcesWithEmbeddings.length} sources have embeddings`);
-
-    // Calculate similarities and preserve metadata
-    const similarities = sourcesWithEmbeddings.map(source => ({
-      ...source,
-      similarity: cosineSimilarity(queryEmbedding, source.embedding),
-    }));
-
-    // Sort by similarity and take top 5
-    const similarSources = similarities
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 5);
-
-    console.log(`🎯 Top ${similarSources.length} similar sources:`, 
-      similarSources.map(source => ({ 
-        type: source.type,
-        similarity: source.similarity.toFixed(3), 
-        preview: source.content.substring(0, 100) + "..."
-      }))
-    );
-
-    // Prepare context for the prompt with source type information
-    const context = similarSources
-      .map((source, index) => {
-        const sourceLabel = source.type === "web-analysis" ? "Web Content" : "Document";
-        return `[${index + 1}] ${sourceLabel} - ${source.name}:\n${source.content}`;
-      })
-      .join("\n\n");
-
-    // Generate AI response using RAG
-    const prompt = await ragPromptTemplate.format({
-      systemPrompt: systemPrompt,
-      context: context || "No relevant context found in the knowledge base.",
-      question: message,
-    });
-
-    const response = await llm.invoke(prompt);
-    const aiResponse = response.content as string;
-
-    // Store AI response with metadata
-    const [aiMessage] = await db
-      .insert(chatMessages)
-      .values({
-        sessionId,
-        role: "assistant",
-        content: aiResponse,
-        metadata: {
-          contextDocs: similarSources.map(source => source.id),
-          similarities: similarSources.map(source => source.similarity),
-          model: "gpt-4o-mini",
-        },
-      })
-      .returning();
-
-    // Log analytics
-    await db.insert(analytics).values({
-      tenantId: session.tenantId,
-      userId: user.id,
-      eventType: "query",
-      eventData: {
-        sessionId,
-        messageId: aiMessage.id,
-        queryLength: message.length,
-        responseLength: aiResponse.length,
-        docsRetrieved: similarSources.length,
-      },
-    });
-
-    // Update session timestamp
-    await db
-      .update(chatSessions)
-      .set({ updatedAt: new Date() })
-      .where(eq(chatSessions.id, sessionId));
-
-    revalidatePath(`/chat/${sessionId}`);
-    
-    return {
-      success: true,
-      message: aiMessage,
-      contextDocs: similarSources,
-    };
-
-  } catch (error) {
-    console.error("Chat error:", error);
-    throw new Error("Failed to process message");
+  // Generate embedding for the user query
+  const queryEmbedding = await embedQuery(message);
+  
+  if (!queryEmbedding || queryEmbedding.length === 0) {
+    throw new Error("Failed to generate query embedding");
   }
+
+  console.log(`🧠 Generated query embedding with ${queryEmbedding.length} dimensions`);
+
+  // Convert embedding to string format for SQL
+  const embeddingString = `[${queryEmbedding.join(',')}]`;
+
+  // Use pgvector for similarity search on documents (only where embeddings exist)
+  const relevantDocs = await db
+    .select({
+      id: documents.id,
+      content: documents.content,
+      name: documents.name,
+      similarity: sql<number>`1 - (${documents.embedding} <=> ${embeddingString}::vector)`.as('similarity')
+    })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.tenantId, session[0].tenantId),
+        eq(documents.isActive, true),
+        isNotNull(documents.embedding) // Only include documents with embeddings
+      )
+    )
+    .orderBy(sql`${documents.embedding} <=> ${embeddingString}::vector`)
+    .limit(10);
+
+  // Use pgvector for similarity search on web analysis (only where embeddings exist)
+  const relevantWebAnalyses = await db
+    .select({
+      id: webAnalysis.id,
+      content: webAnalysis.content,
+      name: webAnalysis.title,
+      similarity: sql<number>`1 - (${webAnalysis.embedding} <=> ${embeddingString}::vector)`.as('similarity')
+    })
+    .from(webAnalysis)
+    .where(
+      and(
+        eq(webAnalysis.tenantId, session[0].tenantId),
+        eq(webAnalysis.status, "success"),
+        isNotNull(webAnalysis.embedding) // Only include analyses with embeddings
+      )
+    )
+    .orderBy(sql`${webAnalysis.embedding} <=> ${embeddingString}::vector`)
+    .limit(5);
+
+  // Combine and take top 5 results
+  const allSources = [
+    ...relevantDocs.map(doc => ({ ...doc, type: "document" as const })),
+    ...relevantWebAnalyses.map(analysis => ({ ...analysis, type: "web-analysis" as const }))
+  ];
+
+  const topSources = allSources
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 5);
+
+  console.log(`🔍 Found ${relevantDocs.length} documents and ${relevantWebAnalyses.length} web analyses in tenant`);
+  console.log(`📝 Query: "${message}"`);
+  console.log(`🎯 Top ${topSources.length} similar sources:`, 
+    topSources.map(source => ({ 
+      type: source.type,
+      similarity: source.similarity.toFixed(3), 
+      preview: source.content.substring(0, 100) + "..."
+    }))
+  );
+
+  // Prepare context for the prompt with source type information
+  const context = topSources
+    .map((source, index) => {
+      const sourceLabel = source.type === "web-analysis" ? "Web Content" : "Document";
+      return `[${index + 1}] ${sourceLabel} - ${source.name}:\n${source.content}`;
+    })
+    .join("\n\n");
+
+  // Generate AI response using RAG
+  const prompt = await ragPromptTemplate.format({
+    systemPrompt: systemPrompt,
+    context: context || "No relevant context found in the knowledge base.",
+    question: message,
+  });
+
+  const response = await llm.invoke(prompt);
+  const aiResponse = response.content as string;
+
+  // Store AI response with metadata
+  const [aiMessage] = await db
+    .insert(chatMessages)
+    .values({
+      sessionId,
+      role: "assistant",
+      content: aiResponse,
+      metadata: {
+        contextDocs: topSources.map(source => source.id),
+        similarities: topSources.map(source => source.similarity),
+        model: "gpt-4o-mini",
+      },
+    })
+    .returning();
+
+  // Log analytics
+  await db.insert(analytics).values({
+    tenantId: session[0].tenantId,
+    userId: session[0].userId,
+    eventType: "query",
+    eventData: {
+      sessionId,
+      messageId: userMessage.id,
+      responseId: aiMessage.id,
+      contextDocsUsed: topSources.length,
+      queryLength: message.length,
+      responseLength: aiResponse.length,
+    },
+  });
+
+  revalidatePath(`/t/${session[0].tenantId}/chat/${sessionId}`);
+  
+  return aiMessage;
 }
 
 /**
  * Update chat session title
  */
-export async function updateChatSession(
-  sessionId: string, 
-  data: { title?: string }
-) {
-  const user = await requireAuth();
-
-  // Verify user owns this session
-  const [session] = await db
-    .select({ userId: chatSessions.userId })
+export async function updateChatSessionTitle(sessionId: string, title: string) {
+  const session = await db
+    .select({ tenantId: chatSessions.tenantId })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
     .limit(1);
 
-  if (!session || session.userId !== user.id) {
-    throw new Error("Access denied");
+  if (!session[0]) {
+    throw new Error("Chat session not found");
   }
+
+  await requireAuth(session[0].tenantId, "viewer");
 
   await db
     .update(chatSessions)
-    .set({ 
-      ...data,
-      updatedAt: new Date(),
-    })
+    .set({ title, updatedAt: new Date() })
     .where(eq(chatSessions.id, sessionId));
 
-  revalidatePath(`/chat`);
+  revalidatePath(`/t/${session[0].tenantId}/chat`);
   return { success: true };
 }
 
@@ -422,30 +310,21 @@ export async function updateChatSession(
  * Delete a chat session
  */
 export async function deleteChatSession(sessionId: string) {
-  const user = await requireAuth();
-
-  // Verify user owns this session
-  const [session] = await db
-    .select({ userId: chatSessions.userId })
+  const session = await db
+    .select({ tenantId: chatSessions.tenantId })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
     .limit(1);
 
-  if (!session || session.userId !== user.id) {
-    throw new Error("Access denied");
+  if (!session[0]) {
+    throw new Error("Chat session not found");
   }
 
-  // Delete messages first (cascade should handle this, but being explicit)
-  await db
-    .delete(chatMessages)
-    .where(eq(chatMessages.sessionId, sessionId));
+  await requireAuth(session[0].tenantId, "admin");
 
-  // Delete session
-  await db
-    .delete(chatSessions)
-    .where(eq(chatSessions.id, sessionId));
+  await db.delete(chatSessions).where(eq(chatSessions.id, sessionId));
 
-  revalidatePath(`/chat`);
+  revalidatePath(`/t/${session[0].tenantId}/chat`);
   return { success: true };
 }
 
@@ -471,4 +350,65 @@ export async function getChatAnalytics(tenantId: string) {
     .limit(100);
 
   return queryAnalytics;
-} 
+}
+
+/**
+ * Toggle bookmark status for a chat session
+ */
+export async function toggleChatBookmark(sessionId: string) {
+  const session = await db
+    .select({ 
+      tenantId: chatSessions.tenantId,
+      isBookmarked: chatSessions.isBookmarked 
+    })
+    .from(chatSessions)
+    .where(eq(chatSessions.id, sessionId))
+    .limit(1);
+
+  if (!session[0]) {
+    throw new Error("Chat session not found");
+  }
+
+  await requireAuth(session[0].tenantId, "viewer");
+
+  const newBookmarkStatus = !session[0].isBookmarked;
+
+  await db
+    .update(chatSessions)
+    .set({ 
+      isBookmarked: newBookmarkStatus,
+      updatedAt: new Date() 
+    })
+    .where(eq(chatSessions.id, sessionId));
+
+  revalidatePath(`/t/${session[0].tenantId}/chat`);
+  revalidatePath(`/t/${session[0].tenantId}/chat/${sessionId}`);
+  
+  return { success: true, isBookmarked: newBookmarkStatus };
+}
+
+/**
+ * Get bookmarked chat sessions for a tenant
+ */
+export async function getBookmarkedChatSessions(tenantId: string) {
+  await requireAuth(tenantId, "viewer");
+
+  const bookmarkedSessions = await db
+    .select({
+      id: chatSessions.id,
+      title: chatSessions.title,
+      isBookmarked: chatSessions.isBookmarked,
+      createdAt: chatSessions.createdAt,
+      updatedAt: chatSessions.updatedAt,
+    })
+    .from(chatSessions)
+    .where(
+      and(
+        eq(chatSessions.tenantId, tenantId),
+        eq(chatSessions.isBookmarked, true)
+      )
+    )
+    .orderBy(desc(chatSessions.updatedAt));
+
+  return bookmarkedSessions;
+}

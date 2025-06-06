@@ -5,7 +5,7 @@ import { db } from "@/server/db";
 import { documents, analytics } from "@/server/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "./auth";
-import { chunkAndEmbedDocument, serializeEmbedding } from "@/lib/embeddings";
+import { chunkAndEmbedDocument } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 
 export interface DocumentData {
@@ -144,7 +144,7 @@ export async function uploadDocument(
       throw new Error("Failed to process document content.");
     }
 
-    // Store document chunks in database
+    // Store document chunks in database with pgvector embeddings
     const documentInserts = chunks.map((chunk, index) => ({
       tenantId,
       name: index === 0 ? name.trim() : `${name.trim()} (chunk ${index + 1})`,
@@ -153,7 +153,7 @@ export async function uploadDocument(
       fileType: file.type,
       fileSize: file.size,
       chunkIndex: index,
-      embedding: serializeEmbedding(chunk.embedding),
+      embedding: chunk.embedding, // Direct array - pgvector handles the conversion
       uploadedBy: user.id,
     }));
 
@@ -293,7 +293,7 @@ export async function updateDocument(
   if (data.content) {
     const chunks = await chunkAndEmbedDocument(data.content);
     if (chunks.length > 0) {
-      updateData.embedding = serializeEmbedding(chunks[0].embedding);
+      updateData.embedding = chunks[0].embedding; // Direct array for pgvector
     }
   }
 
@@ -609,7 +609,7 @@ export async function replaceDocument(
       fileType: file.type,
       fileSize: file.size,
       chunkIndex: index,
-      embedding: serializeEmbedding(chunk.embedding),
+      embedding: chunk.embedding, // Direct array - pgvector handles the conversion
       version: newVersion,
       uploadedBy: user.id,
     }));

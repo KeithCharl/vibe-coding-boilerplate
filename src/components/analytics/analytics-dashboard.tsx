@@ -609,34 +609,36 @@ export function AnalyticsDashboard({
                   Feedback Details
                 </DialogTitle>
                 <DialogDescription>
-                  <div className="flex items-center gap-2 mt-2">
-                    {selectedFeedback.userImage && (
-                      <img 
-                        src={selectedFeedback.userImage} 
-                        alt={selectedFeedback.userName || 'User'} 
-                        className="h-8 w-8 rounded-full"
-                      />
-                    )}
-                    <div>
-                      <div className="font-medium">
-                        {selectedFeedback.userName || 'Anonymous User'}
-                      </div>
-                      <div className="text-sm">
-                        <a 
-                          href={`mailto:${selectedFeedback.userEmail}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {selectedFeedback.userEmail}
-                        </a>
-                        {" • "}
-                        {selectedFeedback.createdAt ? formatDistanceToNow(new Date(selectedFeedback.createdAt), { addSuffix: true }) : 'Unknown date'}
-                      </div>
-                    </div>
-                  </div>
+                  Feedback from user regarding AI response
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  {selectedFeedback.userImage && (
+                    <img 
+                      src={selectedFeedback.userImage} 
+                      alt={selectedFeedback.userName || 'User'} 
+                      className="h-8 w-8 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <div className="font-medium">
+                      {selectedFeedback.userName || 'Anonymous User'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <a 
+                        href={`mailto:${selectedFeedback.userEmail}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {selectedFeedback.userEmail}
+                      </a>
+                      {" • "}
+                      {selectedFeedback.createdAt ? formatDistanceToNow(new Date(selectedFeedback.createdAt), { addSuffix: true }) : 'Unknown date'}
+                    </div>
+                  </div>
+                </div>
+                
                 {selectedFeedback.comment && (
                   <div>
                     <h4 className="font-semibold mb-2">User Comment</h4>

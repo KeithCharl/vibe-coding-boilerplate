@@ -3,13 +3,13 @@ import { getUserPermissions, getPrompts, getPromptCategories } from '@/server/ac
 import { PromptsPageClient } from '@/components/prompts/prompts-page-client';
 
 interface PromptsPageProps {
-  params: {
+  params: Promise<{
     tenantId: string;
-  };
+  }>;
 }
 
 export default async function PromptsPage({ params }: PromptsPageProps) {
-  const { tenantId } = params;
+  const { tenantId } = await params;
 
   try {
     const [permissions, prompts, categories] = await Promise.all([

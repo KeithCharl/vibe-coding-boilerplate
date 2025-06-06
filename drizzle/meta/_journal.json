@@ -29,6 +29,20 @@
       "when": 1749192370078,
       "tag": "0003_secret_madripoor",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1749199795999,
+      "tag": "0004_low_switch",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1749205607422,
+      "tag": "0005_wandering_rogue",
+      "breakpoints": true
     }
   ]
 }

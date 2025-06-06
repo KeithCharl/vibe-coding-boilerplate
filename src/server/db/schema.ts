@@ -12,6 +12,7 @@ import {
   jsonb,
   primaryKey,
   real,
+  vector, // Add vector import for pgvector support
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -141,7 +142,7 @@ export const documents = pgTable(
     fileType: varchar("file_type", { length: 50 }),
     fileSize: integer("file_size"),
     chunkIndex: integer("chunk_index").default(0),
-    embedding: text("embedding"), // Store as JSON array string for now
+    embedding: vector("embedding", { dimensions: 1536 }), // OpenAI embeddings are 1536 dimensions
     version: integer("version").default(1),
     isActive: boolean("is_active").default(true),
     uploadedBy: varchar("uploaded_by", { length: 255 })
@@ -153,6 +154,8 @@ export const documents = pgTable(
     index("documents_tenant_id_idx").on(table.tenantId),
     index("documents_uploaded_by_idx").on(table.uploadedBy),
     index("documents_is_active_idx").on(table.isActive),
+    // Add vector similarity index for fast similarity search
+    index("documents_embedding_idx").using("hnsw", table.embedding.op("vector_cosine_ops")),
   ]
 );
 
@@ -193,12 +196,14 @@ export const chatSessions = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title"),
+    isBookmarked: boolean("is_bookmarked").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("chat_sessions_tenant_id_idx").on(table.tenantId),
     index("chat_sessions_user_id_idx").on(table.userId),
+    index("chat_sessions_is_bookmarked_idx").on(table.isBookmarked),
   ]
 );
 
@@ -295,7 +300,7 @@ export const webAnalysis = pgTable(
     content: text("content").notNull(),
     summary: text("summary"),
     metadata: jsonb("metadata"), // Store additional data like domain, links, images, etc.
-    embedding: text("embedding"), // Store embedding for similarity search
+    embedding: vector("embedding", { dimensions: 1536 }), // pgvector instead of text
     status: varchar("status", { length: 50 }).notNull().default("success"), // 'success', 'failed', 'processing'
     errorMessage: text("error_message"),
     analyzedBy: varchar("analyzed_by", { length: 255 })
@@ -310,6 +315,8 @@ export const webAnalysis = pgTable(
     index("web_analysis_analyzed_by_idx").on(table.analyzedBy),
     index("web_analysis_status_idx").on(table.status),
     index("web_analysis_created_at_idx").on(table.createdAt),
+    // Add vector similarity index
+    index("web_analysis_embedding_idx").using("hnsw", table.embedding.op("vector_cosine_ops")),
   ]
 );
 

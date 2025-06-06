@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit2, Check, X, Trash2 } from "lucide-react";
-import { updateChatSession, deleteChatSession } from "@/server/actions/chat";
+import { updateChatSessionTitle, deleteChatSession } from "@/server/actions/chat";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
@@ -75,7 +75,7 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
 
     try {
       setIsUpdatingTitle(true);
-      await updateChatSession(session.id, { title: editTitleValue.trim() });
+      await updateChatSessionTitle(session.id, editTitleValue.trim());
       setTitle(editTitleValue.trim());
       setIsEditingTitle(false);
       toast.success("Title updated successfully");
@@ -121,7 +121,7 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow`}>
       <CardHeader>
         {isEditingTitle ? (
           <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
@@ -154,7 +154,9 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg truncate pr-2">{title}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg truncate pr-2">{title}</CardTitle>
+            </div>
             <div className="flex items-center gap-1 shrink-0">
               <Button
                 size="sm"

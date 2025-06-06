@@ -17,7 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Send, Bot, User, ThumbsUp, ThumbsDown, Edit2, Check, X } from "lucide-react";
-import { sendMessage, updateChatSession } from "@/server/actions/chat";
+import { sendMessage, updateChatSessionTitle } from "@/server/actions/chat";
 import { submitFeedback } from "@/server/actions/feedback";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -90,24 +90,22 @@ export function ChatInterface({ sessionId, tenantId, initialMessages, initialTit
     try {
       const result = await sendMessage(sessionId, currentInput);
       
-      if (result.success && result.message) {
-        const assistantMessage: Message = {
-          id: result.message.id,
-          role: "assistant",
-          content: result.message.content,
-          metadata: result.message.metadata,
-          createdAt: result.message.createdAt ? new Date(result.message.createdAt) : new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        // If this was the first message and title was auto-generated, update the display
-        if (isFirstMessage && title === "New Chat") {
-          // Refresh the page to get the updated title
-          // We could also make an API call to get just the title, but a full refresh is simpler
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
+      const assistantMessage: Message = {
+        id: result.id,
+        role: "assistant",
+        content: result.content,
+        metadata: result.metadata,
+        createdAt: result.createdAt ? new Date(result.createdAt) : new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // If this was the first message and title was auto-generated, update the display
+      if (isFirstMessage && title === "New Chat") {
+        // Refresh the page to get the updated title
+        // We could also make an API call to get just the title, but a full refresh is simpler
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -135,7 +133,7 @@ export function ChatInterface({ sessionId, tenantId, initialMessages, initialTit
 
     try {
       setIsUpdatingTitle(true);
-      await updateChatSession(sessionId, { title: editTitleValue.trim() });
+      await updateChatSessionTitle(sessionId, editTitleValue.trim());
       setTitle(editTitleValue.trim());
       setIsEditingTitle(false);
       toast.success("Title updated successfully");

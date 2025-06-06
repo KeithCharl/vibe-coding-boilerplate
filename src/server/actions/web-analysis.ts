@@ -5,7 +5,7 @@ import { webAnalysis, analytics } from "@/server/db/schema";
 import { eq, and, desc, like } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import { scrapeWebsite, validateUrl, ScrapedContent } from "@/lib/web-scraper";
-import { chunkAndEmbedDocument, serializeEmbedding } from "@/lib/embeddings";
+import { chunkAndEmbedDocument } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 
 export interface WebAnalysisData {
@@ -102,7 +102,7 @@ export async function analyzeUrl(
       tenantId,
     });
 
-    const embedding = chunks.length > 0 ? serializeEmbedding(chunks[0].embedding) : null;
+    const embedding = chunks.length > 0 ? chunks[0].embedding : null;
     console.log(`✅ Generated embedding with ${chunks.length} chunks`);
 
     // Generate summary if requested

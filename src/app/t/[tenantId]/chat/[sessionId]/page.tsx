@@ -1,10 +1,7 @@
-import { getChatMessages } from "@/server/actions/chat";
+import { getChatSession } from "@/server/actions/chat";
 import { requireAuth } from "@/server/actions/auth";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { redirect } from "next/navigation";
-import { db } from "@/server/db";
-import { chatSessions } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
 
 interface ChatSessionPageProps {
   params: Promise<{ tenantId: string; sessionId: string }>;
@@ -14,26 +11,13 @@ export default async function ChatSessionPage({ params }: ChatSessionPageProps) 
   const { tenantId, sessionId } = await params;
   
   try {
-    const user = await requireAuth(tenantId, "viewer");
+    await requireAuth(tenantId, "viewer");
     
-    // Get session details including title
-    const [session] = await db
-      .select({
-        title: chatSessions.title,
-        userId: chatSessions.userId,
-      })
-      .from(chatSessions)
-      .where(eq(chatSessions.id, sessionId))
-      .limit(1);
-
-    if (!session || session.userId !== user.id) {
-      redirect(`/t/${tenantId}/chat`);
-    }
-
-    const dbMessages = await getChatMessages(sessionId);
+    // Get session details and messages
+    const session = await getChatSession(sessionId);
 
     // Transform database messages to match component interface
-    const messages = dbMessages.map(msg => ({
+    const messages = session.messages.map(msg => ({
       id: msg.id,
       role: msg.role as "user" | "assistant",
       content: msg.content,
