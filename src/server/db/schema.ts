@@ -313,6 +313,37 @@ export const webAnalysis = pgTable(
   ]
 );
 
+// Prompts table for prompt management
+export const prompts = pgTable(
+  "prompts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    content: text("content").notNull(),
+    category: varchar("category", { length: 100 }).default("general"),
+    tags: text("tags").array(), // Array of tags for filtering
+    isPublic: boolean("is_public").default(false), // Whether prompt is available to all users in tenant
+    isActive: boolean("is_active").default(true),
+    usageCount: integer("usage_count").default(0),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("prompts_tenant_id_idx").on(table.tenantId),
+    index("prompts_created_by_idx").on(table.createdBy),
+    index("prompts_category_idx").on(table.category),
+    index("prompts_is_public_idx").on(table.isPublic),
+    index("prompts_is_active_idx").on(table.isActive),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userTenantRoles: many(userTenantRoles),
@@ -320,6 +351,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
   feedback: many(feedback),
   webAnalysis: many(webAnalysis),
+  prompts: many(prompts),
 }));
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
@@ -329,6 +361,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   analytics: many(analytics),
   personas: many(personas),
   webAnalysis: many(webAnalysis),
+  prompts: many(prompts),
 }));
 
 export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => ({
@@ -415,6 +448,17 @@ export const webAnalysisRelations = relations(webAnalysis, ({ one }) => ({
   }),
   analyzedByUser: one(users, {
     fields: [webAnalysis.analyzedBy],
+    references: [users.id],
+  }),
+}));
+
+export const promptsRelations = relations(prompts, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [prompts.tenantId],
+    references: [tenants.id],
+  }),
+  createdByUser: one(users, {
+    fields: [prompts.createdBy],
     references: [users.id],
   }),
 }));

@@ -22,6 +22,13 @@
       "when": 1749127181529,
       "tag": "0002_amazing_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749192370078,
+      "tag": "0003_secret_madripoor",
+      "breakpoints": true
     }
   ]
 }

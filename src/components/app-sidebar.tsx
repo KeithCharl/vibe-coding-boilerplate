@@ -16,6 +16,7 @@ import {
   UserCog,
   Globe,
   LayoutDashboard,
+  FileText,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -101,6 +102,12 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
       title: "Personas",
       icon: UserCog,
       href: `/t/${currentTenantId}/personas`,
+      roles: ["viewer", "contributor", "admin"],
+    },
+    {
+      title: "Prompts",
+      icon: FileText,
+      href: `/t/${currentTenantId}/prompts`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
