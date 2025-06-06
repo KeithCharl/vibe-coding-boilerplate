@@ -50,7 +50,7 @@ export default function CreateTenantPage() {
       });
 
       toast.success("Tenant created successfully!");
-      router.push(`/t/${tenant.id}`);
+      router.push("/");
     } catch (error) {
       console.error("Error creating tenant:", error);
       toast.error("Failed to create tenant. Please try again.");

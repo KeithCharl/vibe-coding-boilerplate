@@ -15,6 +15,7 @@ import {
   Menu,
   UserCog,
   Globe,
+  LayoutDashboard,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -65,6 +66,19 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
   const currentTenant = userTenants.find(t => t.tenantId === currentTenantId);
 
   const navigationItems = [
+    {
+      title: "All Tenants",
+      icon: Building2,
+      href: "/",
+      roles: ["viewer", "contributor", "admin"],
+      isMainDashboard: true,
+    },
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: `/t/${currentTenantId}`,
+      roles: ["viewer", "contributor", "admin"],
+    },
     {
       title: "Chat",
       icon: MessageSquare,
@@ -131,10 +145,10 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild className="font-medium text-primary">
                   <Link href="/">
                     <Building2 className="h-4 w-4 mr-2" />
-                    View All Tenants
+                    ← Back to All Tenants
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -167,19 +181,25 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
         <SidebarMenu>
           {navigationItems
             .filter(item => hasPermission(item.roles))
-            .map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={item.title}
-                >
-                  <Link href={item.href}>
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+            .map((item, index) => (
+              <div key={item.href}>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={item.title}
+                    className={item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""}
+                  >
+                    <Link href={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {item.isMainDashboard && (
+                  <div className="border-b border-border mb-2"></div>
+                )}
+              </div>
             ))}
         </SidebarMenu>
       </SidebarContent>

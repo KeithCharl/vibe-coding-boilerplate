@@ -1,7 +1,7 @@
 import { getDocumentStats } from "@/server/actions/content";
 import { getChatSessions } from "@/server/actions/chat";
 import { getFeedbackStats } from "@/server/actions/feedback";
-import { requireAuth } from "@/server/actions/auth";
+import { requireAuth, getTenant } from "@/server/actions/auth";
 import Link from "next/link";
 import { 
   MessageSquare, 
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 interface TenantDashboardProps {
   params: Promise<{ tenantId: string }>;
@@ -25,8 +26,9 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
   // Ensure user has access to this tenant
   await requireAuth(tenantId, "viewer");
 
-  // Fetch dashboard stats
-  const [docStats, chatSessions, feedbackStats] = await Promise.all([
+  // Fetch tenant info and dashboard stats
+  const [tenant, docStats, chatSessions, feedbackStats] = await Promise.all([
+    getTenant(tenantId),
     getDocumentStats(tenantId),
     getChatSessions(tenantId),
     getFeedbackStats(tenantId).catch(() => ({
@@ -41,11 +43,27 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your knowledge base and AI interactions
-        </p>
+      <div className="space-y-4">
+        <BreadcrumbNav 
+          items={[
+            { label: tenant.name, href: `/t/${tenantId}` },
+            { label: "Dashboard" }
+          ]} 
+        />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Overview of your knowledge base and AI interactions
+            </p>
+          </div>
+          <Button variant="outline" asChild>
+            <Link href="/" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              All Tenants
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { db } from "@/server/db";
 import { userTenantRoles, tenants, users } from "@/server/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export type UserRole = "viewer" | "contributor" | "admin";
@@ -128,6 +128,71 @@ export async function createTenant(data: {
     tenantId: tenant.id,
     role: "admin",
   });
+
+  return tenant;
+}
+
+/**
+ * Update tenant details (admin only)
+ */
+export async function updateTenant(
+  tenantId: string,
+  data: {
+    name?: string;
+    slug?: string;
+    description?: string;
+    systemPrompt?: string;
+    tokenCap?: number;
+  }
+) {
+  await requireAuth(tenantId, "admin");
+
+  // If slug is being updated, check if it's unique
+  if (data.slug) {
+    const existingTenant = await db
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(and(eq(tenants.slug, data.slug), ne(tenants.id, tenantId)))
+      .limit(1);
+
+    if (existingTenant.length > 0) {
+      throw new Error("Slug is already taken");
+    }
+  }
+
+  const updateData: any = {
+    ...data,
+    updatedAt: new Date(),
+  };
+
+  const [updatedTenant] = await db
+    .update(tenants)
+    .set(updateData)
+    .where(eq(tenants.id, tenantId))
+    .returning();
+
+  if (!updatedTenant) {
+    throw new Error("Tenant not found");
+  }
+
+  return updatedTenant;
+}
+
+/**
+ * Get tenant details
+ */
+export async function getTenant(tenantId: string) {
+  await requireAuth(tenantId, "viewer");
+
+  const [tenant] = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.id, tenantId))
+    .limit(1);
+
+  if (!tenant) {
+    throw new Error("Tenant not found");
+  }
 
   return tenant;
 }
