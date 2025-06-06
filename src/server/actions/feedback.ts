@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { feedback, chatMessages, analytics } from "@/server/db/schema";
+import { feedback, chatMessages, chatSessions, analytics, users } from "@/server/db/schema";
 import { eq, and, desc, avg, count } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import { revalidatePath } from "next/cache";
@@ -134,13 +134,16 @@ export async function getMessageFeedback(messageId: string) {
  * Get all feedback for a tenant (admin only)
  */
 export async function getTenantFeedback(tenantId: string) {
-  await requireAuth(tenantId, "admin");
+  await requireAuth(tenantId, "contributor");
 
   const tenantFeedback = await db
     .select({
       id: feedback.id,
       messageId: feedback.messageId,
       userId: feedback.userId,
+      userName: users.name,
+      userEmail: users.email,
+      userImage: users.image,
       rating: feedback.rating,
       comment: feedback.comment,
       createdAt: feedback.createdAt,
@@ -148,6 +151,9 @@ export async function getTenantFeedback(tenantId: string) {
     })
     .from(feedback)
     .innerJoin(chatMessages, eq(feedback.messageId, chatMessages.id))
+    .innerJoin(chatSessions, eq(chatMessages.sessionId, chatSessions.id))
+    .innerJoin(users, eq(feedback.userId, users.id))
+    .where(eq(chatSessions.tenantId, tenantId))
     .orderBy(desc(feedback.createdAt));
 
   return tenantFeedback;
@@ -167,13 +173,12 @@ export async function getFeedbackStats(tenantId: string) {
     })
     .from(feedback)
     .innerJoin(chatMessages, eq(feedback.messageId, chatMessages.id))
-    .innerJoin(
-      db
-        .select({ sessionId: chatMessages.sessionId })
-        .from(chatMessages)
-        .where(eq(chatMessages.role, "assistant"))
-        .as("assistant_messages"),
-      eq(chatMessages.id, chatMessages.id)
+    .innerJoin(chatSessions, eq(chatMessages.sessionId, chatSessions.id))
+    .where(
+      and(
+        eq(chatSessions.tenantId, tenantId),
+        eq(chatMessages.role, "assistant")
+      )
     );
 
   // Get rating distribution
@@ -184,6 +189,13 @@ export async function getFeedbackStats(tenantId: string) {
     })
     .from(feedback)
     .innerJoin(chatMessages, eq(feedback.messageId, chatMessages.id))
+    .innerJoin(chatSessions, eq(chatMessages.sessionId, chatSessions.id))
+    .where(
+      and(
+        eq(chatSessions.tenantId, tenantId),
+        eq(chatMessages.role, "assistant")
+      )
+    )
     .groupBy(feedback.rating)
     .orderBy(feedback.rating);
 
@@ -197,7 +209,13 @@ export async function getFeedbackStats(tenantId: string) {
     })
     .from(feedback)
     .innerJoin(chatMessages, eq(feedback.messageId, chatMessages.id))
-    .where(eq(chatMessages.role, "assistant"))
+    .innerJoin(chatSessions, eq(chatMessages.sessionId, chatSessions.id))
+    .where(
+      and(
+        eq(chatSessions.tenantId, tenantId),
+        eq(chatMessages.role, "assistant")
+      )
+    )
     .orderBy(desc(feedback.createdAt))
     .limit(10);
 

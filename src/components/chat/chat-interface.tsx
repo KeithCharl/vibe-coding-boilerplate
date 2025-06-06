@@ -6,8 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Bot, User, ThumbsUp, ThumbsDown } from "lucide-react";
-import { sendMessage } from "@/server/actions/chat";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Send, Bot, User, ThumbsUp, ThumbsDown, Edit2, Check, X } from "lucide-react";
+import { sendMessage, updateChatSession } from "@/server/actions/chat";
 import { submitFeedback } from "@/server/actions/feedback";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -25,18 +35,39 @@ interface ChatInterfaceProps {
   sessionId: string;
   tenantId: string;
   initialMessages: Message[];
+  initialTitle: string;
 }
 
-export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInterfaceProps) {
+export function ChatInterface({ sessionId, tenantId, initialMessages, initialTitle }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number>(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [selectedMessageId, setSelectedMessageId] = useState<string>("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  
+  // Title editing state
+  const [title, setTitle] = useState(initialTitle);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState(initialTitle);
+  const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +96,9 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
           createdAt: result.message.createdAt ? new Date(result.message.createdAt) : new Date(),
         };
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // If this was the first message, the title might have been auto-generated
+        // We'll refresh the page data on next navigation to pick up the new title
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -74,14 +108,87 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
     }
   };
 
-  const handleFeedback = async (messageId: string, rating: number) => {
+  const handleEditTitle = () => {
+    setEditTitleValue(title);
+    setIsEditingTitle(true);
+  };
+
+  const handleSaveTitle = async () => {
+    if (editTitleValue.trim() === title) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    if (!editTitleValue.trim()) {
+      toast.error("Title cannot be empty");
+      return;
+    }
+
     try {
-      await submitFeedback({ messageId, rating });
-      toast.success("Feedback submitted");
+      setIsUpdatingTitle(true);
+      await updateChatSession(sessionId, { title: editTitleValue.trim() });
+      setTitle(editTitleValue.trim());
+      setIsEditingTitle(false);
+      toast.success("Title updated successfully");
+    } catch (error) {
+      console.error("Failed to update title:", error);
+      toast.error("Failed to update title");
+    } finally {
+      setIsUpdatingTitle(false);
+    }
+  };
+
+  const handleCancelEditTitle = () => {
+    setEditTitleValue(title);
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSaveTitle();
+    } else if (e.key === "Escape") {
+      handleCancelEditTitle();
+    }
+  };
+
+  const handleFeedback = async (messageId: string, rating: number) => {
+    setSelectedMessageId(messageId);
+    setFeedbackRating(rating);
+    setShowFeedbackDialog(true);
+  };
+
+  const submitFeedbackWithComment = async () => {
+    if (!selectedMessageId) return;
+
+    try {
+      setIsSubmittingFeedback(true);
+      await submitFeedback({ 
+        messageId: selectedMessageId, 
+        rating: feedbackRating,
+        comment: feedbackComment.trim() || undefined
+      });
+      
+      const feedbackType = feedbackRating > 0 ? "positive" : "negative";
+      toast.success(`${feedbackType} feedback submitted${feedbackComment.trim() ? " with comment" : ""}`);
+      
+      // Reset state
+      setShowFeedbackDialog(false);
+      setFeedbackComment("");
+      setSelectedMessageId("");
+      setFeedbackRating(0);
     } catch (error) {
       console.error("Failed to submit feedback:", error);
       toast.error("Failed to submit feedback");
+    } finally {
+      setIsSubmittingFeedback(false);
     }
+  };
+
+  const cancelFeedback = () => {
+    setShowFeedbackDialog(false);
+    setFeedbackComment("");
+    setSelectedMessageId("");
+    setFeedbackRating(0);
   };
 
   return (
@@ -89,7 +196,52 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
       {/* Header */}
       <div className="border-b p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Chat Session</h1>
+          {/* Editable Title */}
+          <div className="flex items-center gap-2 flex-1 mr-4">
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  ref={titleInputRef}
+                  value={editTitleValue}
+                  onChange={(e) => setEditTitleValue(e.target.value)}
+                  onKeyDown={handleTitleKeyDown}
+                  className="text-xl font-semibold"
+                  disabled={isUpdatingTitle}
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSaveTitle}
+                  disabled={isUpdatingTitle}
+                  className="shrink-0"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelEditTitle}
+                  disabled={isUpdatingTitle}
+                  className="shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-1">
+                <h1 className="text-xl font-semibold truncate">{title}</h1>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleEditTitle}
+                  className="shrink-0 h-8 w-8 p-0"
+                  title="Edit title"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          
           <div className="flex items-center gap-4">
             <PersonaSelector tenantId={tenantId} sessionId={sessionId} />
             <Button 
@@ -136,7 +288,8 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
                         size="sm"
                         variant="ghost"
                         onClick={() => handleFeedback(message.id, 1)}
-                        className="h-6 w-6 p-0"
+                        className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-700"
+                        title="Thumbs up"
                       >
                         <ThumbsUp className="h-3 w-3" />
                       </Button>
@@ -144,7 +297,8 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
                         size="sm"
                         variant="ghost"
                         onClick={() => handleFeedback(message.id, -1)}
-                        className="h-6 w-6 p-0"
+                        className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-700"
+                        title="Thumbs down"
                       >
                         <ThumbsDown className="h-3 w-3" />
                       </Button>
@@ -201,6 +355,64 @@ export function ChatInterface({ sessionId, tenantId, initialMessages }: ChatInte
           </Button>
         </form>
       </div>
+
+      {/* Feedback Dialog */}
+      <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {feedbackRating > 0 ? (
+                <ThumbsUp className="h-5 w-5 text-green-600" />
+              ) : (
+                <ThumbsDown className="h-5 w-5 text-red-600" />
+              )}
+              Provide Feedback
+            </DialogTitle>
+            <DialogDescription>
+              {feedbackRating > 0 
+                ? "What did you like about this response?" 
+                : "What could be improved about this response?"
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="feedback-comment">
+                Comment (optional)
+              </Label>
+              <Textarea
+                id="feedback-comment"
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                placeholder={feedbackRating > 0 
+                  ? "Tell us what worked well..." 
+                  : "Tell us what could be better..."
+                }
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={cancelFeedback}
+              disabled={isSubmittingFeedback}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={submitFeedbackWithComment}
+              disabled={isSubmittingFeedback}
+              className={feedbackRating > 0 ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
+            >
+              {isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

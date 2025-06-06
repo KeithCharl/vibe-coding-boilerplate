@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChatSessionCard } from "@/components/chat/chat-session-card";
 
 interface ChatPageProps {
   params: Promise<{ tenantId: string }>;
@@ -58,21 +59,11 @@ export default async function ChatPage({ params }: ChatPageProps) {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sessions.map((session) => (
-            <Card key={session.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{session.title}</CardTitle>
-                <CardDescription>
-                  {session.updatedAt ? new Date(session.updatedAt).toLocaleDateString() : 'No date'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full">
-                  <Link href={`/t/${tenantId}/chat/${session.id}`}>
-                    Continue Chat
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <ChatSessionCard 
+              key={session.id} 
+              session={session}
+              tenantId={tenantId}
+            />
           ))}
         </div>
       )}

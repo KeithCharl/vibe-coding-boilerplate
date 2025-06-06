@@ -120,6 +120,27 @@ export async function getChatMessages(sessionId: string) {
 }
 
 /**
+ * Generate a title for a chat session based on the first user message
+ */
+export async function generateChatTitle(message: string): Promise<string> {
+  try {
+    // Use a simple approach - take first few words or summarize
+    const words = message.trim().split(/\s+/);
+    
+    if (words.length <= 4) {
+      return message.substring(0, 50);
+    }
+    
+    // For longer messages, try to create a meaningful title
+    const shortTitle = words.slice(0, 4).join(" ");
+    return shortTitle.length > 50 ? shortTitle.substring(0, 47) + "..." : shortTitle;
+  } catch (error) {
+    console.error("Failed to generate title:", error);
+    return "New Chat";
+  }
+}
+
+/**
  * Send a message and get AI response with RAG
  */
 export async function sendMessage(sessionId: string, message: string) {
@@ -129,7 +150,8 @@ export async function sendMessage(sessionId: string, message: string) {
   const [session] = await db
     .select({ 
       userId: chatSessions.userId, 
-      tenantId: chatSessions.tenantId 
+      tenantId: chatSessions.tenantId,
+      title: chatSessions.title 
     })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
@@ -139,6 +161,9 @@ export async function sendMessage(sessionId: string, message: string) {
     throw new Error("Access denied");
   }
 
+  // Check if this is the first message (session still has default title)
+  const isFirstMessage = session.title === "New Chat";
+
   try {
     // Store user message
     await db.insert(chatMessages).values({
@@ -146,6 +171,15 @@ export async function sendMessage(sessionId: string, message: string) {
       role: "user",
       content: message,
     });
+
+    // If this is the first message, generate a title
+    if (isFirstMessage) {
+      const title = await generateChatTitle(message);
+      await db
+        .update(chatSessions)
+        .set({ title })
+        .where(eq(chatSessions.id, sessionId));
+    }
 
     // Get combined system prompt from personas or fallback to tenant prompt
     let systemPrompt: string;
