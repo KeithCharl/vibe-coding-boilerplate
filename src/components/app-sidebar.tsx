@@ -17,6 +17,7 @@ import {
   Globe,
   LayoutDashboard,
   FileText,
+  Shield,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -58,9 +59,10 @@ interface AppSidebarProps {
     role: "viewer" | "contributor" | "admin";
   }>;
   currentTenantId?: string;
+  globalRole?: "super_admin" | "tenant_admin" | "user";
 }
 
-export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSidebarProps) {
+export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole }: AppSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -178,6 +180,17 @@ export function AppSidebar({ user, userTenants = [], currentTenantId }: AppSideb
                     Create Tenant
                   </Link>
                 </DropdownMenuItem>
+                {(globalRole === "super_admin" || globalRole === "tenant_admin") && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Administration
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

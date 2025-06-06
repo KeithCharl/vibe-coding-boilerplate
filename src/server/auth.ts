@@ -13,6 +13,7 @@ import {
   sessions,
   users,
   verificationTokens,
+  globalUserRoles,
 } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -66,7 +67,25 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     signIn: async ({ user, account, profile }) => {},
-    createUser: async ({ user }) => {},
+    createUser: async ({ user }) => {
+      // Assign default global role to new users
+      try {
+        const existingRole = await db
+          .select()
+          .from(globalUserRoles)
+          .where(eq(globalUserRoles.userId, user.id))
+          .limit(1);
+
+        if (existingRole.length === 0) {
+          await db.insert(globalUserRoles).values({
+            userId: user.id,
+            role: "user", // Default role for new users
+          });
+        }
+      } catch (error) {
+        console.error("Failed to assign global role to new user:", error);
+      }
+    },
   },
   adapter: DrizzleAdapter(db, {
     usersTable: users,

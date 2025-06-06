@@ -94,6 +94,50 @@ export const verificationTokens = pgTable(
 // Role enum for RBAC
 export const roleEnum = pgEnum("role", ["viewer", "contributor", "admin"]);
 
+// Global role enum for system-wide permissions
+export const globalRoleEnum = pgEnum("global_role", ["super_admin", "tenant_admin", "user"]);
+
+// Global user roles table for system-wide permissions
+export const globalUserRoles = pgTable(
+  "global_user_roles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(), // One global role per user
+    role: globalRoleEnum("role").notNull().default("user"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("global_user_roles_user_id_idx").on(table.userId),
+  ]
+);
+
+// User management audit log
+export const userAuditLog = pgTable(
+  "user_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    performedBy: varchar("performed_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    targetUserId: varchar("target_user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    action: varchar("action", { length: 100 }).notNull(), // 'created', 'updated', 'deleted', 'role_changed', etc.
+    details: jsonb("details"), // Store additional context about the action
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("user_audit_log_performed_by_idx").on(table.performedBy),
+    index("user_audit_log_target_user_idx").on(table.targetUserId),
+    index("user_audit_log_action_idx").on(table.action),
+    index("user_audit_log_created_at_idx").on(table.createdAt),
+  ]
+);
+
 // Tenants table for multi-tenancy
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -352,13 +396,19 @@ export const prompts = pgTable(
 );
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   userTenantRoles: many(userTenantRoles),
+  globalRole: one(globalUserRoles, {
+    fields: [users.id],
+    references: [globalUserRoles.userId],
+  }),
   chatSessions: many(chatSessions),
   documents: many(documents),
   feedback: many(feedback),
   webAnalysis: many(webAnalysis),
   prompts: many(prompts),
+  auditLogsPerformed: many(userAuditLog, { relationName: "performedAudits" }),
+  auditLogsTarget: many(userAuditLog, { relationName: "targetAudits" }),
 }));
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
@@ -467,5 +517,25 @@ export const promptsRelations = relations(prompts, ({ one }) => ({
   createdByUser: one(users, {
     fields: [prompts.createdBy],
     references: [users.id],
+  }),
+}));
+
+export const globalUserRolesRelations = relations(globalUserRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [globalUserRoles.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userAuditLogRelations = relations(userAuditLog, ({ one }) => ({
+  performedByUser: one(users, {
+    fields: [userAuditLog.performedBy],
+    references: [users.id],
+    relationName: "performedAudits",
+  }),
+  targetUser: one(users, {
+    fields: [userAuditLog.targetUserId],
+    references: [users.id],
+    relationName: "targetAudits",
   }),
 }));

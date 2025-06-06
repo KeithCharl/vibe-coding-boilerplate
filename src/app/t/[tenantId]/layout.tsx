@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { getUserTenants } from "@/server/actions/auth";
+import { getCurrentUserRole } from "@/server/actions/user-management";
 import { redirect } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -23,6 +24,7 @@ export default async function TenantLayout({
 
   const userTenants = await getUserTenants();
   const currentTenant = userTenants.find(t => t.tenantId === tenantId);
+  const currentUserRole = await getCurrentUserRole();
 
   if (!currentTenant) {
     redirect("/");
@@ -34,6 +36,7 @@ export default async function TenantLayout({
         user={session.user}
         userTenants={userTenants}
         currentTenantId={tenantId}
+        globalRole={currentUserRole?.globalRole}
       />
       <SidebarInset>
         <main className="flex-1 overflow-auto">

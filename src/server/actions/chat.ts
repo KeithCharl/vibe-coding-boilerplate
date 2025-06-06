@@ -14,7 +14,7 @@ import {
 } from "@/server/db/schema";
 import { getCombinedSystemPrompt } from "./personas";
 import { eq, and, desc, sql, isNotNull } from "drizzle-orm";
-import { requireAuth } from "./auth";
+import { requireAuth, getUserRole } from "./auth";
 import { embedQuery } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 
@@ -311,7 +311,10 @@ export async function updateChatSessionTitle(sessionId: string, title: string) {
  */
 export async function deleteChatSession(sessionId: string) {
   const session = await db
-    .select({ tenantId: chatSessions.tenantId })
+    .select({ 
+      tenantId: chatSessions.tenantId,
+      userId: chatSessions.userId 
+    })
     .from(chatSessions)
     .where(eq(chatSessions.id, sessionId))
     .limit(1);
@@ -320,7 +323,13 @@ export async function deleteChatSession(sessionId: string) {
     throw new Error("Chat session not found");
   }
 
-  await requireAuth(session[0].tenantId, "admin");
+  const user = await requireAuth(session[0].tenantId, "viewer");
+  const userRole = await getUserRole(session[0].tenantId);
+  
+  // Users can delete their own sessions, admins can delete any session
+  if (session[0].userId !== user.id && userRole !== "admin") {
+    throw new Error("You can only delete your own chat sessions");
+  }
 
   await db.delete(chatSessions).where(eq(chatSessions.id, sessionId));
 
