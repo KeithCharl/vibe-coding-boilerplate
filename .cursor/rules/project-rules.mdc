@@ -3,6 +3,9 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Project description
+Provide a detailed description of your app, including the most important features.
+
 # Architecture
 - Nextjs 15 with App Router
 - Drizzle ORM for Database Schema
