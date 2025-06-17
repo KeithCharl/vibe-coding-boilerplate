@@ -68,7 +68,20 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
 
   const currentTenant = userTenants.find(t => t.tenantId === currentTenantId);
 
-  const navigationItems = [
+  interface NavigationItem {
+    title: string;
+    icon: any;
+    href: string;
+    roles: string[];
+    isMainDashboard?: boolean;
+    subItems?: Array<{
+      title: string;
+      href: string;
+      roles: string[];
+    }>;
+  }
+
+  const navigationItems: NavigationItem[] = [
     {
       title: "All Tenants",
       icon: Building2,
@@ -93,6 +106,18 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
       icon: BookOpen,
       href: `/t/${currentTenantId}/kb`,
       roles: ["viewer", "contributor", "admin"],
+      subItems: [
+        {
+          title: "Documents",
+          href: `/t/${currentTenantId}/kb`,
+          roles: ["viewer", "contributor", "admin"],
+        },
+        {
+          title: "References",
+          href: `/t/${currentTenantId}/kb/references`,
+          roles: ["contributor", "admin"],
+        },
+      ],
     },
     {
       title: "Web Analysis",
@@ -215,6 +240,21 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+                  {item.subItems && item.subItems.length > 0 && (
+                    <SidebarMenuSub>
+                      {item.subItems
+                        .filter(subItem => hasPermission(subItem.roles))
+                        .map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                              <Link href={subItem.href}>
+                                <span>{subItem.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                    </SidebarMenuSub>
+                  )}
                 </SidebarMenuItem>
                 {item.isMainDashboard && (
                   <div className="border-b border-border mb-2"></div>

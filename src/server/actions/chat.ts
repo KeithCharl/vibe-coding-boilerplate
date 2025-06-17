@@ -16,6 +16,7 @@ import { getCombinedSystemPrompt } from "./personas";
 import { eq, and, desc, sql, isNotNull, lt } from "drizzle-orm";
 import { requireAuth, getUserRole } from "./auth";
 import { embedQuery } from "@/lib/embeddings";
+import { searchAcrossLinkedKBsSimple } from "./simple-direct-search";
 import { revalidatePath } from "next/cache";
 
 // Initialize OpenAI Chat model
@@ -25,16 +26,22 @@ const llm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
-// RAG prompt template
+// RAG prompt template with enhanced source attribution
 const ragPromptTemplate = PromptTemplate.fromTemplate(`
-You are a helpful AI assistant with access to a knowledge base. Use the provided context to answer the user's question. If the context doesn't contain enough information, say so and provide what you can based on the available context.
+You are a helpful AI assistant with access to multiple knowledge bases. Use the provided context to answer the user's question. When referencing information, cite the source knowledge base in brackets.
 
 System Instructions: {systemPrompt}
 
-Context from knowledge base:
+Context from knowledge bases:
 {context}
 
 User Question: {question}
+
+Instructions:
+- Provide a comprehensive answer using information from all relevant sources
+- When citing information, include the source in brackets like [Primary KB] or [Project Management KB]
+- If you combine information from multiple sources, clearly indicate this
+- If the context doesn't contain enough information, say so and provide what you can based on the available context
 
 Answer:
 `);
@@ -158,83 +165,49 @@ export async function sendMessage(sessionId: string, message: string) {
     tenant[0]?.systemPrompt || 
     "You are a helpful AI assistant with access to the knowledge base.";
 
-  // Generate embedding for the user query
-  const queryEmbedding = await embedQuery(message);
+  // Generate embedding for cross-KB search
+  const embedding = await embedQuery(message);
+  const embeddingString = `[${embedding.join(",")}]`;
   
-  if (!queryEmbedding || queryEmbedding.length === 0) {
-    throw new Error("Failed to generate query embedding");
-  }
-
-  console.log(`🧠 Generated query embedding with ${queryEmbedding.length} dimensions`);
-
-  // Convert embedding to string format for SQL
-  const embeddingString = `[${queryEmbedding.join(',')}]`;
-
-  // Use pgvector for similarity search on documents (only where embeddings exist)
-  const relevantDocs = await db
-    .select({
-      id: documents.id,
-      content: documents.content,
-      name: documents.name,
-      similarity: sql<number>`1 - (${documents.embedding} <=> ${embeddingString}::vector)`.as('similarity')
-    })
-    .from(documents)
-    .where(
-      and(
-        eq(documents.tenantId, session[0].tenantId),
-        eq(documents.isActive, true),
-        isNotNull(documents.embedding) // Only include documents with embeddings
-      )
-    )
-    .orderBy(sql`${documents.embedding} <=> ${embeddingString}::vector`)
-    .limit(10);
-
-  // Use pgvector for similarity search on web analysis (only where embeddings exist)
-  const relevantWebAnalyses = await db
-    .select({
-      id: webAnalysis.id,
-      content: webAnalysis.content,
-      name: webAnalysis.title,
-      similarity: sql<number>`1 - (${webAnalysis.embedding} <=> ${embeddingString}::vector)`.as('similarity')
-    })
-    .from(webAnalysis)
-    .where(
-      and(
-        eq(webAnalysis.tenantId, session[0].tenantId),
-        eq(webAnalysis.status, "success"),
-        isNotNull(webAnalysis.embedding) // Only include analyses with embeddings
-      )
-    )
-    .orderBy(sql`${webAnalysis.embedding} <=> ${embeddingString}::vector`)
-    .limit(5);
-
-  // Combine and take top 5 results
-  const allSources = [
-    ...relevantDocs.map(doc => ({ ...doc, type: "document" as const })),
-    ...relevantWebAnalyses.map(analysis => ({ ...analysis, type: "web-analysis" as const }))
-  ];
-
-  const topSources = allSources
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 5);
-
-  console.log(`🔍 Found ${relevantDocs.length} documents and ${relevantWebAnalyses.length} web analyses in tenant`);
-  console.log(`📝 Query: "${message}"`);
-  console.log(`🎯 Top ${topSources.length} similar sources:`, 
-    topSources.map(source => ({ 
-      type: source.type,
-      similarity: source.similarity.toFixed(3), 
-      preview: source.content.substring(0, 100) + "..."
-    }))
+  // Use simple cross-KB search (treat linked KBs as extensions)
+  console.log(`🔍 Starting cross-KB search for tenant ${session[0].tenantId}`);
+  const crossKBResults = await searchAcrossLinkedKBsSimple(
+    session[0].tenantId,
+    embeddingString,
+    15
   );
 
-  // Prepare context for the prompt with source type information
-  const context = topSources
-    .map((source, index) => {
-      const sourceLabel = source.type === "web-analysis" ? "Web Content" : "Document";
-      return `[${index + 1}] ${sourceLabel} - ${source.name}:\n${source.content}`;
-    })
-    .join("\n\n");
+  console.log(`📊 Cross-KB search results: ${crossKBResults.documents.length} documents, ${crossKBResults.webAnalyses.length} web analyses`);
+  console.log(`🔗 Linked KBs: ${crossKBResults.linkedKBCount}`);
+
+  // Combine and format context with source attribution
+  const contextParts: string[] = [];
+
+  if (crossKBResults.documents.length > 0) {
+    contextParts.push("**Relevant Documents:**");
+    crossKBResults.documents.forEach((doc, index) => {
+      const kbLabel = doc.tenantId === session[0].tenantId ? "Current KB" : "Linked KB";
+      contextParts.push(
+        `${index + 1}. [${kbLabel}] ${doc.name}: ${doc.content.substring(0, 500)}...`
+      );
+    });
+  }
+
+  if (crossKBResults.webAnalyses.length > 0) {
+    contextParts.push("\n**Relevant Web Content:**");
+    crossKBResults.webAnalyses.forEach((analysis, index) => {
+      const kbLabel = analysis.tenantId === session[0].tenantId ? "Current KB" : "Linked KB";
+      contextParts.push(
+        `${index + 1}. [${kbLabel}] ${analysis.title}: ${analysis.content.substring(0, 500)}...`
+      );
+    });
+  }
+
+  const context = contextParts.join("\n");
+  const totalSources = crossKBResults.documents.length + crossKBResults.webAnalyses.length;
+
+  console.log(`📝 Query: "${message}"`);
+  console.log(`🎯 Using ${totalSources} sources from ${crossKBResults.linkedKBCount + 1} knowledge bases`);
 
   // Generate AI response using RAG
   const prompt = await ragPromptTemplate.format({
@@ -254,8 +227,11 @@ export async function sendMessage(sessionId: string, message: string) {
       role: "assistant",
       content: aiResponse,
       metadata: {
-        contextDocs: topSources.map(source => source.id),
-        similarities: topSources.map(source => source.similarity),
+        contextDocs: crossKBResults.documents.map(doc => doc.id),
+        contextWebAnalyses: crossKBResults.webAnalyses.map(analysis => analysis.id),
+        documentSimilarities: crossKBResults.documents.map(doc => doc.similarity),
+        webAnalysisSimilarities: crossKBResults.webAnalyses.map(analysis => analysis.similarity),
+        linkedKBCount: crossKBResults.linkedKBCount,
         model: "gpt-4o-mini",
       },
     })
@@ -270,7 +246,10 @@ export async function sendMessage(sessionId: string, message: string) {
       sessionId,
       messageId: userMessage.id,
       responseId: aiMessage.id,
-      contextDocsUsed: topSources.length,
+      contextDocsUsed: totalSources,
+      documentsUsed: crossKBResults.documents.length,
+      webAnalysesUsed: crossKBResults.webAnalyses.length,
+      linkedKBsUsed: crossKBResults.linkedKBCount,
       queryLength: message.length,
       responseLength: aiResponse.length,
     },

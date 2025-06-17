@@ -1,0 +1,60 @@
+{
+  "id": "dora.dev_1750161213647_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/research/2020/",
+  "title": "DORA | DORA Research: 2020",
+  "content": "In 2020, DORA didn’t write an Accelerate State of DevOps Report. We did, however, produce a whitepaper which explores the return on investment (ROI) that can be realized through a DevOps transformation project. Download The ROI of DevOps Whitepaper. Technology transformations can yield substantial returns for organizations. The paper encourages a focus on value-driven approaches, reinvesting gains from efficiency improvements into innovation and value creation. It also highlights the positive impact on employee morale and organizational culture when teams spend less time on rework and more time on value-added development. Technology transformation can drive significant value and innovation for businesses, moving IT from a cost center to a value driver. Elite performers, who excel in software development speed and stability, reap the most benefits. The value includes not only cost savings but also the value gained from avoiding unnecessary rework and reinvesting in new features. Organizations should prioritize retaining and training existing talent, as it is more cost-effective and preserves institutional knowledge. The ability to experiment frequently is crucial for delivering valuable features to customers. Reducing downtime and change failure rates are key to minimizing costs and maximizing returns. Investing in a transformation can lead to substantial returns, making it a worthwhile strategic decision for businesses. Download The ROI of DevOps Whitepaper.",
+  "timestamp": "2025-06-17T11:53:33.647Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 212,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://dora.dev/research/2020/the-roi-of-devops-transformation-google-cloud-dora.pdf",
+      "https://dora.dev/research/team/",
+      "https://dora.dev/research/ai/",
+      "https://dora.dev/research/2024/",
+      "https://dora.dev/research/2023/",
+      "https://dora.dev/research/2022/",
+      "https://dora.dev/research/2021/",
+      "https://dora.dev/research/2020/",
+      "https://dora.dev/research/2019/",
+      "https://dora.dev/research/2018/",
+      "https://dora.dev/research/2017/",
+      "https://dora.dev/research/2016/",
+      "https://dora.dev/research/2015/",
+      "https://dora.dev/research/2014/",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/research/2020/whitepaper-roi.png",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: DORA Research: 2020"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1750161213647_DORA_DORA_Research_2020.json"
+}

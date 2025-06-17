@@ -1,0 +1,46 @@
+{
+  "id": "dora.dev_1750161172798_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/survey/",
+  "title": "DORA | The 2025 DORA Survey",
+  "content": "The DORA survey is open nowlink click to copy link Take the 2025 DORA Survey The DORA research program is dedicated to helping technology teams get better at getting better. That journey often starts with a moment of reflection. We invite you to take 10 minutes for that reflection with the 2025 DORA Survey. Participants often tell us the survey itself is a valuable self-assessment, sparking immediate ideas for how their team can improve. Your anonymous contribution will also power the industry’s most trusted research on software delivery performance. This year, we’re exploring crucial topics like AI integration, platform engineering, and developer well-being. By participating, you: Discover potential improvements for your team just by taking the survey. Shape the industry’s understanding of what defines elite performance in 2025. Help create the benchmark you and your peers will use to drive change. This research is strongest when it includes diverse perspectives. Whether you’re a Software Engineer, Data Scientist, Product Manager, QA Developer, or anyone else who participates in the creation and delivery of software your voice is critical. Thank you for helping us all get better at getting better. Take the 2025 DORA Survey",
+  "timestamp": "2025-06-17T11:52:52.798Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 193,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/survey/survey-banner.png",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: The DORA survey is open nowlink click to copy link"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1750161172798_DORA_The_2025_DORA_Survey.json"
+}

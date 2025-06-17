@@ -564,6 +564,176 @@ export const webScrapingJobRuns = pgTable(
   ]
 );
 
+// Cross-Knowledge Base Reference System Tables
+
+// Knowledge Base Connection Templates (for reusable configurations)
+export const kbConnectionTemplates = pgTable(
+  "kb_connection_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description"),
+    // Template configuration
+    defaultWeight: real("default_weight").default(1.0),
+    defaultAccessLevel: varchar("default_access_level", { length: 20 }).default("read"),
+    includeTags: text("include_tags").array(),
+    excludeTags: text("exclude_tags").array(),
+    // Admin settings
+    isSystemTemplate: boolean("is_system_template").default(false), // Created by super admin
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("kb_templates_name_idx").on(table.name),
+    index("kb_templates_created_by_idx").on(table.createdBy),
+  ]
+);
+
+// Enhanced Knowledge Base References with admin controls
+export const knowledgeBaseReferences = pgTable(
+  "knowledge_base_references",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sourceTenantId: uuid("source_tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    targetTenantId: uuid("target_tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    
+    // Basic configuration
+    name: text("name").notNull(),
+    description: text("description"),
+    
+    // Access and filtering controls
+    accessLevel: varchar("access_level", { length: 20 }).notNull().default("read"), // 'read', 'search_only'
+    includeTags: text("include_tags").array(),
+    excludeTags: text("exclude_tags").array(),
+    includeDocumentTypes: text("include_document_types").array(), // ['pdf', 'txt', 'web']
+    excludeDocumentTypes: text("exclude_document_types").array(),
+    
+    // Performance controls
+    weight: real("weight").default(1.0),
+    maxResults: integer("max_results").default(5), // Limit results from this KB
+    minSimilarity: real("min_similarity").default(0.1),
+    
+    // Status and approval
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'active', 'suspended', 'rejected'
+    isActive: boolean("is_active").default(false),
+    
+    // Admin controls
+    autoApprove: boolean("auto_approve").default(false), // For trusted relationships
+    requiresReview: boolean("requires_review").default(true),
+    expiresAt: timestamp("expires_at"), // Optional expiration
+    
+    // Template reference
+    templateId: uuid("template_id").references(() => kbConnectionTemplates.id),
+    
+    // Audit trail
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    approvedBy: varchar("approved_by", { length: 255 })
+      .references(() => users.id),
+    rejectedBy: varchar("rejected_by", { length: 255 })
+      .references(() => users.id),
+    rejectionReason: text("rejection_reason"),
+    
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+    approvedAt: timestamp("approved_at"),
+  },
+  (table) => [
+    index("kb_refs_source_tenant_idx").on(table.sourceTenantId),
+    index("kb_refs_target_tenant_idx").on(table.targetTenantId),
+    index("kb_refs_status_idx").on(table.status),
+    index("kb_refs_template_idx").on(table.templateId),
+    // Prevent duplicate active references
+    index("kb_refs_unique_active").on(table.sourceTenantId, table.targetTenantId, table.status),
+  ]
+);
+
+// Bulk operations for admin management
+export const kbBulkOperations = pgTable(
+  "kb_bulk_operations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operationType: varchar("operation_type", { length: 50 }).notNull(), // 'bulk_approve', 'bulk_create', 'bulk_suspend'
+    tenantIds: text("tenant_ids").array(), // Target tenants
+    templateId: uuid("template_id").references(() => kbConnectionTemplates.id),
+    configuration: jsonb("configuration"), // Operation-specific config
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+    processedCount: integer("processed_count").default(0),
+    totalCount: integer("total_count").default(0),
+    errorLog: jsonb("error_log"),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => [
+    index("kb_bulk_ops_status_idx").on(table.status),
+    index("kb_bulk_ops_created_by_idx").on(table.createdBy),
+    index("kb_bulk_ops_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// Enhanced analytics with admin insights
+export const referenceUsageAnalytics = pgTable(
+  "reference_usage_analytics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referenceId: uuid("reference_id")
+      .notNull()
+      .references(() => knowledgeBaseReferences.id, { onDelete: "cascade" }),
+    querySessionId: uuid("query_session_id")
+      .references(() => chatSessions.id, { onDelete: "set null" }),
+    
+    // Usage metrics
+    documentsRetrieved: integer("documents_retrieved").default(0),
+    relevanceScore: real("relevance_score"),
+    usedInResponse: boolean("used_in_response").default(false),
+    responseQuality: integer("response_quality"), // 1-5 rating if available
+    
+    // Performance metrics
+    queryTimeMs: integer("query_time_ms"),
+    cacheHit: boolean("cache_hit").default(false),
+    
+    // Context
+    queryText: text("query_text"), // For analysis (anonymized if needed)
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("ref_usage_reference_id_idx").on(table.referenceId),
+    index("ref_usage_created_at_idx").on(table.createdAt),
+    index("ref_usage_response_quality_idx").on(table.responseQuality),
+  ]
+);
+
+// Document tags for better filtering
+export const documentTags = pgTable(
+  "document_tags",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    tag: varchar("tag", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("doc_tags_document_id_idx").on(table.documentId),
+    index("doc_tags_tag_idx").on(table.tag),
+    // Prevent duplicate tags per document
+    index("doc_tags_unique").on(table.documentId, table.tag),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   userTenantRoles: many(userTenantRoles),
@@ -578,6 +748,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   prompts: many(prompts),
   auditLogsPerformed: many(userAuditLog, { relationName: "performedAudits" }),
   auditLogsTarget: many(userAuditLog, { relationName: "targetAudits" }),
+  createdTemplates: many(kbConnectionTemplates),
+  createdReferences: many(knowledgeBaseReferences, { relationName: "createdReferences" }),
+  approvedReferences: many(knowledgeBaseReferences, { relationName: "approvedReferences" }),
+  rejectedReferences: many(knowledgeBaseReferences, { relationName: "rejectedReferences" }),
+  bulkOperations: many(kbBulkOperations),
+  usageAnalytics: many(referenceUsageAnalytics),
 }));
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
@@ -588,6 +764,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   personas: many(personas),
   webAnalysis: many(webAnalysis),
   prompts: many(prompts),
+  sourceReferences: many(knowledgeBaseReferences, { relationName: "sourceReferences" }),
+  targetReferences: many(knowledgeBaseReferences, { relationName: "targetReferences" }),
 }));
 
 export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => ({
@@ -601,7 +779,7 @@ export const userTenantRolesRelations = relations(userTenantRoles, ({ one }) => 
   }),
 }));
 
-export const documentsRelations = relations(documents, ({ one }) => ({
+export const documentsRelations = relations(documents, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [documents.tenantId],
     references: [tenants.id],
@@ -610,6 +788,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     fields: [documents.uploadedBy],
     references: [users.id],
   }),
+  tags: many(documentTags),
 }));
 
 export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => ({
@@ -706,5 +885,81 @@ export const userAuditLogRelations = relations(userAuditLog, ({ one }) => ({
     fields: [userAuditLog.targetUserId],
     references: [users.id],
     relationName: "targetAudits",
+  }),
+}));
+
+// Cross-KB Reference Relations
+export const kbConnectionTemplatesRelations = relations(kbConnectionTemplates, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [kbConnectionTemplates.createdBy],
+    references: [users.id],
+  }),
+  references: many(knowledgeBaseReferences),
+  bulkOperations: many(kbBulkOperations),
+}));
+
+export const knowledgeBaseReferencesRelations = relations(knowledgeBaseReferences, ({ one, many }) => ({
+  sourceTenant: one(tenants, {
+    fields: [knowledgeBaseReferences.sourceTenantId],
+    references: [tenants.id],
+    relationName: "sourceReferences",
+  }),
+  targetTenant: one(tenants, {
+    fields: [knowledgeBaseReferences.targetTenantId],
+    references: [tenants.id],
+    relationName: "targetReferences",
+  }),
+  template: one(kbConnectionTemplates, {
+    fields: [knowledgeBaseReferences.templateId],
+    references: [kbConnectionTemplates.id],
+  }),
+  createdByUser: one(users, {
+    fields: [knowledgeBaseReferences.createdBy],
+    references: [users.id],
+    relationName: "createdReferences",
+  }),
+  approvedByUser: one(users, {
+    fields: [knowledgeBaseReferences.approvedBy],
+    references: [users.id],
+    relationName: "approvedReferences",
+  }),
+  rejectedByUser: one(users, {
+    fields: [knowledgeBaseReferences.rejectedBy],
+    references: [users.id],
+    relationName: "rejectedReferences",
+  }),
+  usageAnalytics: many(referenceUsageAnalytics),
+}));
+
+export const kbBulkOperationsRelations = relations(kbBulkOperations, ({ one }) => ({
+  template: one(kbConnectionTemplates, {
+    fields: [kbBulkOperations.templateId],
+    references: [kbConnectionTemplates.id],
+  }),
+  createdByUser: one(users, {
+    fields: [kbBulkOperations.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const referenceUsageAnalyticsRelations = relations(referenceUsageAnalytics, ({ one }) => ({
+  reference: one(knowledgeBaseReferences, {
+    fields: [referenceUsageAnalytics.referenceId],
+    references: [knowledgeBaseReferences.id],
+  }),
+  querySession: one(chatSessions, {
+    fields: [referenceUsageAnalytics.querySessionId],
+    references: [chatSessions.id],
+  }),
+  user: one(users, {
+    fields: [referenceUsageAnalytics.userId],
+    references: [users.id],
+  }),
+}));
+
+export const documentTagsRelations = relations(documentTags, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentTags.documentId],
+    references: [documents.id],
   }),
 }));

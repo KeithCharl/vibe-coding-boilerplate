@@ -3,11 +3,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { db } from "@/server/db";
-import { userTenantRoles, tenants, users } from "@/server/db/schema";
+import { userTenantRoles, tenants, users, globalUserRoles } from "@/server/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export type UserRole = "viewer" | "contributor" | "admin";
+export type GlobalRole = "super_admin" | "tenant_admin" | "user";
 
 /**
  * Get current user session
@@ -286,4 +287,54 @@ export async function removeUserFromTenant(data: {
     );
 
   return { success: true };
+}
+
+/**
+ * Get user's global role
+ */
+export async function getGlobalUserRole(): Promise<GlobalRole | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return null;
+
+  const globalRole = await db
+    .select({ role: globalUserRoles.role })
+    .from(globalUserRoles)
+    .where(eq(globalUserRoles.userId, session.user.id))
+    .limit(1);
+
+  return globalRole[0]?.role || "user";
+}
+
+/**
+ * Check if user has specific global permissions
+ */
+export async function hasGlobalPermission(requiredRole: GlobalRole): Promise<boolean> {
+  const userRole = await getGlobalUserRole();
+  if (!userRole) return false;
+
+  const roleHierarchy: Record<GlobalRole, number> = {
+    user: 1,
+    tenant_admin: 2,
+    super_admin: 3,
+  };
+
+  return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
+}
+
+/**
+ * Require specific global role
+ */
+export async function requireGlobalRole(requiredRole: GlobalRole) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user) {
+    redirect("/auth/signin");
+  }
+
+  const hasAccess = await hasGlobalPermission(requiredRole);
+  if (!hasAccess) {
+    throw new Error("Insufficient global permissions");
+  }
+
+  return session.user;
 } 

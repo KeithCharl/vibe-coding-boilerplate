@@ -1,0 +1,1 @@
+ALTER TABLE "knowledge_base_references" ALTER COLUMN "min_similarity" SET DEFAULT 0.3;

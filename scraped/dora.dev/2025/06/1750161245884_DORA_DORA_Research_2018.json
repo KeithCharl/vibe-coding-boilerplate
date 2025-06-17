@@ -1,0 +1,60 @@
+{
+  "id": "dora.dev_1750161245884_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/research/2018/",
+  "title": "DORA | DORA Research: 2018",
+  "content": "2018 saw the release of the first Accelerate State of DevOps Report independently published by DORA. Read the 2018 report here.",
+  "timestamp": "2025-06-17T11:54:05.884Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 21,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://dora.dev/research/2018/",
+      "https://dora.dev/research/2018/dora-report/",
+      "https://dora.dev/research/2018/questions/",
+      "https://dora.dev/research/team/",
+      "https://dora.dev/research/ai/",
+      "https://dora.dev/research/2024/",
+      "https://dora.dev/research/2023/",
+      "https://dora.dev/research/2022/",
+      "https://dora.dev/research/2021/",
+      "https://dora.dev/research/2020/",
+      "https://dora.dev/research/2019/",
+      "https://dora.dev/research/2017/",
+      "https://dora.dev/research/2016/",
+      "https://dora.dev/research/2015/",
+      "https://dora.dev/research/2014/",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: DORA Research: 2018"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1750161245884_DORA_DORA_Research_2018.json"
+}
