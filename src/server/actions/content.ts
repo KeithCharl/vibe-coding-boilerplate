@@ -1043,4 +1043,172 @@ export async function getDocumentStats(tenantId: string) {
     totalDocuments: stats.length,
     totalChunks: stats.length,
   };
+}
+
+/**
+ * Add content from web scraping to the documents table
+ */
+export async function addWebContentToKnowledge(
+  tenantId: string,
+  url: string,
+  options: {
+    waitForDynamic?: boolean;
+    generateSummary?: boolean;
+    auth?: {
+      type: 'cookies' | 'headers' | 'basic' | 'confluence-api';
+      cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>;
+      headers?: Record<string, string>;
+      username?: string;
+      password?: string;
+      token?: string;
+    };
+  } = {}
+) {
+  console.log(`🕸️ Adding web content to knowledge base: ${url}`);
+  const user = await requireAuth(tenantId, "contributor");
+
+  // Import validation and scraping from web analysis
+  const { validateUrl, scrapeWebsite } = await import("@/lib/web-scraper");
+  
+  // Validate URL
+  const validation = validateUrl(url);
+  if (!validation.valid) {
+    throw new Error(validation.error || "Invalid URL");
+  }
+
+  // Check if URL has been scraped recently (within last 24 hours)
+  const existingDoc = await db
+    .select()
+    .from(documents)
+    .where(
+      and(
+        eq(documents.tenantId, tenantId),
+        eq(documents.fileUrl, url), // Use fileUrl to store the original URL
+        eq(documents.isActive, true)
+      )
+    )
+    .orderBy(desc(documents.createdAt))
+    .limit(1);
+
+  if (existingDoc.length > 0) {
+    const existing = existingDoc[0];
+    const hoursSinceCreation = existing.createdAt ? 
+      (Date.now() - existing.createdAt.getTime()) / (1000 * 60 * 60) : 
+      25; // If no date, consider it old
+
+    if (hoursSinceCreation < 24) {
+      console.log(`📋 Using existing web content for ${url} (${hoursSinceCreation.toFixed(1)}h old)`);
+      return { success: true, document: existing, isNew: false };
+    }
+  }
+
+  try {
+    // Import internal SSO authentication
+    const { attemptInternalSSO, isInternalDomain } = await import("@/lib/internal-sso-auth");
+    
+    // Check for automatic SSO authentication if no auth is provided
+    let authConfig = options.auth;
+    if (!authConfig && isInternalDomain(url)) {
+      console.log(`🔐 Checking for automatic SSO authentication for ${url}`);
+      const ssoResult = await attemptInternalSSO(url);
+      
+      if (ssoResult.shouldUseSSO && ssoResult.credentials) {
+        console.log(`✅ Using automatic SSO authentication for ${url}`);
+        authConfig = {
+          type: 'headers' as const,
+          headers: ssoResult.credentials.headers,
+          cookies: ssoResult.credentials.sessionCookies,
+        };
+      }
+    }
+    
+    // Scrape the website with authentication
+    console.log(`🕷️ Scraping website: ${url}`);
+    const scrapedContent = await scrapeWebsite(url, {
+      waitForDynamic: options.waitForDynamic,
+      timeout: 30000,
+      maxContentLength: 50000, // Larger limit for knowledge base content
+      auth: authConfig,
+    });
+
+    console.log(`✅ Scraped ${scrapedContent.content.length} characters from ${url}`);
+
+    // Clean content
+    let content = scrapedContent.content
+      .replace(/\0/g, '') // Remove null bytes
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ') // Replace control characters
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+
+    if (!content) {
+      throw new Error("No valid content could be extracted from the website");
+    }
+
+    // Generate embeddings for document chunks
+    console.log("🧠 Generating embeddings...");
+    const chunks = await chunkAndEmbedDocument(content, {
+      fileName: scrapedContent.title,
+      fileType: "web-page",
+      tenantId,
+      url: url,
+      domain: scrapedContent.metadata.domain,
+    });
+    console.log("✅ Generated", chunks.length, "chunks with embeddings");
+
+    if (chunks.length === 0) {
+      throw new Error("Failed to process website content");
+    }
+
+    // Use the page title as the document name, or fallback to domain
+    const documentName = scrapedContent.title || scrapedContent.metadata.domain || 'Web Page';
+
+    // Store document chunks in database
+    const documentInserts = chunks.map((chunk, index) => ({
+      tenantId,
+      name: index === 0 ? documentName : `${documentName} (chunk ${index + 1})`,
+      content: chunk.content,
+      fileUrl: url, // Store the original URL
+      fileType: "web-page",
+      fileSize: content.length, // Use content length as "file size"
+      chunkIndex: index,
+      embedding: chunk.embedding,
+      uploadedBy: user.id,
+    }));
+
+    console.log("💾 Inserting", documentInserts.length, "web document chunks into knowledge base...");
+    const insertedDocs = await db
+      .insert(documents)
+      .values(documentInserts)
+      .returning();
+
+    // Log analytics
+    await db.insert(analytics).values({
+      tenantId,
+      userId: user.id,
+      eventType: "web_content_added",
+      eventData: {
+        url,
+        documentName,
+        contentLength: content.length,
+        domain: scrapedContent.metadata.domain,
+        wordCount: scrapedContent.metadata.wordCount,
+        chunksGenerated: chunks.length,
+      },
+    });
+
+    revalidatePath(`/t/${tenantId}/kb`);
+    console.log(`🎉 Web content added to knowledge base successfully: ${documentName}`);
+    
+    return { 
+      success: true, 
+      document: insertedDocs[0], 
+      isNew: true,
+      chunksCount: chunks.length,
+      metadata: scrapedContent.metadata
+    };
+
+  } catch (error: any) {
+    console.error(`❌ Failed to add web content to knowledge base:`, error);
+    throw new Error(`Failed to add web content: ${error.message}`);
+  }
 } 

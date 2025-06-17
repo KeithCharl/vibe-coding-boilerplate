@@ -38,7 +38,7 @@ export default async function PromptsPage({ params }: PromptsPageProps) {
             <PromptsPageClient
               tenantId={tenantId}
               initialPrompts={prompts}
-              initialCategories={categories}
+              initialCategories={categories.filter((cat): cat is string => cat !== null)}
               permissions={permissions}
             />
           </Suspense>

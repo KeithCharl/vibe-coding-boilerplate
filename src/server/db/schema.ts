@@ -395,6 +395,175 @@ export const prompts = pgTable(
   ]
 );
 
+// Enhanced Web Scraping Tables
+
+// Authentication credentials for web scraping
+export const webScrapingCredentials = pgTable(
+  "web_scraping_credentials",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(), // User-friendly name for the credential
+    domain: text("domain").notNull(), // Domain or site these credentials are for
+    authType: varchar("auth_type", { length: 50 }).notNull(), // 'basic', 'form', 'cookie', 'header', 'sso'
+    credentials: jsonb("credentials").notNull(), // Encrypted credential data
+    isActive: boolean("is_active").default(true),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("web_scraping_credentials_tenant_id_idx").on(table.tenantId),
+    index("web_scraping_credentials_domain_idx").on(table.domain),
+    index("web_scraping_credentials_auth_type_idx").on(table.authType),
+  ]
+);
+
+// Scheduled web scraping jobs
+export const webScrapingJobs = pgTable(
+  "web_scraping_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    baseUrl: text("base_url").notNull(),
+    scrapeChildren: boolean("scrape_children").default(true),
+    maxDepth: integer("max_depth").default(2), // How deep to crawl
+    includePatterns: jsonb("include_patterns"), // URL patterns to include
+    excludePatterns: jsonb("exclude_patterns"), // URL patterns to exclude
+    credentialId: uuid("credential_id")
+      .references(() => webScrapingCredentials.id, { onDelete: "set null" }),
+    schedule: text("schedule").notNull(), // Cron expression
+    isActive: boolean("is_active").default(true),
+    lastRun: timestamp("last_run"),
+    nextRun: timestamp("next_run"),
+    status: varchar("status", { length: 50 }).default("idle"), // 'idle', 'running', 'completed', 'failed'
+    options: jsonb("options"), // Additional scraping options
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("web_scraping_jobs_tenant_id_idx").on(table.tenantId),
+    index("web_scraping_jobs_base_url_idx").on(table.baseUrl),
+    index("web_scraping_jobs_status_idx").on(table.status),
+    index("web_scraping_jobs_next_run_idx").on(table.nextRun),
+    index("web_scraping_jobs_is_active_idx").on(table.isActive),
+  ]
+);
+
+// Enhanced web analysis with versioning and relationships
+export const webAnalysisDocuments = pgTable(
+  "web_analysis_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    jobId: uuid("job_id")
+      .references(() => webScrapingJobs.id, { onDelete: "set null" }),
+    url: text("url").notNull(),
+    parentUrl: text("parent_url"), // URL of parent page if this is a child
+    title: text("title"),
+    content: text("content").notNull(),
+    summary: text("summary"),
+    metadata: jsonb("metadata"),
+    embedding: vector("embedding", { dimensions: 1536 }),
+    contentHash: text("content_hash").notNull(), // Hash of content for change detection
+    version: integer("version").default(1),
+    status: varchar("status", { length: 50 }).notNull().default("success"),
+    errorMessage: text("error_message"),
+    depth: integer("depth").default(0), // Crawl depth from base URL
+    isActive: boolean("is_active").default(true),
+    analyzedBy: varchar("analyzed_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("web_analysis_documents_tenant_id_idx").on(table.tenantId),
+    index("web_analysis_documents_job_id_idx").on(table.jobId),
+    index("web_analysis_documents_url_idx").on(table.url),
+    index("web_analysis_documents_parent_url_idx").on(table.parentUrl),
+    index("web_analysis_documents_content_hash_idx").on(table.contentHash),
+    index("web_analysis_documents_version_idx").on(table.version),
+    index("web_analysis_documents_is_active_idx").on(table.isActive),
+    index("web_analysis_documents_embedding_idx").using("hnsw", table.embedding.op("vector_cosine_ops")),
+  ]
+);
+
+// Change log for tracking content updates
+export const webAnalysisChanges = pgTable(
+  "web_analysis_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => webAnalysisDocuments.id, { onDelete: "cascade" }),
+    jobRunId: uuid("job_run_id"), // References a specific job run
+    changeType: varchar("change_type", { length: 50 }).notNull(), // 'created', 'updated', 'deleted', 'title_changed', 'content_changed'
+    oldContent: text("old_content"),
+    newContent: text("new_content"),
+    oldContentHash: text("old_content_hash"),
+    newContentHash: text("new_content_hash"),
+    changePercentage: real("change_percentage"), // Percentage of content that changed
+    changeSummary: text("change_summary"), // AI-generated summary of changes
+    metadata: jsonb("metadata"), // Additional change metadata
+    detectedAt: timestamp("detected_at").defaultNow(),
+  },
+  (table) => [
+    index("web_analysis_changes_tenant_id_idx").on(table.tenantId),
+    index("web_analysis_changes_document_id_idx").on(table.documentId),
+    index("web_analysis_changes_job_run_id_idx").on(table.jobRunId),
+    index("web_analysis_changes_change_type_idx").on(table.changeType),
+    index("web_analysis_changes_detected_at_idx").on(table.detectedAt),
+  ]
+);
+
+// Job execution history and logs
+export const webScrapingJobRuns = pgTable(
+  "web_scraping_job_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    jobId: uuid("job_id")
+      .notNull()
+      .references(() => webScrapingJobs.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 50 }).notNull().default("running"), // 'running', 'completed', 'failed', 'cancelled'
+    startedAt: timestamp("started_at").defaultNow(),
+    completedAt: timestamp("completed_at"),
+    urlsProcessed: integer("urls_processed").default(0),
+    urlsSuccessful: integer("urls_successful").default(0),
+    urlsFailed: integer("urls_failed").default(0),
+    documentsCreated: integer("documents_created").default(0),
+    documentsUpdated: integer("documents_updated").default(0),
+    changesDetected: integer("changes_detected").default(0),
+    errorMessage: text("error_message"),
+    logs: jsonb("logs"), // Detailed execution logs
+    metadata: jsonb("metadata"), // Additional run metadata
+  },
+  (table) => [
+    index("web_scraping_job_runs_tenant_id_idx").on(table.tenantId),
+    index("web_scraping_job_runs_job_id_idx").on(table.jobId),
+    index("web_scraping_job_runs_status_idx").on(table.status),
+    index("web_scraping_job_runs_started_at_idx").on(table.startedAt),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   userTenantRoles: many(userTenantRoles),

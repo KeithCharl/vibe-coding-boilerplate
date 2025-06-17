@@ -36,11 +36,15 @@ export async function analyzeUrl(
   console.log(`🕸️ Starting analysis for URL: ${url}`);
   const user = await requireAuth(tenantId, "contributor");
 
-  // Validate URL
+  // Validate and sanitize URL
   const validation = validateUrl(url);
   if (!validation.valid) {
     throw new Error(validation.error || "Invalid URL");
   }
+
+  // Use the sanitized URL for all operations
+  const sanitizedUrl = validation.sanitizedUrl || url;
+  console.log(`🧹 Using sanitized URL: ${sanitizedUrl}`);
 
   // Check if URL has been analyzed recently (within last 24 hours)
   const existingAnalysis = await db
@@ -49,7 +53,7 @@ export async function analyzeUrl(
     .where(
       and(
         eq(webAnalysis.tenantId, tenantId),
-        eq(webAnalysis.url, url),
+        eq(webAnalysis.url, sanitizedUrl),
         eq(webAnalysis.status, "success")
       )
     )
@@ -63,7 +67,7 @@ export async function analyzeUrl(
       25; // If no date, consider it old
 
     if (hoursSinceAnalysis < 24) {
-      console.log(`📋 Using existing analysis for ${url} (${hoursSinceAnalysis.toFixed(1)}h old)`);
+      console.log(`📋 Using existing analysis for ${sanitizedUrl} (${hoursSinceAnalysis.toFixed(1)}h old)`);
       return { success: true, analysis: existing, isNew: false };
     }
   }
@@ -74,7 +78,7 @@ export async function analyzeUrl(
       .insert(webAnalysis)
       .values({
         tenantId,
-        url,
+        url: sanitizedUrl,
         title: null,
         content: "",
         status: "processing",
@@ -84,18 +88,45 @@ export async function analyzeUrl(
 
     console.log(`🔄 Created pending analysis record: ${pendingAnalysis.id}`);
 
+    // Check for automatic SSO authentication for internal websites
+    const { attemptInternalSSO, isInternalDomain, suggestSSOSetup } = await import("@/lib/internal-sso-auth");
+    let authConfig;
+    
+    if (isInternalDomain(sanitizedUrl)) {
+      console.log(`🔐 Detected internal domain, checking for automatic SSO: ${sanitizedUrl}`);
+      const ssoResult = await attemptInternalSSO(sanitizedUrl);
+      
+      if (ssoResult.shouldUseSSO && ssoResult.credentials) {
+        console.log(`✅ Using automatic SSO authentication for ${sanitizedUrl}`);
+        authConfig = {
+          type: 'headers' as const,
+          headers: ssoResult.credentials.headers,
+          cookies: ssoResult.credentials.sessionCookies,
+        };
+      } else {
+        console.log(`❌ Internal domain detected but automatic SSO failed for: ${sanitizedUrl}`);
+        const domain = new URL(sanitizedUrl).hostname;
+        throw new Error(
+          `Internal domain (${domain}) requires authentication but automatic SSO is not available. ` +
+          `Please configure credentials manually in the Credentials Manager. ` +
+          `For Atlassian sites: Copy session cookies from your browser (F12 → Application → Cookies → atlassian.net).`
+        );
+      }
+    }
+
     // Scrape the website
-    console.log(`🕷️ Scraping website: ${url}`);
-    const scrapedContent: ScrapedContent = await scrapeWebsite(url, {
+    console.log(`🕷️ Scraping website: ${sanitizedUrl}`);
+    const scrapedContent: ScrapedContent = await scrapeWebsite(sanitizedUrl, {
       waitForDynamic: options.waitForDynamic,
       timeout: 30000,
       maxContentLength: 20000, // Limit content size
+      auth: authConfig,
     });
 
-    console.log(`✅ Scraped ${scrapedContent.content.length} characters from ${url}`);
+    console.log(`✅ Scraped ${scrapedContent.content.length} characters from ${sanitizedUrl}`);
 
     // Generate embedding for the content
-    console.log(`🧠 Generating embedding for ${url}`);
+    console.log(`🧠 Generating embedding for ${sanitizedUrl}`);
     const chunks = await chunkAndEmbedDocument(scrapedContent.content, {
       fileName: scrapedContent.title,
       fileType: "web-page",
@@ -134,7 +165,7 @@ export async function analyzeUrl(
       eventType: "web_analysis",
       eventData: {
         analysisId: completedAnalysis.id,
-        url,
+        url: sanitizedUrl,
         contentLength: scrapedContent.content.length,
         domain: scrapedContent.metadata.domain,
         wordCount: scrapedContent.metadata.wordCount,
@@ -143,12 +174,12 @@ export async function analyzeUrl(
     });
 
     revalidatePath(`/t/${tenantId}/web-analysis`);
-    console.log(`🎉 Analysis completed successfully for ${url}`);
+    console.log(`🎉 Analysis completed successfully for ${sanitizedUrl}`);
     
     return { success: true, analysis: completedAnalysis, isNew: true };
 
   } catch (error: any) {
-    console.error(`❌ Analysis failed for ${url}:`, error);
+    console.error(`❌ Analysis failed for ${sanitizedUrl}:`, error);
 
     // Update record with error
     try {
@@ -162,7 +193,7 @@ export async function analyzeUrl(
         .where(
           and(
             eq(webAnalysis.tenantId, tenantId),
-            eq(webAnalysis.url, url),
+            eq(webAnalysis.url, sanitizedUrl),
             eq(webAnalysis.status, "processing")
           )
         );

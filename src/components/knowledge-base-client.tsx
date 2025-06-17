@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Upload, FileText, Eye, Edit, ExternalLink, Save, X, Trash2, UploadIcon, History, RotateCcw } from "lucide-react";
+import { BookOpen, Upload, FileText, Eye, Edit, ExternalLink, Save, X, Trash2, UploadIcon, History, RotateCcw, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadDocumentDialog } from "@/components/upload-document-dialog";
@@ -94,7 +94,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
 
   const handleViewDocument = (doc: Document) => {
     if (doc.fileUrl) {
-      // Open the original file in a new tab
+      // Open the original file/URL in a new tab
       window.open(doc.fileUrl, '_blank');
     } else {
       // If no file URL, we could show a modal with the text content
@@ -291,12 +291,21 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
             <Card key={doc.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="h-5 w-5" />
+                  {doc.fileType === "web-page" ? (
+                    <Globe className="h-5 w-5 text-blue-500" />
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
                   {doc.name}
                 </CardTitle>
                 <CardDescription>
-                  {doc.chunks?.length || 0} chunks • {doc.fileType || 'Unknown type'}
+                  {doc.chunks?.length || 0} chunks • {doc.fileType === "web-page" ? "Web Page" : (doc.fileType || 'Unknown type')}
                   {doc.version && ` • v${doc.version}`}
+                  {doc.fileType === "web-page" && doc.fileUrl && (
+                    <span className="text-xs text-blue-600 block mt-1 truncate">
+                      {doc.fileUrl}
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>

@@ -47,22 +47,22 @@ interface FeedbackStats {
   ratingDistribution: Array<{ rating: number; count: number }>;
   recentComments: Array<{
     rating: number;
-    comment: string;
-    createdAt: Date;
+    comment: string | null;
+    createdAt: Date | null;
     messageContent: string;
   }>;
 }
 
 interface ChatAnalytic {
   eventData: any;
-  createdAt: Date;
+  createdAt: Date | null;
 }
 
 interface DocumentUsage {
   documentId: string;
   documentName: string;
   usageCount: number;
-  lastUsed: Date;
+  lastUsed: Date | null;
   fileType?: string;
 }
 
@@ -409,7 +409,7 @@ export function AnalyticsDashboard({
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Last used: {formatDistanceToNow(new Date(doc.lastUsed), { addSuffix: true })}
+                          Last used: {doc.lastUsed ? formatDistanceToNow(new Date(doc.lastUsed), { addSuffix: true }) : 'Never'}
                         </div>
                       </div>
                     ))}

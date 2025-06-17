@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import { getAllUsers, getCurrentUserRole } from "@/server/actions/user-management";
 import { UserManagementTable } from "@/components/user-management/user-management-table";
-import { CreateUserDialog } from "@/components/user-management/create-user-dialog";
+// import { CreateUserDialog } from "@/components/user-management/create-user-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Shield, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
 interface UserManagementPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
-  };
+  }>;
 }
 
 async function UserManagementContent({ searchParams }: UserManagementPageProps) {
@@ -22,8 +22,9 @@ async function UserManagementContent({ searchParams }: UserManagementPageProps) 
     redirect("/");
   }
 
-  const page = parseInt(searchParams.page ?? "1");
-  const search = searchParams.search;
+  const params = await searchParams;
+  const page = parseInt(params.page ?? "1");
+  const search = params.search;
 
   const { users, total, totalPages } = await getAllUsers(page, 10, search);
 
@@ -38,12 +39,10 @@ async function UserManagementContent({ searchParams }: UserManagementPageProps) 
           </p>
         </div>
         {currentUserRole.globalRole === "super_admin" && (
-          <CreateUserDialog>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
-          </CreateUserDialog>
+          <Button disabled>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add User (Coming Soon)
+          </Button>
         )}
       </div>
 

@@ -1,0 +1,61 @@
+{
+  "id": "dora.dev_1750155890363_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/research/2017/",
+  "title": "DORA | DORA Research: 2017",
+  "content": "Prior to 2018, research was conducted in partnership with Puppet, as an extension of their original State of DevOps research. Read the history of Puppet's DevOps Reports. The 2017 State of DevOps Report highlights the critical role of transformational leadership in fostering a culture of high performance. Leaders who exhibit vision, inspirational communication, intellectual stimulation, supportive leadership, and personal recognition are more likely to cultivate successful teams. The research also underscores the importance of automation in achieving faster throughput and improved stability. High-performing teams automate significantly more of their configuration management, testing, deployments, and change approval processes, freeing up time for innovation. The report emphasizes the importance of IT performance in achieving broader organizational goals. By adopting DevOps practices and fostering a culture of continuous learning and improvement, organizations can enhance their ability to deliver value to customers and achieve their mission, regardless of how they define success. The key findings of the report are: The presence of transformational leaders who exhibit vision, inspiration, intellectual stimulation, support, and recognition significantly boosts IT performance and overall organizational success. Automation is a key differentiator for high-performing teams, enabling them to focus on innovation and achieve faster throughput and improved stability. DevOps practices are beneficial for all organizations, regardless of their profit orientation, leading to improved efficiency, customer satisfaction, and goal achievement. Loosely coupled architectures and teams are crucial for enabling continuous delivery, allowing for independent development, testing, and deployment of services. Lean product management practices, such as working in small batches and incorporating customer feedback, drive higher organizational performance by enabling faster delivery and experimentation. Continuous delivery, characterized by frequent deployments, fast feedback, and high quality, significantly contributes to lower deployment pain and improved IT performance. Technical practices such as version control, continuous integration, trunk-based development, and test automation are essential for achieving continuous delivery and high performance. Download the 2017 State of DevOps Report",
+  "timestamp": "2025-06-17T10:24:50.363Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 313,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://www.puppet.com/resources/history-of-devops-reports",
+      "https://dora.dev/research/2017/2017-state-of-devops-report.pdf",
+      "https://dora.dev/research/team/",
+      "https://dora.dev/research/ai/",
+      "https://dora.dev/research/2024/",
+      "https://dora.dev/research/2023/",
+      "https://dora.dev/research/2022/",
+      "https://dora.dev/research/2021/",
+      "https://dora.dev/research/2020/",
+      "https://dora.dev/research/2019/",
+      "https://dora.dev/research/2018/",
+      "https://dora.dev/research/2017/",
+      "https://dora.dev/research/2016/",
+      "https://dora.dev/research/2015/",
+      "https://dora.dev/research/2014/",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/research/2017/2017-state-of-devops-report.png",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: DORA Research: 2017"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1750155890363_DORA_DORA_Research_2017.json"
+}

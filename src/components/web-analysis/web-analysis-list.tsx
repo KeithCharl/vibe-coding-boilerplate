@@ -102,9 +102,51 @@ export function WebAnalysisList({ analyses, tenantId }: WebAnalysisListProps) {
 
   const getDomainFromUrl = (url: string) => {
     try {
-      return new URL(url).hostname;
+      return new URL(url).hostname.replace('www.', '');
     } catch {
       return url;
+    }
+  };
+
+  // Enhanced URL cleaning for comprehensive display
+  const getCleanUrlInfo = (urlOrDomain: string): { 
+    cleanDomain: string; 
+    displayName: string; 
+    originalUrl: string;
+    isLongUrl: boolean;
+  } => {
+    try {
+      // Try to parse as URL first
+      const url = new URL(urlOrDomain.startsWith('http') ? urlOrDomain : `https://${urlOrDomain}`);
+      const cleanDomain = url.hostname.replace('www.', '').toLowerCase();
+      
+      // Check if this was originally a long/encoded URL
+      const isLongUrl = urlOrDomain.length > 80 || urlOrDomain.includes('%') || 
+                       (urlOrDomain.includes('?') && urlOrDomain.length > 60);
+      
+      // Create a user-friendly display name
+      let displayName = cleanDomain;
+      
+      // For very long URLs, just show the domain
+      if (isLongUrl) {
+        displayName = cleanDomain;
+      }
+      
+      return {
+        cleanDomain,
+        displayName,
+        originalUrl: urlOrDomain,
+        isLongUrl
+      };
+    } catch (error) {
+      // If not a valid URL, treat as domain name
+      const cleanDomain = urlOrDomain.replace('www.', '').toLowerCase();
+      return {
+        cleanDomain,
+        displayName: cleanDomain,
+        originalUrl: urlOrDomain,
+        isLongUrl: urlOrDomain.length > 80
+      };
     }
   };
 
@@ -152,6 +194,15 @@ export function WebAnalysisList({ analyses, tenantId }: WebAnalysisListProps) {
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Open Original
                       </DropdownMenuItem>
+                      {getCleanUrlInfo(analysis.url).isLongUrl && (
+                        <DropdownMenuItem onClick={() => {
+                          navigator.clipboard.writeText(getCleanUrlInfo(analysis.url).cleanDomain);
+                          toast.success("Domain copied to clipboard");
+                        }}>
+                          <Globe className="h-4 w-4 mr-2" />
+                          Copy Domain
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem 
                         onClick={() => handleReanalyze(analysis.id)}
                         disabled={isReanalyzing === analysis.id}
@@ -219,10 +270,17 @@ export function WebAnalysisList({ analyses, tenantId }: WebAnalysisListProps) {
                   {selectedAnalysis.title || getDomainFromUrl(selectedAnalysis.url)}
                 </DialogTitle>
                 <DialogDescription>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline">{selectedAnalysis.url}</Badge>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <Badge variant="outline" className="max-w-xs truncate">
+                      {getCleanUrlInfo(selectedAnalysis.url).displayName}
+                    </Badge>
+                    {getCleanUrlInfo(selectedAnalysis.url).isLongUrl && (
+                      <Badge variant="secondary" className="text-xs">
+                        Long URL
+                      </Badge>
+                    )}
                     {selectedAnalysis.createdAt && (
-                      <span className="text-xs">
+                      <span className="text-xs text-muted-foreground">
                         Analyzed {formatDistanceToNow(new Date(selectedAnalysis.createdAt), { addSuffix: true })}
                       </span>
                     )}
