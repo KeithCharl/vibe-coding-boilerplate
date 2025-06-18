@@ -44,72 +44,83 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
+  /* Professional Corporate Color Scheme - Light Theme */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.09 0.005 264);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.09 0.005 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.09 0.005 264);
+  /* Professional Blue Primary */
+  --primary: oklch(0.35 0.15 240);
+  --primary-foreground: oklch(0.98 0.002 264);
+  /* Sophisticated Gray Secondary */
+  --secondary: oklch(0.96 0.015 264);
+  --secondary-foreground: oklch(0.35 0.15 240);
+  --muted: oklch(0.97 0.01 264);
+  --muted-foreground: oklch(0.47 0.03 264);
+  --accent: oklch(0.95 0.02 264);
+  --accent-foreground: oklch(0.35 0.15 240);
+  --destructive: oklch(0.55 0.16 25);
+  --destructive-foreground: oklch(0.98 0.002 264);
+  --border: oklch(0.90 0.02 264);
+  --input: oklch(0.96 0.015 264);
+  --ring: oklch(0.35 0.15 240);
+  /* Professional Chart Colors */
+  --chart-1: oklch(0.35 0.15 240);
+  --chart-2: oklch(0.45 0.12 200);
+  --chart-3: oklch(0.55 0.08 150);
+  --chart-4: oklch(0.65 0.10 100);
+  --chart-5: oklch(0.75 0.08 50);
+  /* Professional Sidebar */
+  --sidebar: oklch(0.98 0.005 264);
+  --sidebar-foreground: oklch(0.09 0.005 264);
+  --sidebar-primary: oklch(0.35 0.15 240);
+  --sidebar-primary-foreground: oklch(0.98 0.002 264);
+  --sidebar-accent: oklch(0.95 0.02 264);
+  --sidebar-accent-foreground: oklch(0.09 0.005 264);
+  --sidebar-border: oklch(0.90 0.02 264);
+  --sidebar-ring: oklch(0.35 0.15 240);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Professional Dark Theme */
+  --background: oklch(0.12 0.008 264);
+  --foreground: oklch(0.95 0.004 264);
+  --card: oklch(0.15 0.010 264);
+  --card-foreground: oklch(0.95 0.004 264);
+  --popover: oklch(0.15 0.010 264);
+  --popover-foreground: oklch(0.95 0.004 264);
+  /* Sophisticated Light Blue for Dark Mode */
+  --primary: oklch(0.65 0.12 210);
+  --primary-foreground: oklch(0.12 0.008 264);
+  --secondary: oklch(0.20 0.012 264);
+  --secondary-foreground: oklch(0.90 0.004 264);
+  --muted: oklch(0.18 0.010 264);
+  --muted-foreground: oklch(0.65 0.012 264);
+  --accent: oklch(0.22 0.014 264);
+  --accent-foreground: oklch(0.90 0.004 264);
+  --destructive: oklch(0.65 0.18 25);
+  --destructive-foreground: oklch(0.95 0.004 264);
+  --border: oklch(0.25 0.014 264);
+  --input: oklch(0.20 0.012 264);
+  --ring: oklch(0.65 0.12 210);
+  /* Professional Dark Chart Colors */
+  --chart-1: oklch(0.65 0.12 210);
+  --chart-2: oklch(0.70 0.14 180);
+  --chart-3: oklch(0.60 0.10 150);
+  --chart-4: oklch(0.75 0.12 120);
+  --chart-5: oklch(0.68 0.08 80);
+  /* Professional Dark Sidebar */
+  --sidebar: oklch(0.10 0.006 264);
+  --sidebar-foreground: oklch(0.85 0.004 264);
+  --sidebar-primary: oklch(0.65 0.12 210);
+  --sidebar-primary-foreground: oklch(0.10 0.006 264);
+  --sidebar-accent: oklch(0.18 0.010 264);
+  --sidebar-accent-foreground: oklch(0.85 0.004 264);
+  --sidebar-border: oklch(0.20 0.012 264);
+  --sidebar-ring: oklch(0.65 0.12 210);
 }
 
 @layer base {
@@ -117,6 +128,76 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    letter-spacing: -0.01em;
+  }
+  
+  /* Professional Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  h1 {
+    @apply text-3xl font-bold;
+  }
+  
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+  
+  h3 {
+    @apply text-xl font-semibold;
+  }
+  
+  /* Professional Shadows - Using Tailwind-compatible utilities */
+  
+  /* Enterprise Glass Effect */
+  .glass-effect {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .glass-effect {
+    background: rgba(0, 0, 0, 0.40);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Professional Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Business Card Styling */
+  .business-card {
+    @apply bg-card border border-border/50 rounded-lg shadow-sm transition-all duration-200;
+  }
+  
+  .business-card:hover {
+    @apply shadow-lg border-border;
+    transform: translateY(-1px);
+  }
+  
+  /* Professional Button Variants */
+  .btn-executive {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-md font-medium transition-all duration-200;
+    letter-spacing: 0.01em;
+  }
+  
+  .btn-executive:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
   }
 }

@@ -7,6 +7,7 @@ import { requireAuth } from "./auth";
 import { scrapeWebsite, validateUrl, ScrapedContent } from "@/lib/web-scraper";
 import { chunkAndEmbedDocument } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export interface WebAnalysisData {
   id: string;
@@ -33,7 +34,8 @@ export async function analyzeUrl(
     generateSummary?: boolean;
   } = {}
 ) {
-  console.log(`🕸️ Starting analysis for URL: ${url}`);
+  const operationId = logger.startOperation("web_analysis", { tenantId, url });
+  logger.web.analysisStart(url, tenantId);
   const user = await requireAuth(tenantId, "contributor");
 
   // Validate and sanitize URL
@@ -44,7 +46,7 @@ export async function analyzeUrl(
 
   // Use the sanitized URL for all operations
   const sanitizedUrl = validation.sanitizedUrl || url;
-  console.log(`🧹 Using sanitized URL: ${sanitizedUrl}`);
+  logger.debug("URL validation completed", { originalUrl: url, sanitizedUrl, tenantId, operationId });
 
   // Check if URL has been analyzed recently (within last 24 hours)
   const existingAnalysis = await db
@@ -67,7 +69,12 @@ export async function analyzeUrl(
       25; // If no date, consider it old
 
     if (hoursSinceAnalysis < 24) {
-      console.log(`📋 Using existing analysis for ${sanitizedUrl} (${hoursSinceAnalysis.toFixed(1)}h old)`);
+      logger.info("Using existing web analysis", { 
+        url: sanitizedUrl, 
+        hoursSinceAnalysis: hoursSinceAnalysis.toFixed(1), 
+        tenantId, 
+        operationId 
+      });
       return { success: true, analysis: existing, isNew: false };
     }
   }
@@ -86,25 +93,25 @@ export async function analyzeUrl(
       })
       .returning();
 
-    console.log(`🔄 Created pending analysis record: ${pendingAnalysis.id}`);
+    logger.debug("Created pending analysis record", { analysisId: pendingAnalysis.id, url: sanitizedUrl, tenantId, operationId });
 
     // Check for automatic SSO authentication for internal websites
     const { attemptInternalSSO, isInternalDomain, suggestSSOSetup } = await import("@/lib/internal-sso-auth");
     let authConfig;
     
     if (isInternalDomain(sanitizedUrl)) {
-      console.log(`🔐 Detected internal domain, checking for automatic SSO: ${sanitizedUrl}`);
+      logger.debug("Internal domain detected, checking for automatic SSO", { url: sanitizedUrl, tenantId, operationId });
       const ssoResult = await attemptInternalSSO(sanitizedUrl);
       
       if (ssoResult.shouldUseSSO && ssoResult.credentials) {
-        console.log(`✅ Using automatic SSO authentication for ${sanitizedUrl}`);
+        logger.auth.ssoDetected(sanitizedUrl);
         authConfig = {
           type: 'headers' as const,
           headers: ssoResult.credentials.headers,
           cookies: ssoResult.credentials.sessionCookies,
         };
       } else {
-        console.log(`❌ Internal domain detected but automatic SSO failed for: ${sanitizedUrl}`);
+        logger.warn("Internal domain detected but automatic SSO failed", { url: sanitizedUrl, tenantId, operationId });
         const domain = new URL(sanitizedUrl).hostname;
         throw new Error(
           `Internal domain (${domain}) requires authentication but automatic SSO is not available. ` +
@@ -115,7 +122,7 @@ export async function analyzeUrl(
     }
 
     // Scrape the website
-    console.log(`🕷️ Scraping website: ${sanitizedUrl}`);
+    logger.web.scrapeStart(sanitizedUrl, tenantId);
     const scrapedContent: ScrapedContent = await scrapeWebsite(sanitizedUrl, {
       waitForDynamic: options.waitForDynamic,
       timeout: 30000,
@@ -123,10 +130,10 @@ export async function analyzeUrl(
       auth: authConfig,
     });
 
-    console.log(`✅ Scraped ${scrapedContent.content.length} characters from ${sanitizedUrl}`);
+    logger.web.scrapeComplete(sanitizedUrl, scrapedContent.content.length, tenantId);
 
     // Generate embedding for the content
-    console.log(`🧠 Generating embedding for ${sanitizedUrl}`);
+    logger.debug("Generating embedding for scraped content", { url: sanitizedUrl, contentLength: scrapedContent.content.length, tenantId, operationId });
     const chunks = await chunkAndEmbedDocument(scrapedContent.content, {
       fileName: scrapedContent.title,
       fileType: "web-page",
@@ -134,7 +141,7 @@ export async function analyzeUrl(
     });
 
     const embedding = chunks.length > 0 ? chunks[0].embedding : null;
-    console.log(`✅ Generated embedding with ${chunks.length} chunks`);
+    logger.debug("Embedding generation completed", { url: sanitizedUrl, chunkCount: chunks.length, tenantId, operationId });
 
     // Generate summary if requested
     let summary = null;
@@ -174,12 +181,22 @@ export async function analyzeUrl(
     });
 
     revalidatePath(`/t/${tenantId}/web-analysis`);
-    console.log(`🎉 Analysis completed successfully for ${sanitizedUrl}`);
+    logger.web.analysisComplete(sanitizedUrl, chunks.length, tenantId);
+    logger.endOperation(operationId, "web_analysis", { 
+      analysisId: completedAnalysis.id, 
+      contentLength: scrapedContent.content.length,
+      chunksGenerated: chunks.length 
+    });
     
     return { success: true, analysis: completedAnalysis, isNew: true };
 
   } catch (error: any) {
-    console.error(`❌ Analysis failed for ${sanitizedUrl}:`, error);
+    logger.error("Web analysis failed", { 
+      url: sanitizedUrl, 
+      error: error instanceof Error ? error.message : String(error),
+      tenantId, 
+      operationId 
+    });
 
     // Update record with error
     try {

@@ -7,6 +7,7 @@ import { eq, and, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import { chunkAndEmbedDocument } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export interface DocumentData {
   id: string;
@@ -30,14 +31,14 @@ export async function uploadDocument(
   tenantId: string,
   formData: FormData
 ) {
-  console.log("🚀 Starting upload for tenantId:", tenantId);
+  const operationId = logger.startOperation("document_upload", { tenantId });
   const user = await requireAuth(tenantId, "contributor");
-  console.log("✅ User authenticated:", user.id);
+  logger.debug("User authenticated for document upload", { userId: user.id, tenantId, operationId });
   
   const file = formData.get("file") as File;
   const name = formData.get("name") as string || file.name;
   
-  console.log("📁 File details:", { name: file.name, size: file.size, type: file.type });
+  logger.document.upload(file.name, file.size, tenantId);
   
   if (!file) {
     throw new Error("No file provided");
@@ -64,13 +65,13 @@ export async function uploadDocument(
   }
 
   try {
-    console.log("☁️ Uploading to Vercel Blob...");
+    logger.debug("Uploading file to Vercel Blob", { fileName: file.name, fileSize: file.size, tenantId, operationId });
     // Upload file to Vercel Blob with random suffix to avoid duplicates
     const blob = await put(file.name, file, {
       access: "public",
       addRandomSuffix: true,
     });
-    console.log("✅ Blob uploaded:", blob.url);
+    logger.debug("File uploaded to Vercel Blob", { blobUrl: blob.url, tenantId, operationId });
 
     // Extract text content based on file type
     let content: string;
@@ -93,14 +94,14 @@ export async function uploadDocument(
         
         // Combine all pages into single content
         content = docs.map(doc => doc.pageContent).join('\n');
-        console.log("📄 PDF content extracted, length:", content.length, "pages:", docs.length);
+        logger.debug("PDF content extracted", { contentLength: content.length, pageCount: docs.length, tenantId, operationId });
       } else {
         // Use text() for other file types
         content = await file.text();
-        console.log("📄 Text content extracted, length:", content.length);
+        logger.debug("Text content extracted", { contentLength: content.length, tenantId, operationId });
       }
     } catch (error) {
-      console.error("Content extraction error:", error);
+      logger.error("Content extraction failed", { error: error instanceof Error ? error.message : String(error), fileType: file.type, tenantId, operationId });
       throw new Error(`Failed to extract text from ${file.type} file. Please ensure the file is valid.`);
     }
 
@@ -121,7 +122,13 @@ export async function uploadDocument(
     const totalCharCount = content.length;
     const readableRatio = totalCharCount > 0 ? readableCharCount / totalCharCount : 0;
     
-    console.log(`📊 Content analysis: ${readableCharCount}/${totalCharCount} readable chars (${(readableRatio * 100).toFixed(1)}%)`);
+    logger.debug("Content analysis completed", { 
+      readableCharCount, 
+      totalCharCount, 
+      readableRatio: (readableRatio * 100).toFixed(1) + '%',
+      tenantId, 
+      operationId 
+    });
     
     if (readableRatio < 0.5) {
       throw new Error("Document appears to contain mostly non-readable content. Please ensure it's a valid text-based PDF.");
@@ -131,14 +138,14 @@ export async function uploadDocument(
       throw new Error("Document contains no valid text content after cleaning.");
     }
 
-    console.log("🧠 Generating embeddings...");
+    logger.debug("Generating embeddings for document", { tenantId, operationId });
     // Generate embeddings for document chunks
     const chunks = await chunkAndEmbedDocument(content, {
       fileName: file.name,
       fileType: file.type,
       tenantId,
     });
-    console.log("✅ Generated", chunks.length, "chunks with embeddings");
+    logger.debug("Embeddings generated", { chunkCount: chunks.length, tenantId, operationId });
 
     if (chunks.length === 0) {
       throw new Error("Failed to process document content.");
@@ -157,13 +164,13 @@ export async function uploadDocument(
       uploadedBy: user.id,
     }));
 
-    console.log("💾 Inserting", documentInserts.length, "documents into database...");
+    logger.debug("Inserting document chunks into database", { chunkCount: documentInserts.length, tenantId, operationId });
     const insertedDocs = await db
       .insert(documents)
       .values(documentInserts)
       .returning();
 
-    console.log("✅ Documents inserted:", insertedDocs.length);
+    logger.debug("Document chunks inserted successfully", { insertedCount: insertedDocs.length, tenantId, operationId });
 
     if (insertedDocs.length === 0) {
       throw new Error("Failed to save document to database.");
@@ -183,10 +190,16 @@ export async function uploadDocument(
     });
 
     revalidatePath(`/t/${tenantId}/kb`);
-    console.log("🎉 Upload completed successfully!");
+    logger.document.uploaded(file.name, chunks.length, tenantId);
+    logger.endOperation(operationId, "document_upload", { documentId: insertedDocs[0]?.id, chunksCreated: chunks.length });
     return { success: true, documentId: insertedDocs[0]?.id };
   } catch (error: any) {
-    console.error("❌ Upload error:", error);
+    logger.error("Document upload failed", { 
+      error: error instanceof Error ? error.message : String(error), 
+      fileName: file?.name,
+      tenantId, 
+      operationId 
+    });
     
     // If error has a message, use it, otherwise provide a generic message
     const errorMessage = error.message || "Failed to upload document";
@@ -198,7 +211,7 @@ export async function uploadDocument(
  * Get documents for a tenant
  */
 export async function getDocuments(tenantId: string) {
-  console.log("📋 Getting documents for tenantId:", tenantId);
+  const operationId = logger.startOperation("get_documents", { tenantId });
   await requireAuth(tenantId, "viewer");
 
   const docs = await db
@@ -221,7 +234,7 @@ export async function getDocuments(tenantId: string) {
     .where(and(eq(documents.tenantId, tenantId), eq(documents.isActive, true)))
     .orderBy(desc(documents.createdAt));
 
-  console.log("📊 Found", docs.length, "document chunks from database");
+  logger.debug("Retrieved document chunks from database", { chunkCount: docs.length, tenantId, operationId });
 
   // Group chunks by base document name
   const groupedDocs = docs.reduce((acc, doc) => {
@@ -249,7 +262,7 @@ export async function getDocuments(tenantId: string) {
   }, {} as Record<string, any>);
 
   const result = Object.values(groupedDocs);
-  console.log("📚 Returning", result.length, "grouped documents");
+  logger.endOperation(operationId, "get_documents", { documentCount: result.length });
   return result;
 }
 

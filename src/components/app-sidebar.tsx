@@ -83,74 +83,74 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
 
   const navigationItems: NavigationItem[] = [
     {
-      title: "All Tenants",
+      title: "All Workspaces",
       icon: Building2,
       href: "/",
       roles: ["viewer", "contributor", "admin"],
       isMainDashboard: true,
     },
     {
-      title: "Dashboard",
+      title: "Workspace Overview",
       icon: LayoutDashboard,
       href: `/t/${currentTenantId}`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "Chat",
+      title: "AI Assistant",
       icon: MessageSquare,
       href: `/t/${currentTenantId}/chat`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "Knowledge Base",
+      title: "Knowledge Repository",
       icon: BookOpen,
       href: `/t/${currentTenantId}/kb`,
       roles: ["viewer", "contributor", "admin"],
       subItems: [
         {
-          title: "Documents",
+          title: "Document Library",
           href: `/t/${currentTenantId}/kb`,
           roles: ["viewer", "contributor", "admin"],
         },
         {
-          title: "References",
+          title: "Reference Management",
           href: `/t/${currentTenantId}/kb/references`,
           roles: ["contributor", "admin"],
         },
       ],
     },
     {
-      title: "Web Analysis",
+      title: "Web Intelligence",
       icon: Globe,
       href: `/t/${currentTenantId}/web-analysis`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "Personas",
+      title: "AI Personas",
       icon: UserCog,
       href: `/t/${currentTenantId}/personas`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "Prompts",
+      title: "Prompt Templates",
       icon: FileText,
       href: `/t/${currentTenantId}/prompts`,
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "Users",
+      title: "User Management",
       icon: Users,
       href: `/t/${currentTenantId}/users`,
       roles: ["admin"],
     },
     {
-      title: "Analytics",
+      title: "Business Analytics",
       icon: BarChart3,
       href: `/t/${currentTenantId}/analytics`,
       roles: ["contributor", "admin"],
     },
     {
-      title: "Settings",
+      title: "System Configuration",
       icon: Settings,
       href: `/t/${currentTenantId}/settings`,
       roles: ["admin"],
@@ -172,7 +172,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     <span className="truncate">
-                      {currentTenant?.tenantName || "Select Tenant"}
+                      {currentTenant?.tenantName || "Select Workspace"}
                     </span>
                   </div>
                   <Menu className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
                 <DropdownMenuItem asChild className="font-medium text-primary">
                   <Link href="/">
                     <Building2 className="h-4 w-4 mr-2" />
-                    ← Back to All Tenants
+                    ← All Workspaces
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

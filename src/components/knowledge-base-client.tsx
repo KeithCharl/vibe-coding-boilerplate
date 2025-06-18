@@ -2,7 +2,38 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Upload, FileText, Eye, Edit, ExternalLink, Save, X, Trash2, UploadIcon, History, RotateCcw, Globe } from "lucide-react";
+import { 
+  BookOpen, 
+  Upload, 
+  FileText, 
+  Eye, 
+  Edit, 
+  ExternalLink, 
+  Save, 
+  X, 
+  Trash2, 
+  UploadIcon, 
+  History, 
+  RotateCcw, 
+  Globe,
+  MoreHorizontal,
+  Download,
+  Calendar,
+  FileIcon,
+  Plus,
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown,
+  BarChart3,
+  Brain,
+  Settings,
+  TrendingUp,
+  Users,
+  Shield,
+  Zap,
+  Move
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadDocumentDialog } from "@/components/upload-document-dialog";
@@ -14,6 +45,21 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +73,7 @@ interface Document {
   createdAt?: Date;
   fileUrl?: string;
   version?: number;
+  assignedCategory?: string; // For manual folder assignment
 }
 
 interface DocumentVersion {
@@ -42,13 +89,167 @@ interface DocumentVersion {
   updatedAt: Date | null;
 }
 
+interface DocumentCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  documents: Document[];
+  keywords: string[];
+}
+
 interface KnowledgeBaseClientProps {
   tenantId: string;
   initialDocuments: Document[];
 }
 
+const getFileTypeDisplay = (fileType: string | undefined) => {
+  if (!fileType) return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
+  
+  const types: Record<string, { label: string; color: string }> = {
+    "web-page": { label: "Web Page", color: "bg-blue-100 text-blue-700" },
+    "pdf": { label: "PDF", color: "bg-red-100 text-red-700" },
+    "txt": { label: "Text", color: "bg-green-100 text-green-700" },
+    "docx": { label: "Word", color: "bg-blue-100 text-blue-700" },
+    "md": { label: "Markdown", color: "bg-purple-100 text-purple-700" },
+  };
+  
+  return types[fileType] || { label: fileType.toUpperCase(), color: "bg-gray-100 text-gray-700" };
+};
+
+const formatDate = (date: Date | undefined) => {
+  if (!date) return "Unknown";
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
+};
+
+const PREDEFINED_CATEGORIES: Omit<DocumentCategory, 'documents'>[] = [
+  {
+    id: "dora-metrics",
+    name: "DORA Metrics & KPIs",
+    description: "Key performance indicators, metrics frameworks, and measurement strategies for software delivery performance",
+    icon: <BarChart3 className="h-5 w-5" />,
+    color: "bg-blue-50 border-blue-200 text-blue-700",
+    keywords: ["dora", "metrics", "four keys", "measurement", "kpi", "performance", "delivery", "throughput", "stability"]
+  },
+  {
+    id: "capabilities",
+    name: "DevOps Capabilities",
+    description: "Technical and organizational capabilities that drive software delivery and operational performance",
+    icon: <Settings className="h-5 w-5" />,
+    color: "bg-green-50 border-green-200 text-green-700",
+    keywords: ["capabilities", "continuous", "integration", "delivery", "deployment", "testing", "monitoring", "security", "automation"]
+  },
+  {
+    id: "annual-reports",
+    name: "Annual Reports",
+    description: "State of DevOps annual reports with industry trends, benchmarks, and best practices",
+    icon: <TrendingUp className="h-5 w-5" />,
+    color: "bg-purple-50 border-purple-200 text-purple-700",
+    keywords: ["accelerate", "state of devops", "report", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "annual"]
+  },
+  {
+    id: "research",
+    name: "Research & Studies",
+    description: "Academic research, data analysis, methodology papers, and scientific studies on software engineering",
+    icon: <Brain className="h-5 w-5" />,
+    color: "bg-amber-50 border-amber-200 text-amber-700",
+    keywords: ["research", "study", "methodology", "analysis", "survey", "questions", "errata", "structural equation", "academic"]
+  },
+  {
+    id: "artificial-intelligence",
+    name: "Artificial Intelligence",
+    description: "AI and machine learning applications in software development, generative AI tools and practices",
+    icon: <Zap className="h-5 w-5" />,
+    color: "bg-indigo-50 border-indigo-200 text-indigo-700",
+    keywords: ["artificial intelligence", "ai", "generative ai", "machine learning", "automation", "gen ai", "fostering trust"]
+  },
+  {
+    id: "organizational",
+    name: "Culture & Leadership",
+    description: "Organizational culture, leadership practices, team dynamics, and workplace transformation",
+    icon: <Users className="h-5 w-5" />,
+    color: "bg-rose-50 border-rose-200 text-rose-700",
+    keywords: ["culture", "leadership", "organizational", "team", "transformation", "job satisfaction", "learning", "experimentation"]
+  }
+];
+
+const categorizeDocuments = (documents: Document[], documentCategories: Map<string, string> = new Map()): DocumentCategory[] => {
+  // Initialize categories with empty documents arrays
+  const categories: DocumentCategory[] = PREDEFINED_CATEGORIES.map(cat => ({
+    ...cat,
+    documents: []
+  }));
+
+  // Add uncategorized category
+  const uncategorized: DocumentCategory = {
+    id: "uncategorized",
+    name: "Other Documents",
+    description: "Documents that don't fit into predefined categories",
+    icon: <FileIcon className="h-5 w-5" />,
+    color: "bg-gray-50 border-gray-200 text-gray-700",
+    keywords: [],
+    documents: []
+  };
+
+  // Categorize documents
+  documents.forEach(doc => {
+    // Check if document has a manual category assignment
+    const manualCategory = documentCategories.get(doc.id) || doc.assignedCategory;
+    
+    if (manualCategory) {
+      const category = categories.find(cat => cat.id === manualCategory);
+      if (category) {
+        category.documents.push(doc);
+        return;
+      }
+    }
+
+    // Fallback to automatic categorization
+    const docName = doc.name.toLowerCase();
+    const docType = doc.fileType?.toLowerCase() || "";
+    const docText = `${docName} ${docType}`;
+    
+    let categorized = false;
+    
+    for (const category of categories) {
+      const hasKeyword = category.keywords.some(keyword => 
+        docText.includes(keyword.toLowerCase())
+      );
+      
+      if (hasKeyword) {
+        category.documents.push(doc);
+        categorized = true;
+        break;
+      }
+    }
+    
+    if (!categorized) {
+      uncategorized.documents.push(doc);
+    }
+  });
+
+  // Only include categories that have documents and uncategorized if it has documents
+  const result = categories.filter(cat => cat.documents.length > 0);
+  if (uncategorized.documents.length > 0) {
+    result.push(uncategorized);
+  }
+
+  // Sort categories by document count (descending)
+  return result.sort((a, b) => b.documents.length - a.documents.length);
+};
+
 export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBaseClientProps) {
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+  const [documentCategories, setDocumentCategories] = useState<Map<string, string>>(new Map());
+  const [categories, setCategories] = useState<DocumentCategory[]>(() => categorizeDocuments(initialDocuments));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["dora-metrics"])); // Start with first category expanded
   const [isPending, startTransition] = useTransition();
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [editedName, setEditedName] = useState("");
@@ -61,49 +262,45 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   const [documentVersions, setDocumentVersions] = useState<DocumentVersion[]>([]);
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [isReverting, setIsReverting] = useState(false);
+  const [movingDocument, setMovingDocument] = useState<Document | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Update documents state when initialDocuments changes
+  // Update documents and categories when initialDocuments changes
   useEffect(() => {
     setDocuments(initialDocuments);
-  }, [initialDocuments]);
+    const newCategories = categorizeDocuments(initialDocuments, documentCategories);
+    setCategories(newCategories);
+  }, [initialDocuments, documentCategories]);
 
   const refreshDocuments = async () => {
     try {
       const updatedDocuments = await getDocuments(tenantId);
-      console.log("📚 Got updated documents:", updatedDocuments.length);
       setDocuments(updatedDocuments);
-      console.log("✅ Documents refreshed successfully");
+      setCategories(categorizeDocuments(updatedDocuments, documentCategories));
     } catch (error) {
-      console.error("❌ Failed to refresh documents:", error);
+      console.error("Failed to refresh documents:", error);
     }
   };
 
   const handleUploadComplete = () => {
-    console.log("🔄 Upload complete callback triggered");
-    // Refresh documents after upload
     startTransition(() => {
-      console.log("🔄 Starting transition to refresh documents");
       router.refresh();
     });
-    
-    // Separately fetch updated documents
     refreshDocuments();
   };
 
   const handleViewDocument = (doc: Document) => {
     if (doc.fileUrl) {
-      // Open the original file/URL in a new tab
       window.open(doc.fileUrl, '_blank');
     } else {
-      // If no file URL, we could show a modal with the text content
       console.log("No file URL available for document:", doc.name);
+      toast.error("Document preview not available");
     }
   };
 
   const handleEditDocument = (doc: Document) => {
-    console.log("📝 Starting rename for document:", doc.name);
     setEditingDocument(doc);
     setEditedName(doc.name);
   };
@@ -111,17 +308,12 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   const handleSaveDocument = async () => {
     if (!editingDocument) return;
 
-    console.log("💾 Saving renamed document:", editingDocument.name, "→", editedName.trim());
     setIsSaving(true);
     try {
       await renameDocument(tenantId, editingDocument.id, editedName.trim());
-
       toast.success("Document renamed successfully!");
       setEditingDocument(null);
-      
-      // Refresh documents
       await refreshDocuments();
-      
     } catch (error: any) {
       console.error("Error renaming document:", error);
       toast.error(error.message || "Failed to rename document");
@@ -131,7 +323,6 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   };
 
   const handleCancelEdit = () => {
-    console.log("❌ Cancelled rename operation");
     setEditingDocument(null);
     setEditedName("");
   };
@@ -154,9 +345,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   };
 
   const handleReplaceDocument = (doc: Document) => {
-    console.log("🔄 Starting replace for document:", doc.name);
     setReplaceDoc(doc);
-    // Trigger file input
     setTimeout(() => {
       fileInputRef.current?.click();
     }, 100);
@@ -164,34 +353,23 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
 
   const handleFileReplace = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !replaceDoc) {
-      console.log("❌ No file or replaceDoc in handleFileReplace");
-      return;
-    }
+    if (!file || !replaceDoc) return;
 
-    console.log("🔄 Processing file replacement:", file.name);
     setIsReplacing(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("name", replaceDoc.name);
 
-      console.log("📤 Calling replaceDocument server action...");
-      const result = await replaceDocument(tenantId, replaceDoc.id, formData);
-      console.log("✅ Replace result:", result);
-      
+      await replaceDocument(tenantId, replaceDoc.id, formData);
       toast.success(`Document replaced successfully! New version created.`);
       setReplaceDoc(null);
-      
-      // Refresh documents
       await refreshDocuments();
-      
     } catch (error: any) {
       console.error("Error replacing document:", error);
       toast.error(error.message || "Failed to replace document");
     } finally {
       setIsReplacing(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -199,7 +377,6 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   };
 
   const handleViewVersionHistory = async (doc: Document) => {
-    console.log("📚 Getting version history for:", doc.name);
     setVersionHistoryDoc(doc);
     setIsLoadingVersions(true);
     try {
@@ -216,7 +393,6 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   const handleRevertToVersion = async (version: number) => {
     if (!versionHistoryDoc) return;
 
-    console.log(`🔄 Reverting ${versionHistoryDoc.name} to version ${version}`);
     setIsReverting(true);
     try {
       await revertDocumentVersion(tenantId, versionHistoryDoc.name, version);
@@ -231,8 +407,51 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
     }
   };
 
+  const handleMoveDocument = (doc: Document) => {
+    setMovingDocument(doc);
+    // Set current category as default
+    const currentCategory = categories.find(cat => 
+      cat.documents.some(d => d.id === doc.id)
+    )?.id || "";
+    setSelectedCategory(currentCategory);
+  };
+
+  const handleMoveDocumentToCategory = () => {
+    if (!movingDocument || !selectedCategory) return;
+
+    // Update the document categories mapping
+    const newCategories = new Map(documentCategories);
+    newCategories.set(movingDocument.id, selectedCategory);
+    setDocumentCategories(newCategories);
+
+    // Recategorize documents
+    const newCategorizedDocuments = categorizeDocuments(documents, newCategories);
+    setCategories(newCategorizedDocuments);
+
+    // Expand the target category
+    setExpandedCategories(prev => new Set([...prev, selectedCategory]));
+
+    toast.success(`Document moved to ${PREDEFINED_CATEGORIES.find(cat => cat.id === selectedCategory)?.name || selectedCategory} successfully!`);
+    setMovingDocument(null);
+    setSelectedCategory("");
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const totalDocuments = documents.length;
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
       {/* Hidden file input for replace functionality */}
       <input
         ref={fileInputRef}
@@ -242,141 +461,247 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
         onChange={handleFileReplace}
       />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
-          <p className="text-muted-foreground">
-            Manage documents and content for your AI assistant
-          </p>
+      {/* Professional Header */}
+      <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-gray-900">Document Library</h1>
+              <p className="text-gray-600">
+                Organized knowledge repository with {totalDocuments} document{totalDocuments !== 1 ? 's' : ''} across {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <UploadDocumentDialog 
+                tenantId={tenantId} 
+                onUploadComplete={handleUploadComplete}
+                trigger={
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Document
+                  </Button>
+                }
+              />
+            </div>
+          </div>
         </div>
-        <UploadDocumentDialog 
-          tenantId={tenantId} 
-          onUploadComplete={handleUploadComplete} 
-        />
       </div>
 
-      {isPending && (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground">Updating documents...</p>
-        </div>
-      )}
+      <div className="container mx-auto px-6 py-8">
+        {isPending && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-700 text-sm font-medium">Updating document library...</p>
+          </div>
+        )}
 
-      {isReplacing && (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground">Replacing document...</p>
-        </div>
-      )}
+        {isReplacing && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-700 text-sm font-medium">Replacing document...</p>
+          </div>
+        )}
 
-      {documents.length === 0 ? (
-        <div className="text-center py-12">
-          <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium mb-2">No documents yet</h3>
-          <p className="text-muted-foreground mb-6">
-            Upload your first document to get started with AI-powered search
-          </p>
-          <UploadDocumentDialog 
-            tenantId={tenantId} 
-            onUploadComplete={handleUploadComplete}
-            trigger={
-              <Button size="lg">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Your First Document
-              </Button>
-            }
-          />
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {documents.map((doc) => (
-            <Card key={doc.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  {doc.fileType === "web-page" ? (
-                    <Globe className="h-5 w-5 text-blue-500" />
-                  ) : (
-                    <FileText className="h-5 w-5" />
-                  )}
-                  {doc.name}
-                </CardTitle>
-                <CardDescription>
-                  {doc.chunks?.length || 0} chunks • {doc.fileType === "web-page" ? "Web Page" : (doc.fileType || 'Unknown type')}
-                  {doc.version && ` • v${doc.version}`}
-                  {doc.fileType === "web-page" && doc.fileUrl && (
-                    <span className="text-xs text-blue-600 block mt-1 truncate">
-                      {doc.fileUrl}
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Uploaded {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : 'Unknown date'}
-                </p>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleViewDocument(doc)}
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
+        {totalDocuments === 0 ? (
+          <Card className="bg-white shadow-sm border border-gray-200">
+            <CardContent className="text-center py-16">
+              <div className="h-16 w-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No documents yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Upload your first document to get started with AI-powered search and analysis
+              </p>
+              <UploadDocumentDialog 
+                tenantId={tenantId} 
+                onUploadComplete={handleUploadComplete}
+                trigger={
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    <Upload className="h-5 w-5 mr-2" />
+                    Upload Your First Document
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleEditDocument(doc)}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Rename
-                  </Button>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleReplaceDocument(doc)}
-                    disabled={isReplacing}
-                  >
-                    <UploadIcon className="h-3 w-3 mr-1" />
-                    Replace
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleViewVersionHistory(doc)}
-                  >
-                    <History className="h-3 w-3 mr-1" />
-                    Versions
-                  </Button>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => setDeleteConfirmDoc(doc)}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                }
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {categories.map((category) => (
+              <Card key={category.id} className="bg-white shadow-sm border border-gray-200">
+                <CardHeader 
+                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => toggleCategory(category.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${category.color}`}>
+                        {category.icon}
+                      </div>
+                      <div className="text-left">
+                        <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          {category.name}
+                          <Badge variant="secondary" className="text-xs">
+                            {category.documents.length}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-600 mt-1">
+                          {category.description}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {expandedCategories.has(category.id) ? (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                {expandedCategories.has(category.id) && (
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {category.documents.map((doc) => {
+                        const fileTypeDisplay = getFileTypeDisplay(doc.fileType);
+                        return (
+                          <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                {doc.fileType === "web-page" ? (
+                                  <Globe className="h-4 w-4 text-blue-600" />
+                                ) : (
+                                  <FileIcon className="h-4 w-4 text-blue-600" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {doc.name}
+                                </div>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                                  <Badge className={`${fileTypeDisplay.color} text-xs`}>
+                                    {fileTypeDisplay.label}
+                                  </Badge>
+                                  <span>
+                                    {doc.chunks?.length || 0} chunk{(doc.chunks?.length || 0) !== 1 ? 's' : ''}
+                                  </span>
+                                  <span>v{doc.version || 1}</span>
+                                  <span>{formatDate(doc.createdAt)}</span>
+                                </div>
+                                {doc.fileType === "web-page" && doc.fileUrl && (
+                                  <div className="text-xs text-blue-600 truncate mt-1">
+                                    {doc.fileUrl}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => handleViewDocument(doc)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Document
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditDocument(doc)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Rename
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleMoveDocument(doc)}>
+                                  <Move className="h-4 w-4 mr-2" />
+                                  Move to Folder
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleReplaceDocument(doc)}>
+                                  <UploadIcon className="h-4 w-4 mr-2" />
+                                  Replace File
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewVersionHistory(doc)}>
+                                  <History className="h-4 w-4 mr-2" />
+                                  Version History
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => setDeleteConfirmDoc(doc)}
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
       
-      {/* Edit Document Dialog - Name Only */}
+      {/* Move Document Dialog */}
+      <Dialog open={!!movingDocument} onOpenChange={() => setMovingDocument(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move Document to Folder</DialogTitle>
+            <DialogDescription>
+              Choose which folder to move "{movingDocument?.name}" to.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-select">Select Folder</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a folder..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_CATEGORIES.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        {category.icon}
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="uncategorized">
+                    <div className="flex items-center gap-2">
+                      <FileIcon className="h-4 w-4" />
+                      Other Documents
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setMovingDocument(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleMoveDocumentToCategory} disabled={!selectedCategory}>
+              Move Document
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Document Dialog */}
       <Dialog open={!!editingDocument} onOpenChange={() => setEditingDocument(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Rename Document</DialogTitle>
             <DialogDescription>
-              Change the display name for your document.
+              Update the display name for this document.
             </DialogDescription>
           </DialogHeader>
           
@@ -394,11 +719,9 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
           
           <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-              <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
             <Button onClick={handleSaveDocument} disabled={isSaving || !editedName.trim()}>
-              <Save className="h-4 w-4 mr-2" />
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
@@ -417,30 +740,30 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
           
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {isLoadingVersions ? (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">Loading version history...</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading version history...</p>
               </div>
             ) : documentVersions.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">No version history found</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">No version history found</p>
               </div>
             ) : (
               documentVersions.map((version) => (
-                <div key={version.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={version.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Version {version.version}</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900">Version {version.version}</span>
                       {version.isActive && (
-                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                        <Badge className="bg-green-100 text-green-800">
                           Current
-                        </span>
+                        </Badge>
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-600">
                       {version.fileType} • {version.fileSize ? `${(version.fileSize / 1024).toFixed(1)}KB` : 'Unknown size'}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {version.createdAt ? new Date(version.createdAt).toLocaleString() : 'Unknown date'}
+                    <div className="text-sm text-gray-500">
+                      {version.createdAt ? formatDate(version.createdAt) : 'Unknown date'}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -473,7 +796,6 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
           
           <div className="flex justify-end pt-4 border-t">
             <Button variant="outline" onClick={() => setVersionHistoryDoc(null)}>
-              <X className="h-4 w-4 mr-2" />
               Close
             </Button>
           </div>
@@ -486,7 +808,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deleteConfirmDoc?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{deleteConfirmDoc?.name}"? This action cannot be undone and will remove all associated data.
             </DialogDescription>
           </DialogHeader>
           
