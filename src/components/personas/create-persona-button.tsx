@@ -29,14 +29,16 @@ export function CreatePersonaButton({ tenantId, variant = "outline" }: CreatePer
           Create Persona
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Persona</DialogTitle>
           <DialogDescription>
             Define a new AI persona with specific characteristics and behavior.
           </DialogDescription>
         </DialogHeader>
-        <CreatePersonaForm tenantId={tenantId} onSuccess={() => setOpen(false)} />
+        <div className="max-h-[calc(90vh-8rem)] overflow-y-auto">
+          <CreatePersonaForm tenantId={tenantId} onSuccess={() => setOpen(false)} />
+        </div>
       </DialogContent>
     </Dialog>
   );

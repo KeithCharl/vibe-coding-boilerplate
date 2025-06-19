@@ -276,4 +276,192 @@ export async function getCombinedSystemPrompt(tenantId: string, sessionId: strin
     .join('\n\n');
 
   return `You are an AI assistant embodying the following personas:\n\n${combinedPrompt}\n\nCombine the characteristics and knowledge of all these personas when responding. You also have access to the knowledge base to provide accurate information.`;
+}
+
+/**
+ * Generate a persona using AI based on user description
+ */
+export async function generatePersonaWithAI(
+  tenantId: string,
+  description: string,
+  requirements?: {
+    expertise?: string;
+    tone?: string;
+    style?: string;
+    constraints?: string;
+  }
+) {
+  await requireAuth(tenantId, "contributor");
+
+  if (!description?.trim()) {
+    throw new Error("Description is required for AI generation");
+  }
+
+  try {
+    const { ChatOpenAI } = await import("@langchain/openai");
+    const { HumanMessage, SystemMessage } = await import("@langchain/core/messages");
+
+    const llm = new ChatOpenAI({
+      modelName: "gpt-4o-mini",
+      temperature: 0.7,
+    });
+
+    const systemPrompt = `You are an expert AI prompt engineer and persona designer. Your task is to create detailed, effective personas based on user descriptions.
+
+When creating a persona, you should:
+1. Generate a clear, descriptive name that reflects the persona's role/expertise
+2. Write a concise description (1-2 sentences) explaining the persona's purpose
+3. Create a comprehensive system prompt that defines the persona's:
+   - Expertise and knowledge areas
+   - Communication style and tone
+   - Behavioral guidelines
+   - Response format preferences
+   - Any specific constraints or requirements
+
+The system prompt should be detailed enough to ensure consistent, high-quality responses that match the intended persona.
+
+Respond in JSON format with exactly these fields:
+{
+  "name": "Persona Name",
+  "description": "Brief description of the persona's purpose and role",
+  "systemPrompt": "Detailed system prompt that defines the persona's behavior, expertise, and response style"
+}`;
+
+    const userPrompt = `Create a persona based on this description: "${description}"
+
+${requirements?.expertise ? `Expertise focus: ${requirements.expertise}` : ''}
+${requirements?.tone ? `Preferred tone: ${requirements.tone}` : ''}
+${requirements?.style ? `Communication style: ${requirements.style}` : ''}
+${requirements?.constraints ? `Additional constraints: ${requirements.constraints}` : ''}
+
+Generate a JSON response with name, description, and systemPrompt fields.`;
+
+    const response = await llm.invoke([
+      new SystemMessage(systemPrompt),
+      new HumanMessage(userPrompt),
+    ]);
+
+    let result;
+    try {
+      // Extract JSON from the response
+      const content = response.content as string;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("No JSON found in response");
+      }
+    } catch (parseError) {
+      throw new Error("Failed to parse AI response. Please try again.");
+    }
+
+    // Validate the response structure
+    if (!result.name || !result.description || !result.systemPrompt) {
+      throw new Error("AI response missing required fields");
+    }
+
+    return {
+      success: true,
+      persona: {
+        name: result.name,
+        description: result.description,
+        systemPrompt: result.systemPrompt,
+      }
+    };
+  } catch (error) {
+    console.error("AI persona generation error:", error);
+    throw new Error(error instanceof Error ? error.message : "Failed to generate persona with AI");
+  }
+}
+
+/**
+ * Refine an existing persona using AI
+ */
+export async function refinePersonaWithAI(
+  tenantId: string,
+  currentPersona: {
+    name: string;
+    description?: string;
+    systemPrompt: string;
+  },
+  refinementRequest: string
+) {
+  await requireAuth(tenantId, "contributor");
+
+  if (!refinementRequest?.trim()) {
+    throw new Error("Refinement request is required");
+  }
+
+  try {
+    const { ChatOpenAI } = await import("@langchain/openai");
+    const { HumanMessage, SystemMessage } = await import("@langchain/core/messages");
+
+    const llm = new ChatOpenAI({
+      modelName: "gpt-4o-mini",
+      temperature: 0.7,
+    });
+
+    const systemPrompt = `You are an expert AI prompt engineer. Your task is to refine and improve existing personas based on user feedback.
+
+When refining a persona, you should:
+1. Carefully analyze the current persona definition
+2. Understand the user's refinement request
+3. Make targeted improvements while preserving the core identity
+4. Ensure the refined persona is more effective and aligned with the user's needs
+
+Respond in JSON format with exactly these fields:
+{
+  "name": "Refined persona name (may be the same)",
+  "description": "Updated description",
+  "systemPrompt": "Improved system prompt",
+  "changes": "Brief explanation of what was changed and why"
+}`;
+
+    const userPrompt = `Refine this existing persona based on the user's request:
+
+CURRENT PERSONA:
+Name: ${currentPersona.name}
+Description: ${currentPersona.description || 'No description'}
+System Prompt: ${currentPersona.systemPrompt}
+
+REFINEMENT REQUEST:
+${refinementRequest}
+
+Please refine the persona to better meet the user's needs while maintaining its core identity.`;
+
+    const response = await llm.invoke([
+      new SystemMessage(systemPrompt),
+      new HumanMessage(userPrompt),
+    ]);
+
+    let result;
+    try {
+      const content = response.content as string;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("No JSON found in response");
+      }
+    } catch (parseError) {
+      throw new Error("Failed to parse AI response. Please try again.");
+    }
+
+    if (!result.name || !result.description || !result.systemPrompt) {
+      throw new Error("AI response missing required fields");
+    }
+
+    return {
+      success: true,
+      persona: {
+        name: result.name,
+        description: result.description,
+        systemPrompt: result.systemPrompt,
+      },
+      changes: result.changes || "Persona refined based on your request"
+    };
+  } catch (error) {
+    console.error("AI persona refinement error:", error);
+    throw new Error(error instanceof Error ? error.message : "Failed to refine persona with AI");
+  }
 } 
