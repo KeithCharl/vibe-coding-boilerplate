@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ThemeToggleButton } from "@/components/theme-toggle-button";
 
 export default function SignIn() {
   const handleGoogleSignIn = () => {
@@ -18,7 +19,12 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center p-6 relative">
+      {/* Theme Toggle in Top Right */}
+      <div className="absolute top-6 right-6 z-10">
+        <ThemeToggleButton />
+      </div>
+      
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
         {/* Professional Branding Section */}

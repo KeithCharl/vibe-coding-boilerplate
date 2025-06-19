@@ -46,7 +46,19 @@ import {
   Copy,
   Shield,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  FileText,
+  MessageSquare,
+  Workflow,
+  Plug,
+  Download,
+  Star,
+  Calendar,
+  User,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -56,6 +68,9 @@ import {
   deleteConnectionTemplate
 } from "@/server/actions/kb-references";
 import Link from "next/link";
+import { getCurrentUserRole } from "@/server/actions/user-management";
+import { getTemplateSubmissions } from "@/server/actions/templates";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ConnectionTemplate {
   id: string;
@@ -71,413 +86,277 @@ interface ConnectionTemplate {
   usageCount: number;
 }
 
-export default function TemplatesAdminPage() {
-  const [templates, setTemplates] = useState<ConnectionTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [editingTemplate, setEditingTemplate] = useState<ConnectionTemplate | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    isSystemTemplate: false,
-    defaultWeight: [1.0],
-    includeTags: "",
-    excludeTags: "",
-    includeDocumentTypes: [] as string[],
-    excludeDocumentTypes: [] as string[],
-  });
-
-  const documentTypes = ["pdf", "txt", "md", "web"];
-
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
-    try {
-      const data = await getConnectionTemplates();
-      setTemplates(data);
-    } catch (error) {
-      toast.error("Failed to load templates");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+// Template Submission Review Component
+async function TemplateSubmissionCard({ submission }: { submission: any }) {
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "document":
+        return <FileText className="h-4 w-4" />;
+      case "prompt":
+        return <MessageSquare className="h-4 w-4" />;
+      case "workflow":
+        return <Workflow className="h-4 w-4" />;
+      case "integration":
+        return <Plug className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
-  const openCreateDialog = () => {
-    setEditingTemplate(null);
-    setFormData({
-      name: "",
-      description: "",
-      isSystemTemplate: false,
-      defaultWeight: [1.0],
-      includeTags: "",
-      excludeTags: "",
-      includeDocumentTypes: [],
-      excludeDocumentTypes: [],
-    });
-    setIsDialogOpen(true);
-  };
-
-  const openEditDialog = (template: ConnectionTemplate) => {
-    setEditingTemplate(template);
-    setFormData({
-      name: template.name,
-      description: template.description || "",
-      isSystemTemplate: template.isSystemTemplate,
-      defaultWeight: [template.defaultWeight],
-      includeTags: template.includeTags?.join(", ") || "",
-      excludeTags: template.excludeTags?.join(", ") || "",
-      includeDocumentTypes: template.includeDocumentTypes || [],
-      excludeDocumentTypes: template.excludeDocumentTypes || [],
-    });
-    setIsDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-    setEditingTemplate(null);
-  };
-
-  const handleSave = async () => {
-    if (!formData.name.trim()) {
-      toast.error("Template name is required");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const templateData = {
-        name: formData.name,
-        description: formData.description || undefined,
-        isSystemTemplate: formData.isSystemTemplate,
-        defaultWeight: formData.defaultWeight[0],
-        includeTags: formData.includeTags ? formData.includeTags.split(",").map(t => t.trim()) : undefined,
-        excludeTags: formData.excludeTags ? formData.excludeTags.split(",").map(t => t.trim()) : undefined,
-        includeDocumentTypes: formData.includeDocumentTypes.length > 0 ? formData.includeDocumentTypes : undefined,
-        excludeDocumentTypes: formData.excludeDocumentTypes.length > 0 ? formData.excludeDocumentTypes : undefined,
-      };
-
-      if (editingTemplate) {
-        await updateConnectionTemplate(editingTemplate.id, templateData);
-        toast.success("Template updated successfully!");
-      } else {
-        await createConnectionTemplate(templateData);
-        toast.success("Template created successfully!");
-      }
-
-      await loadTemplates();
-      closeDialog();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save template");
-    } finally {
-      setIsSaving(false);
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+      case "approved":
+        return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
+      case "rejected":
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const handleDelete = async (templateId: string) => {
-    if (!confirm("Are you sure you want to delete this template?")) return;
-
-    try {
-      await deleteConnectionTemplate(templateId);
-      toast.success("Template deleted successfully!");
-      await loadTemplates();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete template");
-    }
-  };
-
-  const handleDuplicate = (template: ConnectionTemplate) => {
-    setEditingTemplate(null);
-    setFormData({
-      name: `${template.name} (Copy)`,
-      description: template.description || "",
-      isSystemTemplate: false, // Copies are never system templates
-      defaultWeight: [template.defaultWeight],
-      includeTags: template.includeTags?.join(", ") || "",
-      excludeTags: template.excludeTags?.join(", ") || "",
-      includeDocumentTypes: template.includeDocumentTypes || [],
-      excludeDocumentTypes: template.excludeDocumentTypes || [],
-    });
-    setIsDialogOpen(true);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
+  return (
+    <Card className="w-full">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Admin
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Connection Templates</h1>
-              <p className="text-muted-foreground">Loading templates...</p>
+          <div className="flex items-center space-x-2">
+            {getCategoryIcon(submission.category)}
+            <CardTitle className="text-lg">{submission.name}</CardTitle>
+          </div>
+          {getStatusBadge(submission.status)}
+        </div>
+        <CardDescription>{submission.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Metadata */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>Submitted by: {submission.submittedByUser?.name || submission.submittedByUser?.email}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
             </div>
           </div>
+
+          {/* Category and Version */}
+          <div className="flex items-center space-x-4">
+            <Badge variant="outline">{submission.category}</Badge>
+            <span className="text-sm text-muted-foreground">Version: {submission.version}</span>
+          </div>
+
+          {/* Tags */}
+          {submission.tags && submission.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {submission.tags.map((tag: string, index: number) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Submission Notes */}
+          {submission.submissionNotes && (
+            <div className="border-l-4 border-blue-500 pl-4">
+              <p className="text-sm font-medium">Submission Notes:</p>
+              <p className="text-sm text-muted-foreground">{submission.submissionNotes}</p>
+            </div>
+          )}
+
+          {/* Review Notes (if reviewed) */}
+          {submission.reviewNotes && (
+            <div className="border-l-4 border-gray-500 pl-4">
+              <p className="text-sm font-medium">Review Notes:</p>
+              <p className="text-sm text-muted-foreground">{submission.reviewNotes}</p>
+            </div>
+          )}
+
+          {/* File Download */}
+          {submission.fileUrl && (
+            <div className="flex items-center space-x-2">
+              <Download className="h-4 w-4 text-muted-foreground" />
+              <a 
+                href={submission.fileUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Download File ({submission.fileType})
+              </a>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {submission.status === "pending" && (
+            <div className="flex space-x-2 pt-4">
+              <Button size="sm" className="flex-1">
+                <Eye className="h-4 w-4 mr-2" />
+                Review
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Approve
+              </Button>
+              <Button size="sm" variant="destructive" className="flex-1">
+                <XCircle className="h-4 w-4 mr-2" />
+                Reject
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
-    );
+      </CardContent>
+    </Card>
+  );
+}
+
+export default async function AdminTemplatesPage() {
+  const currentUserRole = await getCurrentUserRole();
+  
+  if (!currentUserRole || (currentUserRole.globalRole !== "super_admin" && currentUserRole.globalRole !== "tenant_admin")) {
+    redirect("/admin");
   }
+
+  // Fetch template submissions
+  const submissionsResult = await getTemplateSubmissions();
+  const submissions = submissionsResult.success ? submissionsResult.data : [];
+
+  // Group submissions by status
+  const pendingSubmissions = submissions.filter(s => s.status === "pending");
+  const approvedSubmissions = submissions.filter(s => s.status === "approved");
+  const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/admin">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Admin
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Connection Templates</h1>
-            <p className="text-muted-foreground">
-              Manage reusable configuration templates for knowledge base references.
-            </p>
-          </div>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Template
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTemplate ? "Edit Template" : "Create New Template"}
-              </DialogTitle>
-              <DialogDescription>
-                Create a reusable configuration template for knowledge base references.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Template Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Standard Cross-Reference"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe when to use this template..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Default Weight: {formData.defaultWeight[0]}</Label>
-                <Slider
-                  value={formData.defaultWeight}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, defaultWeight: value }))}
-                  max={2}
-                  min={0.1}
-                  step={0.1}
-                  className="w-full"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Default result weight for references using this template.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="isSystemTemplate">System Template</Label>
-                <Switch
-                  id="isSystemTemplate"
-                  checked={formData.isSystemTemplate}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isSystemTemplate: checked }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Include Document Types</Label>
-                <div className="flex gap-2 flex-wrap">
-                  {documentTypes.map((type) => (
-                    <Badge
-                      key={type}
-                      variant={formData.includeDocumentTypes.includes(type) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          includeDocumentTypes: prev.includeDocumentTypes.includes(type)
-                            ? prev.includeDocumentTypes.filter(t => t !== type)
-                            : [...prev.includeDocumentTypes, type]
-                        }));
-                      }}
-                    >
-                      {type.toUpperCase()}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="includeTags">Include Tags (comma-separated)</Label>
-                  <Input
-                    id="includeTags"
-                    value={formData.includeTags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, includeTags: e.target.value }))}
-                    placeholder="project, banking, upgrade"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="excludeTags">Exclude Tags (comma-separated)</Label>
-                  <Input
-                    id="excludeTags"
-                    value={formData.excludeTags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, excludeTags: e.target.value }))}
-                    placeholder="draft, internal, deprecated"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? "Saving..." : (editingTemplate ? "Update Template" : "Create Template")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+      {/* Header */}
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold">Template Management</h2>
+        <p className="text-muted-foreground">
+          Review and approve user-submitted templates for the knowledge base.
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Templates Overview</CardTitle>
-          <CardDescription>
-            {templates.length} template{templates.length !== 1 ? 's' : ''} configured
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {templates.length === 0 ? (
-            <div className="text-center py-12">
-              <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">No Templates</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first connection template to get started.
-              </p>
-              <Button onClick={openCreateDialog}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Template
-              </Button>
-            </div>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingSubmissions.length}</div>
+            <p className="text-xs text-muted-foreground">Templates awaiting review</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{approvedSubmissions.length}</div>
+            <p className="text-xs text-muted-foreground">Templates approved</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{rejectedSubmissions.length}</div>
+            <p className="text-xs text-muted-foreground">Templates rejected</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{submissions.length}</div>
+            <p className="text-xs text-muted-foreground">All time submissions</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Templates Tabs */}
+      <Tabs defaultValue="pending" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="pending" className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>Pending ({pendingSubmissions.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="approved" className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4" />
+            <span>Approved ({approvedSubmissions.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="flex items-center space-x-2">
+            <XCircle className="h-4 w-4" />
+            <span>Rejected ({rejectedSubmissions.length})</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="space-y-4">
+          {pendingSubmissions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No pending submissions to review.</p>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Weight</TableHead>
-                  <TableHead>Usage</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {templates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{template.name}</div>
-                        {template.description && (
-                          <div className="text-sm text-muted-foreground">
-                            {template.description}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {template.isSystemTemplate ? (
-                        <Badge variant="default" className="gap-1">
-                          <Crown className="w-3 h-3" />
-                          System
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Custom</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{template.defaultWeight}</TableCell>
-                    <TableCell>{template.usageCount} uses</TableCell>
-                    <TableCell>
-                      {new Date(template.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDuplicate(template)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(template)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Template</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{template.name}"? 
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(template.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid gap-4">
+              {pendingSubmissions.map((submission) => (
+                <TemplateSubmissionCard key={submission.id} submission={submission} />
+              ))}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="approved" className="space-y-4">
+          {approvedSubmissions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No approved templates yet.</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {approvedSubmissions.map((submission) => (
+                <TemplateSubmissionCard key={submission.id} submission={submission} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="rejected" className="space-y-4">
+          {rejectedSubmissions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground">
+                  <XCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No rejected templates.</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {rejectedSubmissions.map((submission) => (
+                <TemplateSubmissionCard key={submission.id} submission={submission} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 } 

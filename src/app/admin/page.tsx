@@ -1,6 +1,6 @@
 import { getCurrentUserRole } from "@/server/actions/user-management";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Settings, Shield, Activity } from "lucide-react";
+import { Users, Settings, Shield, Activity, FileText } from "lucide-react";
 import Link from "next/link";
 
 async function AdminNavigation() {
@@ -16,6 +16,13 @@ async function AdminNavigation() {
       href: "/admin/users",
       icon: Users,
       description: "Manage users and their roles",
+      requiredRole: "tenant_admin" as const,
+    },
+    {
+      label: "Template Submissions",
+      href: "/admin/template-submissions",
+      icon: FileText,
+      description: "Review and approve template submissions",
       requiredRole: "tenant_admin" as const,
     },
     {

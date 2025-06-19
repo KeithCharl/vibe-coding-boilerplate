@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TenantEditDialog } from "@/components/tenant/tenant-edit-dialog";
+import { ThemeToggleButton } from "@/components/theme-toggle-button";
 
 interface TenantDashboardProps {
   userTenants: Array<{
@@ -39,36 +40,44 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
               {/* Professional Header */}
-        <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="container mx-auto px-6 py-8">
+        <div className="border-b bg-background/80 backdrop-blur-sm shadow-sm">
+        <div className="container mx-auto px-6 py-8 relative">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                    <Building2 className="h-7 w-7 text-white" />
+                  <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
+                    <Building2 className="h-7 w-7 text-primary-foreground" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
                       Enterprise Knowledge Platform
                     </h1>
-                    <p className="text-lg text-gray-600">
+                    <p className="text-lg text-muted-foreground">
                       Intelligent data management and collaborative analytics
                     </p>
                   </div>
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-6">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Shield className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Shield className="h-4 w-4 text-primary" />
                   <span>Enterprise Grade Security</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Globe className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Globe className="h-4 w-4 text-primary" />
                   <span>Multi-Tenant Architecture</span>
                 </div>
+                <div className="border-l border-border pl-4">
+                  <ThemeToggleButton />
+                </div>
+              </div>
+              
+              {/* Mobile Theme Toggle */}
+              <div className="md:hidden absolute top-4 right-4">
+                <ThemeToggleButton />
               </div>
             </div>
           </div>
@@ -97,15 +106,15 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {userTenants.map((tenant) => (
-                    <Card key={tenant.tenantId} className="bg-white border shadow-sm hover:shadow-lg transition-all duration-200 group cursor-pointer animate-fade-in">
+                    <Card key={tenant.tenantId} className="bg-card border shadow-sm hover:shadow-lg transition-all duration-200 group cursor-pointer animate-fade-in">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                              <Building2 className="h-5 w-5 text-blue-600" />
+                            <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Building2 className="h-5 w-5 text-primary" />
                             </div>
                             <div className="space-y-1">
-                              <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              <CardTitle className="text-lg font-semibold text-card-foreground group-hover:text-primary transition-colors">
                                 {tenant.tenantName}
                               </CardTitle>
                               <Badge 
@@ -124,7 +133,7 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           <span>Active & Operational</span>
                         </div>
-                        <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm group">
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm group">
                           <Link href={`/t/${tenant.tenantId}`} className="flex items-center justify-center gap-2">
                             <span>Access Workspace</span>
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

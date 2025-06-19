@@ -395,6 +395,136 @@ export const prompts = pgTable(
   ]
 );
 
+// Templates Tables
+
+// Template status enum
+export const templateStatusEnum = pgEnum("template_status", ["draft", "pending", "approved", "rejected", "archived"]);
+
+// Template categories enum  
+export const templateCategoryEnum = pgEnum("template_category", ["document", "prompt", "workflow", "integration", "other"]);
+
+// Templates table for storing approved templates
+export const templates = pgTable(
+  "templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    category: templateCategoryEnum("category").notNull().default("document"),
+    tags: text("tags").array(), // Array of tags for filtering
+    content: jsonb("content").notNull(), // Template content (can be document, prompt, etc.)
+    fileUrl: text("file_url"), // Optional file download URL
+    fileType: varchar("file_type", { length: 50 }), // e.g., "pdf", "docx", "json"
+    fileSize: integer("file_size"), // File size in bytes
+    version: varchar("version", { length: 20 }).notNull().default("1.0.0"),
+    downloadCount: integer("download_count").default(0),
+    rating: real("rating").default(0), // Average rating 1-5
+    ratingCount: integer("rating_count").default(0), // Number of ratings
+    isPublic: boolean("is_public").default(true), // Whether template is publicly visible
+    isActive: boolean("is_active").default(true),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    approvedBy: varchar("approved_by", { length: 255 })
+      .references(() => users.id),
+    approvedAt: timestamp("approved_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("templates_category_idx").on(table.category),
+    index("templates_created_by_idx").on(table.createdBy),
+    index("templates_approved_by_idx").on(table.approvedBy),
+    index("templates_is_public_idx").on(table.isPublic),
+    index("templates_is_active_idx").on(table.isActive),
+    index("templates_rating_idx").on(table.rating),
+    index("templates_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// Template submissions table for user-submitted templates awaiting approval
+export const templateSubmissions = pgTable(
+  "template_submissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    category: templateCategoryEnum("category").notNull().default("document"),
+    tags: text("tags").array(),
+    content: jsonb("content").notNull(),
+    fileUrl: text("file_url"),
+    fileType: varchar("file_type", { length: 50 }),
+    fileSize: integer("file_size"),
+    version: varchar("version", { length: 20 }).notNull().default("1.0.0"),
+    status: templateStatusEnum("status").notNull().default("pending"),
+    submissionNotes: text("submission_notes"), // User's notes when submitting
+    reviewNotes: text("review_notes"), // Admin's notes when reviewing
+    submittedBy: varchar("submitted_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    reviewedBy: varchar("reviewed_by", { length: 255 })
+      .references(() => users.id),
+    reviewedAt: timestamp("reviewed_at"),
+    submittedAt: timestamp("submitted_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("template_submissions_status_idx").on(table.status),
+    index("template_submissions_category_idx").on(table.category),
+    index("template_submissions_submitted_by_idx").on(table.submittedBy),
+    index("template_submissions_reviewed_by_idx").on(table.reviewedBy),
+    index("template_submissions_submitted_at_idx").on(table.submittedAt),
+  ]
+);
+
+// Template ratings table for user ratings
+export const templateRatings = pgTable(
+  "template_ratings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => templates.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(), // 1-5 stars
+    comment: text("comment"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("template_ratings_template_id_idx").on(table.templateId),
+    index("template_ratings_user_id_idx").on(table.userId),
+    // Unique constraint: one rating per user per template
+    index("template_ratings_unique_idx").on(table.templateId, table.userId),
+  ]
+);
+
+// Template downloads table for tracking usage
+export const templateDownloads = pgTable(
+  "template_downloads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => templates.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "set null" }), // Allow anonymous downloads
+    tenantId: uuid("tenant_id")
+      .references(() => tenants.id, { onDelete: "set null" }), // Track which tenant if applicable
+    ipAddress: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
+    userAgent: text("user_agent"),
+    downloadedAt: timestamp("downloaded_at").defaultNow(),
+  },
+  (table) => [
+    index("template_downloads_template_id_idx").on(table.templateId),
+    index("template_downloads_user_id_idx").on(table.userId),
+    index("template_downloads_tenant_id_idx").on(table.tenantId),
+    index("template_downloads_downloaded_at_idx").on(table.downloadedAt),
+  ]
+);
+
 // Enhanced Web Scraping Tables
 
 // Authentication credentials for web scraping
@@ -961,5 +1091,60 @@ export const documentTagsRelations = relations(documentTags, ({ one }) => ({
   document: one(documents, {
     fields: [documentTags.documentId],
     references: [documents.id],
+  }),
+}));
+
+// Template Relations
+export const templatesRelations = relations(templates, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [templates.createdBy],
+    references: [users.id],
+    relationName: "createdTemplates",
+  }),
+  approvedByUser: one(users, {
+    fields: [templates.approvedBy],
+    references: [users.id],
+    relationName: "approvedTemplates",
+  }),
+  ratings: many(templateRatings),
+  downloads: many(templateDownloads),
+}));
+
+export const templateSubmissionsRelations = relations(templateSubmissions, ({ one }) => ({
+  submittedByUser: one(users, {
+    fields: [templateSubmissions.submittedBy],
+    references: [users.id],
+    relationName: "submittedTemplates",
+  }),
+  reviewedByUser: one(users, {
+    fields: [templateSubmissions.reviewedBy],
+    references: [users.id],
+    relationName: "reviewedTemplates",
+  }),
+}));
+
+export const templateRatingsRelations = relations(templateRatings, ({ one }) => ({
+  template: one(templates, {
+    fields: [templateRatings.templateId],
+    references: [templates.id],
+  }),
+  user: one(users, {
+    fields: [templateRatings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const templateDownloadsRelations = relations(templateDownloads, ({ one }) => ({
+  template: one(templates, {
+    fields: [templateDownloads.templateId],
+    references: [templates.id],
+  }),
+  user: one(users, {
+    fields: [templateDownloads.userId],
+    references: [users.id],
+  }),
+  tenant: one(tenants, {
+    fields: [templateDownloads.tenantId],
+    references: [tenants.id],
   }),
 }));
