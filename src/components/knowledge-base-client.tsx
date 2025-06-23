@@ -71,6 +71,7 @@ interface Document {
   chunks?: Array<{ id: string; content: string; chunkIndex: number }>;
   fileType?: string;
   createdAt?: Date;
+  updatedAt?: Date;
   fileUrl?: string;
   version?: number;
   assignedCategory?: string; // For manual folder assignment
@@ -127,6 +128,66 @@ const formatDate = (date: Date | undefined) => {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(date));
+};
+
+const getDocumentStatus = (doc: Document) => {
+  const now = new Date();
+  const createdAt = doc.createdAt ? new Date(doc.createdAt) : null;
+  const updatedAt = doc.updatedAt ? new Date(doc.updatedAt) : null;
+  const version = doc.version || 1;
+
+  // Check if document is new (created within last 24 hours)
+  const isNew = createdAt && (now.getTime() - createdAt.getTime()) < (24 * 60 * 60 * 1000);
+  
+  // Check if document has multiple versions (indicating actual content changes)
+  const hasMultipleVersions = version > 1;
+  
+  // Only consider "recently updated" if version > 1 AND actually updated within 7 days
+  // This ensures we only highlight when content has actually changed
+  const isRecentlyUpdated = hasMultipleVersions && 
+    updatedAt && 
+    createdAt && 
+    (now.getTime() - updatedAt.getTime()) < (7 * 24 * 60 * 60 * 1000) &&
+    (updatedAt.getTime() - createdAt.getTime()) > (60 * 1000); // At least 1 minute difference
+
+  return {
+    isNew,
+    isRecentlyUpdated,
+    hasMultipleVersions,
+    version
+  };
+};
+
+const getDocumentHighlight = (doc: Document) => {
+  const status = getDocumentStatus(doc);
+  
+  if (status.isNew) {
+    return {
+      highlight: "ring-2 ring-green-200 bg-green-50 border-green-300",
+      badge: { text: "NEW", color: "bg-green-100 text-green-700", icon: "✨" }
+    };
+  }
+  
+  if (status.hasMultipleVersions && status.isRecentlyUpdated) {
+    return {
+      highlight: "ring-2 ring-blue-200 bg-blue-50 border-blue-300",
+      badge: { text: "UPDATED", color: "bg-blue-100 text-blue-700", icon: "🔄" }
+    };
+  }
+  
+  if (status.hasMultipleVersions) {
+    return {
+      highlight: "ring-1 ring-purple-200 bg-purple-50 border-purple-200",
+      badge: { text: `v${status.version}`, color: "bg-purple-100 text-purple-700", icon: "📝" }
+    };
+  }
+  
+  // Removed standalone "MODIFIED" status since it was triggering on non-content changes
+  
+  return {
+    highlight: "",
+    badge: null
+  };
 };
 
 const PREDEFINED_CATEGORIES: Omit<DocumentCategory, 'documents'>[] = [
@@ -249,7 +310,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
   const [documentCategories, setDocumentCategories] = useState<Map<string, string>>(new Map());
   const [categories, setCategories] = useState<DocumentCategory[]>(() => categorizeDocuments(initialDocuments));
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["dora-metrics"])); // Start with first category expanded
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(categories.map(cat => cat.id))); // Start with all categories expanded
   const [isPending, startTransition] = useTransition();
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [editedName, setEditedName] = useState("");
@@ -470,6 +531,21 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
               <p className="text-gray-600">
                 Organized knowledge repository with {totalDocuments} document{totalDocuments !== 1 ? 's' : ''} across {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}
               </p>
+              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                <span className="font-medium">Document Status:</span>
+                <div className="flex items-center gap-1">
+                  <span>✨</span>
+                  <span>New (24h)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>🔄</span>
+                  <span>Recently Updated</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📝</span>
+                  <span>Has Versions</span>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <UploadDocumentDialog 
@@ -541,6 +617,11 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                           <Badge variant="secondary" className="text-xs">
                             {category.documents.length}
                           </Badge>
+                          {category.documents.length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              Click to {expandedCategories.has(category.id) ? 'collapse' : 'expand'}
+                            </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600 mt-1">
                           {category.description}
@@ -562,8 +643,9 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                     <div className="space-y-3">
                       {category.documents.map((doc) => {
                         const fileTypeDisplay = getFileTypeDisplay(doc.fileType);
+                        const highlight = getDocumentHighlight(doc);
                         return (
-                          <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div key={doc.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors ${highlight.highlight || 'border-gray-100'}`}>
                             <div className="flex items-center gap-4 flex-1">
                               <div className="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
                                 {doc.fileType === "web-page" ? (
@@ -573,8 +655,14 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="font-medium text-gray-900 truncate">
+                                <div className="font-medium text-gray-900 truncate flex items-center gap-2">
                                   {doc.name}
+                                  {highlight.badge && (
+                                    <Badge className={`${highlight.badge.color} text-xs flex items-center gap-1`}>
+                                      <span>{highlight.badge.icon}</span>
+                                      {highlight.badge.text}
+                                    </Badge>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                                   <Badge className={`${fileTypeDisplay.color} text-xs`}>
@@ -599,6 +687,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-8 w-8 p-0 hover:bg-gray-100"
+                                  title="Document actions: View, Rename, Replace, Delete, Version History"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>

@@ -1,0 +1,51 @@
+{
+  "id": "dora.dev_1750665345165_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/publications/errata/",
+  "title": "DORA | Errata",
+  "content": "DORA Publications Erratalink click to copy link Impact of Generative AI in Software Developmentlink click to copy link Accelerate State of DevOps 2024link click to copy link Accelerate State of DevOps 2023link click to copy link Have you found an error in a publication by DORA? Submit a change or correction",
+  "timestamp": "2025-06-23T07:55:45.165Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 51,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://dora.dev/research/ai/errata/",
+      "https://dora.dev/research/2024/errata/",
+      "https://dora.dev/research/2023/errata/",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: DORA Publications Erratalink click to copy link",
+      "H3: Impact of Generative AI in Software Developmentlink click to copy link",
+      "H3: Accelerate State of DevOps 2024link click to copy link",
+      "H3: Accelerate State of DevOps 2023link click to copy link"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1750665345165_DORA_Errata.json"
+}
