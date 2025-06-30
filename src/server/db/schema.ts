@@ -403,7 +403,10 @@ export const templateStatusEnum = pgEnum("template_status", ["draft", "pending",
 // Template categories enum  
 export const templateCategoryEnum = pgEnum("template_category", ["document", "prompt", "workflow", "integration", "other"]);
 
-// Templates table for storing approved templates
+// Template access level enum for fine-grained permissions
+export const templateAccessEnum = pgEnum("template_access", ["public", "tenant_only", "creator_only", "admin_only"]);
+
+// Templates table for storing approved templates (base template info)
 export const templates = pgTable(
   "templates",
   {
@@ -412,16 +415,22 @@ export const templates = pgTable(
     description: text("description").notNull(),
     category: templateCategoryEnum("category").notNull().default("document"),
     tags: text("tags").array(), // Array of tags for filtering
-    content: jsonb("content").notNull(), // Template content (can be document, prompt, etc.)
-    fileUrl: text("file_url"), // Optional file download URL
-    fileType: varchar("file_type", { length: 50 }), // e.g., "pdf", "docx", "json"
-    fileSize: integer("file_size"), // File size in bytes
-    version: varchar("version", { length: 20 }).notNull().default("1.0.0"),
+    
+    // Current version info (references latest approved version)
+    currentVersionId: uuid("current_version_id"), // Will reference template_versions table
+    currentVersion: varchar("current_version", { length: 20 }).notNull().default("1.0.0"),
+    
+    // Stats and metadata
     downloadCount: integer("download_count").default(0),
     rating: real("rating").default(0), // Average rating 1-5
     ratingCount: integer("rating_count").default(0), // Number of ratings
-    isPublic: boolean("is_public").default(true), // Whether template is publicly visible
+    
+    // Access control
+    accessLevel: templateAccessEnum("access_level").notNull().default("public"),
+    tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "cascade" }), // If tenant-specific
     isActive: boolean("is_active").default(true),
+    
+    // Ownership and approval
     createdBy: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
@@ -435,10 +444,57 @@ export const templates = pgTable(
     index("templates_category_idx").on(table.category),
     index("templates_created_by_idx").on(table.createdBy),
     index("templates_approved_by_idx").on(table.approvedBy),
-    index("templates_is_public_idx").on(table.isPublic),
+    index("templates_access_level_idx").on(table.accessLevel),
+    index("templates_tenant_id_idx").on(table.tenantId),
     index("templates_is_active_idx").on(table.isActive),
     index("templates_rating_idx").on(table.rating),
     index("templates_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// Template versions table for storing all versions of templates
+export const templateVersions = pgTable(
+  "template_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => templates.id, { onDelete: "cascade" }),
+    
+    // Version specific data
+    version: varchar("version", { length: 20 }).notNull(),
+    versionNotes: text("version_notes"), // What changed in this version
+    content: jsonb("content").notNull(), // Template content (can be document, prompt, etc.)
+    
+    // File information
+    fileUrl: text("file_url"), // Optional file download URL
+    fileType: varchar("file_type", { length: 50 }), // e.g., "pdf", "docx", "json", "pptx", "xlsx"
+    fileSize: integer("file_size"), // File size in bytes
+    fileName: text("file_name"), // Original file name
+    
+    // Status and approval for this version
+    status: templateStatusEnum("status").notNull().default("pending"),
+    isCurrentVersion: boolean("is_current_version").default(false), // Only one current version per template
+    
+    // Version metadata
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    approvedBy: varchar("approved_by", { length: 255 })
+      .references(() => users.id),
+    approvedAt: timestamp("approved_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("template_versions_template_id_idx").on(table.templateId),
+    index("template_versions_version_idx").on(table.version),
+    index("template_versions_status_idx").on(table.status),
+    index("template_versions_is_current_idx").on(table.isCurrentVersion),
+    index("template_versions_created_by_idx").on(table.createdBy),
+    index("template_versions_created_at_idx").on(table.createdAt),
+    // Unique constraint: one current version per template
+    index("template_versions_template_current_idx").on(table.templateId, table.isCurrentVersion),
   ]
 );
 
@@ -447,6 +503,7 @@ export const templateSubmissions = pgTable(
   "template_submissions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id").references(() => templates.id), // Link to existing template for new versions
     name: text("name").notNull(),
     description: text("description").notNull(),
     category: templateCategoryEnum("category").notNull().default("document"),
@@ -455,7 +512,11 @@ export const templateSubmissions = pgTable(
     fileUrl: text("file_url"),
     fileType: varchar("file_type", { length: 50 }),
     fileSize: integer("file_size"),
+    fileName: text("file_name"),
     version: varchar("version", { length: 20 }).notNull().default("1.0.0"),
+    versionNotes: text("version_notes"), // What's new in this version
+    accessLevel: templateAccessEnum("access_level").notNull().default("public"),
+    tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "cascade" }),
     status: templateStatusEnum("status").notNull().default("pending"),
     submissionNotes: text("submission_notes"), // User's notes when submitting
     reviewNotes: text("review_notes"), // Admin's notes when reviewing
@@ -469,6 +530,7 @@ export const templateSubmissions = pgTable(
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
+    index("template_submissions_template_id_idx").on(table.templateId),
     index("template_submissions_status_idx").on(table.status),
     index("template_submissions_category_idx").on(table.category),
     index("template_submissions_submitted_by_idx").on(table.submittedBy),
@@ -1106,11 +1168,47 @@ export const templatesRelations = relations(templates, ({ one, many }) => ({
     references: [users.id],
     relationName: "approvedTemplates",
   }),
+  tenant: one(tenants, {
+    fields: [templates.tenantId],
+    references: [tenants.id],
+  }),
+  currentVersionRef: one(templateVersions, {
+    fields: [templates.currentVersionId],
+    references: [templateVersions.id],
+    relationName: "currentVersion",
+  }),
+  versions: many(templateVersions),
   ratings: many(templateRatings),
   downloads: many(templateDownloads),
+  submissions: many(templateSubmissions),
+}));
+
+export const templateVersionsRelations = relations(templateVersions, ({ one }) => ({
+  template: one(templates, {
+    fields: [templateVersions.templateId],
+    references: [templates.id],
+  }),
+  createdByUser: one(users, {
+    fields: [templateVersions.createdBy],
+    references: [users.id],
+    relationName: "createdTemplateVersions",
+  }),
+  approvedByUser: one(users, {
+    fields: [templateVersions.approvedBy],
+    references: [users.id],
+    relationName: "approvedTemplateVersions",
+  }),
 }));
 
 export const templateSubmissionsRelations = relations(templateSubmissions, ({ one }) => ({
+  template: one(templates, {
+    fields: [templateSubmissions.templateId],
+    references: [templates.id],
+  }),
+  tenant: one(tenants, {
+    fields: [templateSubmissions.tenantId],
+    references: [tenants.id],
+  }),
   submittedByUser: one(users, {
     fields: [templateSubmissions.submittedBy],
     references: [users.id],

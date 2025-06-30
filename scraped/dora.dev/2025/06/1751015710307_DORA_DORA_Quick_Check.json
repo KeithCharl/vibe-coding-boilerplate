@@ -1,0 +1,55 @@
+{
+  "id": "dora.dev_1751015710307_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/quickcheck/",
+  "title": "DORA | DORA Quick Check",
+  "content": "Take the DORA Quick Check Measure your team’s software delivery performance in less than a minute! Compare it to the rest of the industry by responding to four multiple-choice questions. Compare your team’s performance to others, and discover which capabilities you should focus on improving. We don’t store your answers or personal information.",
+  "timestamp": "2025-06-27T09:15:10.307Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 53,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://google.qualtrics.com/jfe/form/SV_40i28bp9qIMfNjw?source=doradotdev-survey",
+      "https://dora.dev/faq/#dora-quick-check",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/quickcheck/header.png",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: Take the DORA Quick Check",
+      "H5: Question 1 of 4: Lead time",
+      "H2: Lead time",
+      "H5: Question 2 of 4: Deploy frequency",
+      "H2: Deploy frequency",
+      "H5: Question 3 of 4: Change fail percentage",
+      "H2: Change fail percentage",
+      "H5: Question 4 of 4: Failed deployment recovery time",
+      "H2: Failed deployment recovery time"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\06\\1751015710307_DORA_DORA_Quick_Check.json"
+}
