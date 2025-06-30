@@ -97,6 +97,15 @@ export const roleEnum = pgEnum("role", ["viewer", "contributor", "admin"]);
 // Global role enum for system-wide permissions
 export const globalRoleEnum = pgEnum("global_role", ["super_admin", "tenant_admin", "user"]);
 
+// Agent-related enums
+export const agentTypeEnum = pgEnum("agent_type", ["knowledge_base", "business_rules", "testing", "workflow", "analytics"]);
+export const agentStatusEnum = pgEnum("agent_status", ["active", "inactive", "maintenance", "deprecated"]);
+export const agentCapabilityEnum = pgEnum("agent_capability", [
+  "search", "analyze", "generate", "validate", "transform", "integrate", "monitor", "audit"
+]);
+export const operationStatusEnum = pgEnum("operation_status", ["pending", "running", "completed", "failed", "cancelled"]);
+export const complianceFrameworkEnum = pgEnum("compliance_framework", ["SOC2", "GDPR", "HIPAA", "ISO27001", "PCI_DSS"]);
+
 // Global user roles table for system-wide permissions
 export const globalUserRoles = pgTable(
   "global_user_roles",
@@ -873,6 +882,245 @@ export const kbBulkOperations = pgTable(
   ]
 );
 
+// ===== MULTI-AGENT ENTERPRISE PLATFORM TABLES =====
+
+// Agent Registry - Core agent definitions and configurations
+export const agentRegistry = pgTable(
+  "agent_registry",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 100 }).notNull(),
+    type: agentTypeEnum("type").notNull(),
+    version: varchar("version", { length: 20 }).notNull().default("1.0.0"),
+    description: text("description").notNull(),
+    
+    // Technical configuration
+    baseRoute: varchar("base_route", { length: 100 }).notNull(), // e.g., "/agents/knowledge-base"
+    apiEndpoint: varchar("api_endpoint", { length: 255 }), // For inter-agent communication
+    healthCheckEndpoint: varchar("health_check_endpoint", { length: 255 }),
+    
+    // Capabilities and dependencies
+    capabilities: agentCapabilityEnum("capabilities").array().notNull().default([]),
+    dependencies: text("dependencies").array().default([]), // Other agent IDs this agent depends on
+    interfaceSchema: jsonb("interface_schema"), // API schema for inter-agent communication
+    
+    // Configuration and constraints
+    defaultConfig: jsonb("default_config").notNull().default('{}'),
+    resourceLimits: jsonb("resource_limits"), // CPU, memory, token limits
+    securityLevel: varchar("security_level", { length: 20 }).notNull().default("standard"), // 'basic', 'standard', 'high', 'critical'
+    
+    // Status and lifecycle
+    status: agentStatusEnum("status").notNull().default("active"),
+    isCore: boolean("is_core").default(false), // Core system agents that cannot be disabled
+    maintenanceMode: boolean("maintenance_mode").default(false),
+    
+    // Enterprise features
+    complianceFrameworks: complianceFrameworkEnum("compliance_frameworks").array().default([]),
+    auditLevel: varchar("audit_level", { length: 20 }).notNull().default("standard"), // 'minimal', 'standard', 'comprehensive'
+    dataRetentionDays: integer("data_retention_days").default(365),
+    
+    // Metadata
+    icon: varchar("icon", { length: 50 }).default("Bot"),
+    color: varchar("color", { length: 20 }).default("blue"),
+    tags: text("tags").array().default([]),
+    documentation: text("documentation"),
+    
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("agent_registry_type_idx").on(table.type),
+    index("agent_registry_status_idx").on(table.status),
+    index("agent_registry_is_core_idx").on(table.isCore),
+    index("agent_registry_security_level_idx").on(table.securityLevel),
+  ]
+);
+
+// Tenant Agent Configurations - Per-tenant agent settings and access
+export const tenantAgentConfigs = pgTable(
+  "tenant_agent_configs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agentRegistry.id, { onDelete: "cascade" }),
+    
+    // Access and permissions
+    isEnabled: boolean("is_enabled").default(true),
+    accessLevel: varchar("access_level", { length: 20 }).notNull().default("standard"), // 'readonly', 'standard', 'advanced', 'admin'
+    allowedUsers: text("allowed_users").array(), // Specific user IDs if restricted
+    restrictedUsers: text("restricted_users").array(), // Explicitly blocked users
+    
+    // Configuration overrides
+    customConfig: jsonb("custom_config").default('{}'), // Tenant-specific configuration
+    resourceOverrides: jsonb("resource_overrides"), // Custom resource limits
+    featureFlags: jsonb("feature_flags").default('{}'), // Enable/disable specific features
+    
+    // Usage limits and quotas
+    dailyRequestLimit: integer("daily_request_limit"),
+    monthlyRequestLimit: integer("monthly_request_limit"),
+    tokenQuotaDaily: integer("token_quota_daily"),
+    tokenQuotaMonthly: integer("token_quota_monthly"),
+    
+    // Compliance and security overrides
+    encryptionRequired: boolean("encryption_required").default(false),
+    auditingRequired: boolean("auditing_required").default(true),
+    ipWhitelist: text("ip_whitelist").array(),
+    
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("tenant_agents_tenant_id_idx").on(table.tenantId),
+    index("tenant_agents_agent_id_idx").on(table.agentId),
+    index("tenant_agents_is_enabled_idx").on(table.isEnabled),
+    // Prevent duplicate configurations
+    index("tenant_agents_unique").on(table.tenantId, table.agentId),
+  ]
+);
+
+// Agent Health Monitoring - Real-time health and performance metrics
+export const agentHealthMetrics = pgTable(
+  "agent_health_metrics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agentRegistry.id, { onDelete: "cascade" }),
+    tenantId: uuid("tenant_id")
+      .references(() => tenants.id, { onDelete: "cascade" }), // NULL for system-wide metrics
+    
+    // Health status
+    status: varchar("status", { length: 20 }).notNull(), // 'healthy', 'degraded', 'unhealthy', 'offline'
+    responseTime: integer("response_time"), // milliseconds
+    errorRate: real("error_rate").default(0), // percentage
+    successRate: real("success_rate").default(100), // percentage
+    
+    // Performance metrics
+    requestsPerMinute: integer("requests_per_minute").default(0),
+    avgTokensPerRequest: real("avg_tokens_per_request"),
+    memoryUsageMB: real("memory_usage_mb"),
+    cpuUsagePercent: real("cpu_usage_percent"),
+    
+    // Operational metrics
+    uptime: integer("uptime_seconds"),
+    lastHealthCheck: timestamp("last_health_check").defaultNow(),
+    lastError: text("last_error"),
+    lastErrorAt: timestamp("last_error_at"),
+    
+    // Compliance metrics
+    encryptionStatus: boolean("encryption_status").default(true),
+    auditCompliance: boolean("audit_compliance").default(true),
+    dataRetentionCompliance: boolean("data_retention_compliance").default(true),
+    
+    timestamp: timestamp("timestamp").defaultNow(),
+  },
+  (table) => [
+    index("agent_health_agent_id_idx").on(table.agentId),
+    index("agent_health_tenant_id_idx").on(table.tenantId),
+    index("agent_health_status_idx").on(table.status),
+    index("agent_health_timestamp_idx").on(table.timestamp),
+  ]
+);
+
+// Inter-Agent Communication Log - Audit trail for agent interactions
+export const agentCommunicationLog = pgTable(
+  "agent_communication_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sourceAgentId: uuid("source_agent_id")
+      .notNull()
+      .references(() => agentRegistry.id),
+    targetAgentId: uuid("target_agent_id")
+      .notNull()
+      .references(() => agentRegistry.id),
+    tenantId: uuid("tenant_id")
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "set null" }),
+    
+    // Communication details
+    operationType: varchar("operation_type", { length: 50 }).notNull(), // 'query', 'validate', 'transform', 'notify'
+    requestData: jsonb("request_data"),
+    responseData: jsonb("response_data"),
+    status: operationStatusEnum("status").notNull(),
+    
+    // Performance and compliance
+    duration: integer("duration_ms"),
+    tokensUsed: integer("tokens_used"),
+    encrypted: boolean("encrypted").default(true),
+    dataClassification: varchar("data_classification", { length: 20 }).default("internal"), // 'public', 'internal', 'confidential', 'restricted'
+    
+    // Error handling
+    errorCode: varchar("error_code", { length: 50 }),
+    errorMessage: text("error_message"),
+    retryCount: integer("retry_count").default(0),
+    
+    timestamp: timestamp("timestamp").defaultNow(),
+  },
+  (table) => [
+    index("agent_comm_source_idx").on(table.sourceAgentId),
+    index("agent_comm_target_idx").on(table.targetAgentId),
+    index("agent_comm_tenant_idx").on(table.tenantId),
+    index("agent_comm_user_idx").on(table.userId),
+    index("agent_comm_operation_idx").on(table.operationType),
+    index("agent_comm_status_idx").on(table.status),
+    index("agent_comm_timestamp_idx").on(table.timestamp),
+  ]
+);
+
+// Agent Security Events - Security and compliance audit log
+export const agentSecurityEvents = pgTable(
+  "agent_security_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agentRegistry.id),
+    tenantId: uuid("tenant_id")
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "set null" }),
+    
+    // Event details
+    eventType: varchar("event_type", { length: 50 }).notNull(), // 'auth_failure', 'privilege_escalation', 'data_breach', 'compliance_violation'
+    severity: varchar("severity", { length: 20 }).notNull(), // 'low', 'medium', 'high', 'critical'
+    description: text("description").notNull(),
+    
+    // Context and metadata
+    sourceIP: varchar("source_ip", { length: 45 }),
+    userAgent: text("user_agent"),
+    requestPath: varchar("request_path", { length: 255 }),
+    requestData: jsonb("request_data"), // Sanitized request data
+    
+    // Response and resolution
+    blocked: boolean("blocked").default(false),
+    resolved: boolean("resolved").default(false),
+    resolvedBy: varchar("resolved_by", { length: 255 })
+      .references(() => users.id),
+    resolvedAt: timestamp("resolved_at"),
+    resolutionNotes: text("resolution_notes"),
+    
+    // Compliance tracking
+    complianceFramework: complianceFrameworkEnum("compliance_framework"),
+    riskScore: integer("risk_score"), // 1-100
+    reportedToAuthorities: boolean("reported_to_authorities").default(false),
+    
+    timestamp: timestamp("timestamp").defaultNow(),
+  },
+  (table) => [
+    index("agent_security_agent_id_idx").on(table.agentId),
+    index("agent_security_tenant_id_idx").on(table.tenantId),
+    index("agent_security_event_type_idx").on(table.eventType),
+    index("agent_security_severity_idx").on(table.severity),
+    index("agent_security_resolved_idx").on(table.resolved),
+    index("agent_security_timestamp_idx").on(table.timestamp),
+  ]
+);
+
 // Enhanced analytics with admin insights
 export const referenceUsageAnalytics = pgTable(
   "reference_usage_analytics",
@@ -1244,5 +1492,78 @@ export const templateDownloadsRelations = relations(templateDownloads, ({ one })
   tenant: one(tenants, {
     fields: [templateDownloads.tenantId],
     references: [tenants.id],
+  }),
+}));
+
+// ===== AGENT PLATFORM RELATIONS =====
+
+export const agentRegistryRelations = relations(agentRegistry, ({ many }) => ({
+  tenantConfigs: many(tenantAgentConfigs),
+  healthMetrics: many(agentHealthMetrics),
+  communicationLogsAsSource: many(agentCommunicationLog, { relationName: "sourceAgent" }),
+  communicationLogsAsTarget: many(agentCommunicationLog, { relationName: "targetAgent" }),
+  securityEvents: many(agentSecurityEvents),
+}));
+
+export const tenantAgentConfigsRelations = relations(tenantAgentConfigs, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantAgentConfigs.tenantId],
+    references: [tenants.id],
+  }),
+  agent: one(agentRegistry, {
+    fields: [tenantAgentConfigs.agentId],
+    references: [agentRegistry.id],
+  }),
+}));
+
+export const agentHealthMetricsRelations = relations(agentHealthMetrics, ({ one }) => ({
+  agent: one(agentRegistry, {
+    fields: [agentHealthMetrics.agentId],
+    references: [agentRegistry.id],
+  }),
+  tenant: one(tenants, {
+    fields: [agentHealthMetrics.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export const agentCommunicationLogRelations = relations(agentCommunicationLog, ({ one }) => ({
+  sourceAgent: one(agentRegistry, {
+    fields: [agentCommunicationLog.sourceAgentId],
+    references: [agentRegistry.id],
+    relationName: "sourceAgent",
+  }),
+  targetAgent: one(agentRegistry, {
+    fields: [agentCommunicationLog.targetAgentId],
+    references: [agentRegistry.id],
+    relationName: "targetAgent",
+  }),
+  tenant: one(tenants, {
+    fields: [agentCommunicationLog.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [agentCommunicationLog.userId],
+    references: [users.id],
+  }),
+}));
+
+export const agentSecurityEventsRelations = relations(agentSecurityEvents, ({ one }) => ({
+  agent: one(agentRegistry, {
+    fields: [agentSecurityEvents.agentId],
+    references: [agentRegistry.id],
+  }),
+  tenant: one(tenants, {
+    fields: [agentSecurityEvents.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [agentSecurityEvents.userId],
+    references: [users.id],
+  }),
+  resolvedByUser: one(users, {
+    fields: [agentSecurityEvents.resolvedBy],
+    references: [users.id],
+    relationName: "resolvedSecurityEvents",
   }),
 }));
