@@ -105,6 +105,97 @@ This boilerplate comes with everything you need to start your web application:
 2. Open your browser and go to `http://localhost:3000`
 3. You should see your application running!
 
+### Step 8: Configure Your Project Rules (Recommended)
+
+This project comes with an example Cursor rules file called `project-rules.mdc`.
+
+It is **highly recommended** to use an LLM (like ChatGPT) to generate a project-rules file specific to your project. This will assist the Cursor Agent to have a better understanding of your project's features, architecture, components, and requirements.
+
+To do this:
+
+1. Use the following prompt with ChatGPT or another LLM:
+
+```
+You are a technical documentation assistant.
+
+Project description:
+[INSERT NATURAL LANGUAGE PROJECT DESCRIPTION HERE]
+
+Your task is to generate a structured system overview document (similar to a Cursor "Rules" file) for a given software project. This document should clearly explain the purpose, structure, core logic, and architecture of the system. It must be informative for both stakeholders and developers, without including setup instructions.
+
+Please use the following format:
+
+---
+
+# [Project Name] System Overview
+
+## What is [Project Name]?
+
+Briefly explain what the project is, who it's for, and the problem it solves.
+
+## How [Project Name] Works
+
+### Core Concept
+
+Summarize the high-level idea behind the platform's approach or innovation. Avoid unnecessary jargon.
+
+## Core Components
+
+Break the system into key components or modules. For each component, provide:
+- **Name**
+- **Purpose**
+- **Inputs**
+- **Outputs**
+- **How it works**
+- **Example (optional)**
+
+## Technical Architecture
+
+### Frontend
+
+- **Framework**: Next.js 15 with React 19
+- **Styling**: Tailwind CSS + Shadcn/ui components
+- **State Management**: React hooks and forms using `react-hook-form`
+- **Authentication**: NextAuth.js with Google Auth Provider
+
+### Backend
+
+- **API**: Next.js Route Handlers
+- **Database**: PostgreSQL with Drizzle ORM
+- **AI Integration**:
+  - OpenAI SDK for GPT models
+  - Langchain for LLM orchestration
+- **File Storage**: Vercel Blob Storage
+
+## Data Flow
+
+Describe how data flows through the system, step-by-step — from initial user input through processing, storage, and output.
+
+## Key Features
+
+List the core features that differentiate or empower the platform. Use bullet points for clarity.
+
+## User Workflow
+
+Describe how a typical user interacts with the platform in sequential steps (e.g., setup, usage, output).
+
+---
+
+**IMPORTANT INSTRUCTION (for Cursor Agent):**
+
+If you detect that a user has made changes to the database schema, you must always remind them to run:
+
+npm run db:generate
+npm run db:migrate
+
+If possible, attempt to execute these commands automatically. This ensures that Drizzle ORM remains in sync with the updated schema.
+```
+
+2. Provide details about your specific project to the LLM
+3. Replace the contents of the `project-rules.mdc` file with the generated rules
+
+This step will significantly improve your experience when working with Cursor's AI assistant throughout your project development.
+
 ## Making Changes to the Database
 
 If you need to modify the database structure:
