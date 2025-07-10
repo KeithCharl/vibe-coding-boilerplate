@@ -3,6 +3,9 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Project description
+Provide a detailed description of your app, including the most important features.
+
 # Architecture
 - Nextjs 15 with App Router
 - Drizzle ORM for Database Schema
@@ -12,7 +15,7 @@ alwaysApply: true
 - Tailwind & ShadCN for styling
 - Use Server Actions over Route Handlers (APIs)
 - Use Vercel Blob storage with files
-- 
+
 # Project structure
 src/
 src/app/
@@ -34,3 +37,4 @@ If possible, run these commands yourself.
 - The database connection var is called POSTGRES_URL, not DATABASE_URL.
 - DO NOT create a middleware file.  Protect the backend logic within the routes and server actions.
 - Use the existing AUTH config file (src/server/auth.ts). Do not create a new file.
+- Use PostgreSQL full-text search + pg_trgm for advanced search features
