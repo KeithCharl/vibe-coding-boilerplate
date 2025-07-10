@@ -67,14 +67,14 @@ export default function ReferenceConfigPage({ params }: PageProps) {
       
       // Update form data
       setFormData({
-        isActive: data.isActive,
+        isActive: data.isActive ?? false,
         weight: [data.weight || 1.0],
         maxResults: [data.maxResults || 5],
         minSimilarity: [data.minSimilarity || 0.7],
         includeTags: data.includeTags?.join(", ") || "",
         excludeTags: data.excludeTags?.join(", ") || "",
-        includeDocumentTypes: data.includeDocumentTypes || [],
-        excludeDocumentTypes: data.excludeDocumentTypes || [],
+        includeDocumentTypes: [],
+        excludeDocumentTypes: [],
       });
     } catch (error) {
       toast.error("Failed to load reference");
@@ -94,8 +94,6 @@ export default function ReferenceConfigPage({ params }: PageProps) {
         minSimilarity: formData.minSimilarity[0],
         includeTags: formData.includeTags ? formData.includeTags.split(",").map(t => t.trim()) : [],
         excludeTags: formData.excludeTags ? formData.excludeTags.split(",").map(t => t.trim()) : [],
-        includeDocumentTypes: formData.includeDocumentTypes,
-        excludeDocumentTypes: formData.excludeDocumentTypes,
       });
       
       toast.success("Reference updated successfully!");

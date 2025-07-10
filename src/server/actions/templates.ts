@@ -3,6 +3,7 @@
 import { db } from "@/server/db";
 import {
   templates,
+  templateVersions,
   templateSubmissions,
   templateRatings,
   templateDownloads,
@@ -17,6 +18,7 @@ import { revalidatePath } from "next/cache";
 
 // Types
 export type Template = typeof templates.$inferSelect;
+export type TemplateVersion = typeof templateVersions.$inferSelect;
 export type TemplateSubmission = typeof templateSubmissions.$inferSelect;
 export type TemplateRating = typeof templateRatings.$inferSelect;
 
@@ -24,6 +26,7 @@ export type TemplateWithDetails = Template & {
   createdByUser: { id: string; name: string | null; email: string };
   approvedByUser?: { id: string; name: string | null; email: string } | null;
   userRating?: number | null;
+  currentVersionData?: TemplateVersion | null;
 };
 
 export type TemplateSubmissionWithDetails = TemplateSubmission & {
@@ -61,7 +64,7 @@ export async function getTemplates(params?: {
     // Build where conditions
     const whereConditions = [
       eq(templates.isActive, true),
-      eq(templates.isPublic, true)
+      eq(templates.accessLevel, "public") // Use accessLevel instead of isPublic
     ];
 
     // Add category filter
@@ -96,7 +99,7 @@ export async function getTemplates(params?: {
         orderByClause = desc(templates.createdAt);
     }
 
-    // Build and execute the query
+    // Build and execute the query with template versions
     const queryBuilder = db
       .select({
         id: templates.id,
@@ -104,15 +107,13 @@ export async function getTemplates(params?: {
         description: templates.description,
         category: templates.category,
         tags: templates.tags,
-        content: templates.content,
-        fileUrl: templates.fileUrl,
-        fileType: templates.fileType,
-        fileSize: templates.fileSize,
-        version: templates.version,
+        currentVersionId: templates.currentVersionId,
+        currentVersion: templates.currentVersion,
         downloadCount: templates.downloadCount,
         rating: templates.rating,
         ratingCount: templates.ratingCount,
-        isPublic: templates.isPublic,
+        accessLevel: templates.accessLevel,
+        tenantId: templates.tenantId,
         isActive: templates.isActive,
         createdBy: templates.createdBy,
         approvedBy: templates.approvedBy,
@@ -124,9 +125,18 @@ export async function getTemplates(params?: {
           name: users.name,
           email: users.email,
         },
+        // Include current version data
+        versionContent: templateVersions.content,
+        versionFileUrl: templateVersions.fileUrl,
+        versionFileType: templateVersions.fileType,
+        versionFileSize: templateVersions.fileSize,
       })
       .from(templates)
       .leftJoin(users, eq(templates.createdBy, users.id))
+      .leftJoin(templateVersions, and(
+        eq(templates.currentVersionId, templateVersions.id),
+        eq(templateVersions.isCurrentVersion, true)
+      ))
       .where(and(...whereConditions))
       .orderBy(orderByClause);
 
@@ -139,7 +149,24 @@ export async function getTemplates(params?: {
     }
 
     const results = await queryBuilder;
-    return { success: true, data: results as TemplateWithDetails[] };
+    
+    // Transform results to match expected structure
+    const transformedResults = results.map(result => ({
+      ...result,
+      currentVersionData: result.versionContent ? {
+        content: result.versionContent,
+        fileUrl: result.versionFileUrl,
+        fileType: result.versionFileType,
+        fileSize: result.versionFileSize,
+      } : null,
+      // Remove the version-specific fields from the main object
+      versionContent: undefined,
+      versionFileUrl: undefined,
+      versionFileType: undefined,
+      versionFileSize: undefined,
+    }));
+
+    return { success: true, data: transformedResults as unknown as TemplateWithDetails[] };
   } catch (error) {
     console.error("Error fetching templates:", error);
     return { success: false, error: "Failed to fetch templates" };
@@ -155,15 +182,13 @@ export async function getTemplateById(id: string) {
         description: templates.description,
         category: templates.category,
         tags: templates.tags,
-        content: templates.content,
-        fileUrl: templates.fileUrl,
-        fileType: templates.fileType,
-        fileSize: templates.fileSize,
-        version: templates.version,
+        currentVersionId: templates.currentVersionId,
+        currentVersion: templates.currentVersion,
         downloadCount: templates.downloadCount,
         rating: templates.rating,
         ratingCount: templates.ratingCount,
-        isPublic: templates.isPublic,
+        accessLevel: templates.accessLevel,
+        tenantId: templates.tenantId,
         isActive: templates.isActive,
         createdBy: templates.createdBy,
         approvedBy: templates.approvedBy,
@@ -175,9 +200,18 @@ export async function getTemplateById(id: string) {
           name: users.name,
           email: users.email,
         },
+        // Include current version data
+        versionContent: templateVersions.content,
+        versionFileUrl: templateVersions.fileUrl,
+        versionFileType: templateVersions.fileType,
+        versionFileSize: templateVersions.fileSize,
       })
       .from(templates)
       .leftJoin(users, eq(templates.createdBy, users.id))
+      .leftJoin(templateVersions, and(
+        eq(templates.currentVersionId, templateVersions.id),
+        eq(templateVersions.isCurrentVersion, true)
+      ))
       .where(
         and(
           eq(templates.id, id),
@@ -190,7 +224,18 @@ export async function getTemplateById(id: string) {
       return { success: false, error: "Template not found" };
     }
 
-    return { success: true, data: result[0] as TemplateWithDetails };
+    // Transform result to match expected structure
+    const transformedResult = {
+      ...result[0],
+      currentVersionData: result[0]!.versionContent ? {
+        content: result[0]!.versionContent,
+        fileUrl: result[0]!.versionFileUrl,
+        fileType: result[0]!.versionFileType,
+        fileSize: result[0]!.versionFileSize,
+      } : null,
+    };
+
+    return { success: true, data: transformedResult as unknown as TemplateWithDetails };
   } catch (error) {
     console.error("Error fetching template:", error);
     return { success: false, error: "Failed to fetch template" };
@@ -217,6 +262,7 @@ export async function submitTemplate(data: {
     let fileUrl: string | undefined;
     let fileType: string | undefined;
     let fileSize: number | undefined;
+    let fileName: string | undefined;
 
     // Handle file upload if provided
     if (data.file) {
@@ -228,6 +274,7 @@ export async function submitTemplate(data: {
       fileUrl = blob.url;
       fileType = data.file.type;
       fileSize = data.file.size;
+      fileName = data.file.name;
     }
 
     const submission = await db
@@ -241,6 +288,7 @@ export async function submitTemplate(data: {
         fileUrl,
         fileType,
         fileSize,
+        fileName,
         version: data.version || "1.0.0",
         submissionNotes: data.submissionNotes,
         submittedBy: session.user.id,
@@ -276,6 +324,7 @@ export async function getTemplateSubmissions(status?: string) {
     const results = await db
       .select({
         id: templateSubmissions.id,
+        templateId: templateSubmissions.templateId,
         name: templateSubmissions.name,
         description: templateSubmissions.description,
         category: templateSubmissions.category,
@@ -284,7 +333,11 @@ export async function getTemplateSubmissions(status?: string) {
         fileUrl: templateSubmissions.fileUrl,
         fileType: templateSubmissions.fileType,
         fileSize: templateSubmissions.fileSize,
+        fileName: templateSubmissions.fileName,
         version: templateSubmissions.version,
+        versionNotes: templateSubmissions.versionNotes,
+        accessLevel: templateSubmissions.accessLevel,
+        tenantId: templateSubmissions.tenantId,
         status: templateSubmissions.status,
         submissionNotes: templateSubmissions.submissionNotes,
         reviewNotes: templateSubmissions.reviewNotes,
@@ -304,7 +357,7 @@ export async function getTemplateSubmissions(status?: string) {
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(desc(templateSubmissions.submittedAt));
 
-    return { success: true, data: results as TemplateSubmissionWithDetails[] };
+    return { success: true, data: results as unknown as TemplateSubmissionWithDetails[] };
   } catch (error) {
     console.error("Error fetching template submissions:", error);
     return { success: false, error: "Failed to fetch template submissions" };
@@ -353,22 +406,48 @@ export async function reviewTemplateSubmission(
       })
       .where(eq(templateSubmissions.id, submissionId));
 
-    // If approved, create the template
+    // If approved, create the template and its first version
     if (action === "approve") {
-      await db.insert(templates).values({
+      // First create the template
+      const newTemplate = await db.insert(templates).values({
         name: sub.name,
         description: sub.description,
         category: sub.category,
         tags: sub.tags,
+        currentVersion: sub.version,
+        createdBy: sub.submittedBy,
+        approvedBy: session.user.id,
+        approvedAt: new Date(),
+        accessLevel: sub.accessLevel || "public",
+        tenantId: sub.tenantId,
+      }).returning();
+
+      const templateId = newTemplate[0]!.id;
+
+      // Then create the template version
+      const newVersion = await db.insert(templateVersions).values({
+        templateId,
+        version: sub.version,
         content: sub.content,
         fileUrl: sub.fileUrl,
         fileType: sub.fileType,
         fileSize: sub.fileSize,
-        version: sub.version,
+        fileName: sub.fileName,
+        versionNotes: sub.versionNotes,
+        status: "approved",
+        isCurrentVersion: true,
         createdBy: sub.submittedBy,
         approvedBy: session.user.id,
         approvedAt: new Date(),
-      });
+      }).returning();
+
+      // Update the template to reference the current version
+      await db
+        .update(templates)
+        .set({
+          currentVersionId: newVersion[0]!.id,
+        })
+        .where(eq(templates.id, templateId));
     }
 
     revalidatePath("/admin/template-submissions");
@@ -473,7 +552,7 @@ export async function downloadTemplate(templateId: string) {
         and(
           eq(templates.id, templateId),
           eq(templates.isActive, true),
-          eq(templates.isPublic, true)
+          eq(templates.accessLevel, "public") // Use accessLevel instead of isPublic
         )
       )
       .limit(1);
@@ -563,11 +642,4 @@ export async function getTemplateStats() {
   }
 }
 
-// Template Categories
-export const TEMPLATE_CATEGORIES = [
-  { value: "document", label: "Document Template" },
-  { value: "prompt", label: "AI Prompt Template" },
-  { value: "workflow", label: "Workflow Template" },
-  { value: "integration", label: "Integration Template" },
-  { value: "other", label: "Other" },
-] as const;
+

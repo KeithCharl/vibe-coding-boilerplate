@@ -10,13 +10,13 @@ import { Plus, ExternalLink, Clock, CheckCircle, XCircle, BarChart3 } from "luci
 import Link from "next/link";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     tenantId: string;
-  };
+  }>;
 }
 
 export default async function ReferencesPage({ params }: PageProps) {
-  const { tenantId } = params;
+  const { tenantId } = await params;
 
   // Get data in parallel
   const [references, pendingRequests, availableTenants] = await Promise.all([
@@ -139,7 +139,7 @@ export default async function ReferencesPage({ params }: PageProps) {
                       {getStatusBadge(reference.status, reference.isActive)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Target: {reference.targetTenantName}
+                      Target: {reference.targetTenant?.name}
                     </p>
                     {reference.description && (
                       <p className="text-sm text-muted-foreground">
@@ -150,9 +150,6 @@ export default async function ReferencesPage({ params }: PageProps) {
                       <span>Weight: {reference.weight}</span>
                       <span>Max Results: {reference.maxResults}</span>
                       <span>Created: {reference.createdAt ? new Date(reference.createdAt).toLocaleDateString() : 'Unknown'}</span>
-                      {reference.approvedAt && (
-                        <span>Approved: {new Date(reference.approvedAt).toLocaleDateString()}</span>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">

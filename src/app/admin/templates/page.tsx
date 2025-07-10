@@ -61,13 +61,12 @@ import {
 import { toast } from "sonner";
 import { 
   getConnectionTemplates,
-  createConnectionTemplate,
-  updateConnectionTemplate,
-  deleteConnectionTemplate
+  createConnectionTemplate
 } from "@/server/actions/kb-references";
 import Link from "next/link";
 import { getCurrentUserRole } from "@/server/actions/user-management";
 import { getTemplateSubmissions } from "@/server/actions/templates";
+import { TEMPLATE_CATEGORIES } from "@/lib/template-constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ConnectionTemplate {
@@ -211,6 +210,9 @@ async function TemplateSubmissionCard({ submission }: { submission: any }) {
   );
 }
 
+// Force dynamic rendering to prevent build-time execution of server actions
+export const dynamic = 'force-dynamic';
+
 export default async function AdminTemplatesPage() {
   const currentUserRole = await getCurrentUserRole();
   
@@ -220,7 +222,7 @@ export default async function AdminTemplatesPage() {
 
   // Fetch template submissions
   const submissionsResult = await getTemplateSubmissions();
-  const submissions = submissionsResult.success ? submissionsResult.data : [];
+  const submissions = (submissionsResult.success && submissionsResult.data) ? submissionsResult.data : [];
 
   // Group submissions by status
   const pendingSubmissions = submissions.filter(s => s.status === "pending");

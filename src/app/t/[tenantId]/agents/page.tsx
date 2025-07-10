@@ -6,12 +6,13 @@ import { MultiAgentHub } from "@/components/agents/multi-agent-hub";
 import { redirect } from "next/navigation";
 
 interface AgentsPageProps {
-  params: {
+  params: Promise<{
     tenantId: string;
-  };
+  }>;
 }
 
 export default async function AgentsPage({ params }: AgentsPageProps) {
+  const { tenantId } = await params;
   const session = await getServerSession(authOptions);
   
   if (!session?.user) {
@@ -19,7 +20,7 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
   }
 
   // Verify user has access to this tenant
-  const userRole = await getUserTenantRole(params.tenantId);
+  const userRole = await getUserTenantRole(tenantId);
   if (!userRole) {
     redirect("/");
   }
@@ -27,8 +28,8 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
   // Get agent data for this tenant
   const [availableAgents, tenantConfigs, healthData] = await Promise.all([
     getAvailableAgents(),
-    getTenantAgentConfigs(params.tenantId),
-    getAgentHealth(params.tenantId)
+    getTenantAgentConfigs(tenantId),
+    getAgentHealth(tenantId)
   ]);
 
   // Merge agent definitions with tenant-specific configs and health data
@@ -40,8 +41,8 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
 
   return (
     <MultiAgentHub 
-      agents={agentsWithConfig}
-      tenantId={params.tenantId}
+      agents={agentsWithConfig as any}
+      tenantId={tenantId}
       userRole={userRole === 'admin' ? 'admin' : 'user'}
     />
   );

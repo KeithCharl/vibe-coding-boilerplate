@@ -108,8 +108,6 @@ export default function RequestReferencePage({ params }: PageProps) {
             minSimilarity: formData.minSimilarity[0],
             includeTags: formData.includeTags ? formData.includeTags.split(",").map(t => t.trim()) : undefined,
             excludeTags: formData.excludeTags ? formData.excludeTags.split(",").map(t => t.trim()) : undefined,
-            includeDocumentTypes: formData.includeDocumentTypes.length > 0 ? formData.includeDocumentTypes : undefined,
-            excludeDocumentTypes: formData.excludeDocumentTypes.length > 0 ? formData.excludeDocumentTypes : undefined,
           }
         }
       );

@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   BarChart3,
   Activity,
-  Users
+  Users,
+  CheckCircle
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";

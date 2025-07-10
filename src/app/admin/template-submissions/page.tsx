@@ -38,22 +38,22 @@ type TemplateSubmissionWithDetails = {
   name: string;
   description: string;
   category: string;
-  tags: string[];
+  tags: string[] | null;
   content: any;
-  fileUrl?: string;
-  fileType?: string;
-  fileSize?: number;
+  fileUrl: string | null;
+  fileType: string | null;
+  fileSize: number | null;
   version: string;
   status: string;
-  submissionNotes?: string;
-  reviewNotes?: string;
+  submissionNotes: string | null;
+  reviewNotes: string | null;
   submittedBy: string;
-  reviewedBy?: string;
-  reviewedAt?: Date;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
   submittedAt: Date;
-  updatedAt: Date;
+  updatedAt: Date | null;
   submittedByUser: { id: string; name: string | null; email: string };
-  reviewedByUser?: { id: string; name: string | null; email: string } | null;
+  reviewedByUser: { id: string; name: string | null; email: string } | null;
 };
 
 // Template Submission Review Component
@@ -278,8 +278,8 @@ export default function AdminTemplateSubmissionsPage() {
         getTemplateStats()
       ]);
       
-      if (submissionsResult.success) {
-        setSubmissions(submissionsResult.data);
+      if (submissionsResult.success && submissionsResult.data) {
+        setSubmissions(submissionsResult.data as TemplateSubmissionWithDetails[]);
       }
       
       if (statsResult.success) {
