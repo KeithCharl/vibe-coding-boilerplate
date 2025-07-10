@@ -1,0 +1,61 @@
+{
+  "id": "dora.dev_1752131112637_ZG9yYS5k",
+  "source": "dora.dev",
+  "url": "https://dora.dev/research/2016/",
+  "title": "DORA | DORA Research: 2016",
+  "content": "Prior to 2018, research was conducted in partnership with Puppet, as an extension of their original State of DevOps research. Read the history of Puppet's DevOps Reports. The 2016 State of DevOps Report reveals that high-performing organizations significantly outperform low performers in terms of IT performance and employee engagement. The report emphasizes benefits of integrating quality into every stage of development. The report also highlights the benefits of an experimental approach to product development, which involves breaking down products into smaller batches, ensuring visibility into the workflow, and actively seeking customer feedback. The report provides calculations for potential savings and discussing how these savings can be reinvested to foster innovation and drive business value. This work was later expanded in The ROI of DevOps Transformation whitepaper. The key findings of the report are: High-performing organizations significantly outperform low-performing organizations in terms of throughput, stability, and employee loyalty. High performers deploy code 200 times more frequently than low performers, with 2,555 times faster lead times. High performers have 24 times faster recovery times and three times lower change failure rates than low performers. High performers spend 22% less time on unplanned work and rework, allowing them to spend 29% more time on new work. High performers spend 50% less time remediating security issues than low performers. An experimental approach to product development can improve IT and organizational performance. Technology transformation initiatives can lead to significant cost savings for organizations. Download the 2016 State of DevOps Report",
+  "timestamp": "2025-07-10T07:05:12.637Z",
+  "metadata": {
+    "domain": "dora.dev",
+    "contentType": "public",
+    "authMethod": "none",
+    "wordCount": 245,
+    "links": [
+      "https://dora.dev/",
+      "https://dora.dev/publications/",
+      "https://dora.dev/research/",
+      "https://dora.dev/capabilities/",
+      "https://dora.dev/guides/",
+      "https://dora.dev/quickcheck/",
+      "https://dora.community/",
+      "https://dora.dev/search/",
+      "https://dora.dev/survey/",
+      "https://www.puppet.com/resources/history-of-devops-reports",
+      "https://dora.dev/research/2016/2016-state-of-devops-report.pdf",
+      "https://dora.dev/research/2020/",
+      "https://dora.dev/research/team/",
+      "https://dora.dev/research/ai/",
+      "https://dora.dev/research/2024/",
+      "https://dora.dev/research/2023/",
+      "https://dora.dev/research/2022/",
+      "https://dora.dev/research/2021/",
+      "https://dora.dev/research/2019/",
+      "https://dora.dev/research/2018/",
+      "https://dora.dev/research/2017/",
+      "https://dora.dev/research/2016/",
+      "https://dora.dev/research/2015/",
+      "https://dora.dev/research/2014/",
+      "https://cloud.google.com/",
+      "https://dora.dev/resources/",
+      "https://dora.dev/faq/",
+      "https://dora.dev/contact/",
+      "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "https://www.linkedin.com/company/doradotdev/",
+      "https://www.youtube.com/@dora-dev",
+      "https://github.com/dora-team/dora.dev"
+    ],
+    "images": [
+      "https://dora.dev/img/dora-logo.svg",
+      "https://dora.dev/research/2016/2016-state-of-devops-report.png",
+      "https://dora.dev/img/cloud-logo-dark.svg"
+    ],
+    "headings": [
+      "H1: DORA Research: 2016"
+    ],
+    "description": "DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance.",
+    "keywords": "DevOps, Lead time, Deploy frequency, Change fail rate, MTTR, Time to restore, metrics, DORA",
+    "author": "",
+    "language": "en"
+  },
+  "filePath": "C:\\agents\\kb-agent\\scraped\\dora.dev\\2025\\07\\1752131112637_DORA_DORA_Research_2016.json"
+}
