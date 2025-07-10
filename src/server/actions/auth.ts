@@ -40,6 +40,11 @@ export async function getUserRole(tenantId: string): Promise<UserRole | null> {
 }
 
 /**
+ * Alias for getUserRole for better semantic naming
+ */
+export const getUserTenantRole = getUserRole;
+
+/**
  * Check if user has specific permissions
  */
 export async function hasPermission(

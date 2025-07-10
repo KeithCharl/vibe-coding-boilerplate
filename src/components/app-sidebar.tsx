@@ -103,6 +103,12 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
       roles: ["viewer", "contributor", "admin"],
     },
     {
+      title: "AI Agent Hub",
+      icon: Shield,
+      href: `/t/${currentTenantId}/agents`,
+      roles: ["viewer", "contributor", "admin"],
+    },
+    {
       title: "Knowledge Repository",
       icon: BookOpen,
       href: `/t/${currentTenantId}/kb`,

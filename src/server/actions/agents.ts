@@ -355,4 +355,50 @@ export async function resolveSecurityEvent(
       error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
+}
+
+// ===== ADDITIONAL TENANT-SPECIFIC FUNCTIONS =====
+
+/**
+ * Get tenant-specific agent configurations
+ */
+export async function getTenantAgentConfigs(tenantId: string) {
+  const session = await getServerAuthSession();
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  try {
+    const configs = await db
+      .select()
+      .from(tenantAgentConfigs)
+      .where(eq(tenantAgentConfigs.tenantId, tenantId));
+
+    return configs;
+  } catch (error) {
+    console.error("Failed to get tenant agent configs:", error);
+    return [];
+  }
+}
+
+/**
+ * Get agent health metrics for a specific tenant
+ */
+export async function getAgentHealth(tenantId: string) {
+  const session = await getServerAuthSession();
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  try {
+    const healthData = await db
+      .select()
+      .from(agentHealthMetrics)
+      .where(eq(agentHealthMetrics.tenantId, tenantId));
+
+    return healthData;
+  } catch (error) {
+    console.error("Failed to get agent health:", error);
+    return [];
+  }
 } 
