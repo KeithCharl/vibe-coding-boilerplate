@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getServerAuthSession } from "@/server/auth";
+import { useSession } from "next-auth/react";
 import { 
   getTemplates, 
   submitTemplate,
@@ -441,9 +441,9 @@ function TemplateSubmissionDialog({ onSubmissionComplete }: { onSubmissionComple
 export default function TemplatesPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -452,18 +452,10 @@ export default function TemplatesPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
-    loadData();
-    loadSession();
-  }, [searchQuery, selectedCategory, sortBy, sortOrder]);
-
-  async function loadSession() {
-    try {
-      const sessionData = await getServerAuthSession();
-      setSession(sessionData);
-    } catch (error) {
-      console.error("Error loading session:", error);
+    if (status === "authenticated") {
+      loadData();
     }
-  }
+  }, [searchQuery, selectedCategory, sortBy, sortOrder, status]);
 
   async function loadData() {
     setIsLoading(true);
@@ -476,7 +468,7 @@ export default function TemplatesPage() {
         limit: 50,
       });
       
-      if (result.success) {
+      if (result.success && result.data) {
         setTemplates(result.data);
       } else {
         toast.error("Failed to load templates");
@@ -532,7 +524,15 @@ export default function TemplatesPage() {
     : 0;
   const uniqueCategories = new Set(templates.map(t => t.category)).size;
 
-  if (!session) {
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
     router.push("/api/auth/signin");
     return null;
   }
