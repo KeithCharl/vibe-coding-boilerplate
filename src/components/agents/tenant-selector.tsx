@@ -6,7 +6,6 @@ import {
   Building2, 
   ArrowRight, 
   Sparkles,
-  Shield,
   Users,
   Clock,
   CheckCircle,
@@ -20,7 +19,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
-import { type AgentDefinition } from "@/lib/agents/agent-registry";
+import { type SerializableAgent } from "@/server/actions/agents";
+import { Brain, Shield, TestTube, GitBranch, BarChart } from "lucide-react";
 
 interface TenantSelectorProps {
   userTenants: Array<{
@@ -30,7 +30,7 @@ interface TenantSelectorProps {
     role: "viewer" | "contributor" | "admin";
     isActive: boolean | null;
   }>;
-  availableAgents: AgentDefinition[];
+  availableAgents: SerializableAgent[];
   userEmail: string;
 }
 
@@ -45,6 +45,18 @@ const roleLabels = {
   contributor: "Contributor", 
   viewer: "Viewer",
 };
+
+// Helper function to map icon names back to components
+function getIconComponent(iconName: string) {
+  const iconMap = {
+    'Brain': Brain,
+    'Shield': Shield,
+    'TestTube': TestTube,
+    'GitBranch': GitBranch,
+    'BarChart': BarChart,
+  };
+  return iconMap[iconName as keyof typeof iconMap] || Brain;
+}
 
 export function TenantSelector({ userTenants, availableAgents, userEmail }: TenantSelectorProps) {
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
@@ -235,7 +247,7 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
 
               <div className="space-y-4">
                 {availableAgents.slice(0, 5).map((agent, index) => {
-                  const Icon = agent.icon;
+                  const Icon = getIconComponent(agent.iconName);
                   return (
                     <motion.div
                       key={agent.id}

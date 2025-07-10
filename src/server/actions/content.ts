@@ -8,6 +8,7 @@ import { requireAuth } from "./auth";
 import { chunkAndEmbedDocument } from "@/lib/embeddings";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import { customCollections, documentCollectionAssignments } from "@/server/db/schema";
 
 export interface DocumentData {
   id: string;
@@ -1225,3 +1226,142 @@ export async function addWebContentToKnowledge(
     throw new Error(`Failed to add web content: ${error.message}`);
   }
 } 
+
+// Custom Collections Management
+
+export async function createCustomCollection(
+  tenantId: string,
+  name: string,
+  description?: string
+) {
+  const user = await requireAuth(tenantId, "contributor");
+
+  try {
+    const [collection] = await db
+      .insert(customCollections)
+      .values({
+        tenantId,
+        name: name.trim(),
+        description: description?.trim() || `Custom collection: ${name.trim()}`,
+        createdBy: user.id,
+      })
+      .returning();
+
+    revalidatePath(`/t/${tenantId}/kb`);
+    return { success: true, collection };
+  } catch (error: any) {
+    throw new Error(`Failed to create collection: ${error.message}`);
+  }
+}
+
+export async function deleteCustomCollection(
+  tenantId: string,
+  collectionId: string
+) {
+  const user = await requireAuth(tenantId, "contributor");
+
+  try {
+    // First remove all document assignments from this collection
+    await db
+      .delete(documentCollectionAssignments)
+      .where(
+        and(
+          eq(documentCollectionAssignments.collectionId, collectionId),
+        )
+      );
+
+    // Then delete the collection
+    await db
+      .delete(customCollections)
+      .where(
+        and(
+          eq(customCollections.id, collectionId),
+          eq(customCollections.tenantId, tenantId)
+        )
+      );
+
+    revalidatePath(`/t/${tenantId}/kb`);
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(`Failed to delete collection: ${error.message}`);
+  }
+}
+
+export async function moveDocumentToCollection(
+  tenantId: string,
+  documentId: string,
+  collectionId: string | null
+) {
+  const user = await requireAuth(tenantId, "contributor");
+
+  try {
+    // Remove existing collection assignments for this document
+    await db
+      .delete(documentCollectionAssignments)
+      .where(eq(documentCollectionAssignments.documentId, documentId));
+
+    // Add new assignment if collectionId is provided
+    if (collectionId) {
+      await db
+        .insert(documentCollectionAssignments)
+        .values({
+          documentId,
+          collectionId,
+          assignedBy: user.id,
+        });
+    }
+
+    revalidatePath(`/t/${tenantId}/kb`);
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(`Failed to move document: ${error.message}`);
+  }
+}
+
+export async function getCustomCollections(tenantId: string) {
+  try {
+    const collections = await db
+      .select()
+      .from(customCollections)
+      .where(eq(customCollections.tenantId, tenantId))
+      .orderBy(customCollections.createdAt);
+
+    return collections;
+  } catch (error: any) {
+    throw new Error(`Failed to fetch collections: ${error.message}`);
+  }
+}
+
+export async function getDocumentCollectionAssignments(tenantId: string) {
+  try {
+    const assignments = await db
+      .select({
+        documentId: documentCollectionAssignments.documentId,
+        collectionId: documentCollectionAssignments.collectionId,
+        collectionName: customCollections.name,
+      })
+      .from(documentCollectionAssignments)
+      .innerJoin(
+        customCollections,
+        eq(documentCollectionAssignments.collectionId, customCollections.id)
+      )
+      .where(eq(customCollections.tenantId, tenantId));
+
+    // Convert to Map for easy lookup
+    const assignmentMap = new Map<string, string>();
+    const collectionNameMap = new Map<string, string>();
+
+    assignments.forEach((assignment) => {
+      assignmentMap.set(assignment.documentId, assignment.collectionId);
+      collectionNameMap.set(assignment.collectionId, assignment.collectionName);
+    });
+
+    return { assignmentMap, collectionNameMap };
+  } catch (error: any) {
+    throw new Error(`Failed to fetch document assignments: ${error.message}`);
+  }
+} 
+
+// Add aliases for backward compatibility
+export const getKnowledgeBaseDocuments = getDocuments;
+export const revertToVersion = revertDocumentVersion; 

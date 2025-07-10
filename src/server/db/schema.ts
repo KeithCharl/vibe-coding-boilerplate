@@ -212,6 +212,53 @@ export const documents = pgTable(
   ]
 );
 
+// Custom collections table for organizing documents
+export const customCollections = pgTable(
+  "custom_collections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    color: varchar("color", { length: 100 }).default("bg-indigo-50 border-indigo-200 text-indigo-700"),
+    createdBy: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("custom_collections_tenant_id_idx").on(table.tenantId),
+    index("custom_collections_created_by_idx").on(table.createdBy),
+  ]
+);
+
+// Document collection assignments - junction table for many-to-many relationship
+export const documentCollectionAssignments = pgTable(
+  "document_collection_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => customCollections.id, { onDelete: "cascade" }),
+    assignedBy: varchar("assigned_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("doc_collection_assignments_doc_id_idx").on(table.documentId),
+    index("doc_collection_assignments_collection_id_idx").on(table.collectionId),
+    // Ensure a document can't be assigned to the same collection twice
+    index("doc_collection_unique_assignment").on(table.documentId, table.collectionId),
+  ]
+);
+
 // Personas table for AI personalities
 export const personas = pgTable(
   "personas",
@@ -645,6 +692,7 @@ export const webScrapingJobs = pgTable(
     lastRun: timestamp("last_run"),
     nextRun: timestamp("next_run"),
     status: varchar("status", { length: 50 }).default("idle"), // 'idle', 'running', 'completed', 'failed'
+    saveToKnowledgeBase: boolean("save_to_knowledge_base").default(true), // Whether to save scraped content to knowledge base
     options: jsonb("options"), // Additional scraping options
     createdBy: varchar("created_by", { length: 255 })
       .notNull()

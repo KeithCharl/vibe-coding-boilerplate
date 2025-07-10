@@ -3,8 +3,7 @@ import { authOptions } from "@/server/auth";
 import { getUserTenants } from "@/server/actions/auth";
 import { getCurrentUserRole } from "@/server/actions/user-management";
 import { redirect } from "next/navigation";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarLayout } from "@/components/sidebar-layout";
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -31,18 +30,13 @@ export default async function TenantLayout({
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar
-        user={session.user}
-        userTenants={userTenants}
-        currentTenantId={tenantId}
-        globalRole={currentUserRole?.globalRole}
-      />
-      <SidebarInset>
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <SidebarLayout
+      user={session.user}
+      userTenants={userTenants}
+      currentTenantId={tenantId}
+      globalRole={currentUserRole?.globalRole}
+    >
+      {children}
+    </SidebarLayout>
   );
 } 

@@ -148,6 +148,7 @@ export interface ScrapingJobData {
   nextRun: Date | null;
   status: string;
   credentialName?: string;
+  saveToKnowledgeBase: boolean;
   createdAt: Date | null;
 }
 
@@ -166,6 +167,7 @@ export async function saveScrapingJob(
     excludePatterns?: string[];
     credentialId?: string;
     schedule: string;
+    saveToKnowledgeBase?: boolean;
     options?: any;
   }
 ) {
@@ -192,6 +194,7 @@ export async function saveScrapingJob(
         excludePatterns: data.excludePatterns,
         credentialId: data.credentialId,
         schedule: data.schedule,
+        saveToKnowledgeBase: data.saveToKnowledgeBase ?? true,
         nextRun,
         options: data.options,
         updatedAt: new Date(),
@@ -220,6 +223,7 @@ export async function saveScrapingJob(
         excludePatterns: data.excludePatterns,
         credentialId: data.credentialId,
         schedule: data.schedule,
+        saveToKnowledgeBase: data.saveToKnowledgeBase ?? true,
         nextRun,
         options: data.options,
         createdBy: user.id,
@@ -250,6 +254,7 @@ export async function getScrapingJobs(tenantId: string): Promise<ScrapingJobData
       nextRun: webScrapingJobs.nextRun,
       status: webScrapingJobs.status,
       credentialName: webScrapingCredentials.name,
+      saveToKnowledgeBase: webScrapingJobs.saveToKnowledgeBase,
       createdAt: webScrapingJobs.createdAt,
     })
     .from(webScrapingJobs)

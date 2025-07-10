@@ -120,6 +120,11 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
           roles: ["viewer", "contributor", "admin"],
         },
         {
+          title: "AI Knowledge Agent",
+          href: `/t/${currentTenantId}/kb/agent`,
+          roles: ["viewer", "contributor", "admin"],
+        },
+        {
           title: "Reference Management",
           href: `/t/${currentTenantId}/kb/references`,
           roles: ["contributor", "admin"],

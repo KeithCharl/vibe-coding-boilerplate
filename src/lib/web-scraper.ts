@@ -73,14 +73,22 @@ export function sanitizeUrl(input: string): string {
   // Remove any internal whitespace that could break the URL
   url = url.replace(/\s+/g, '');
   
+  // Fix common protocol typos first
+  // Fix https// or http// (missing colon)
+  url = url.replace(/^https?\/\//, (match) => {
+    return match.includes('https') ? 'https://' : 'http://';
+  });
+  
+  // Fix http:/ or https:/ (missing one slash)
+  url = url.replace(/^https?:\/([^\/])/, (match, char) => {
+    return match.includes('https') ? `https://${char}` : `http://${char}`;
+  });
+  
   // Add protocol if missing
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     // Default to HTTPS for security
     url = 'https://' + url;
   }
-  
-  // Fix common typos
-  url = url.replace(/^https?:\/([^\/])/, 'https://$1'); // Fix single slash
   
   return url;
 }
@@ -92,6 +100,15 @@ export function validateUrl(url: string): { valid: boolean; error?: string; sani
   try {
     // First try to sanitize the URL
     const sanitizedUrl = sanitizeUrl(url);
+    
+    // Check for obvious malformed patterns before URL parsing
+    if (sanitizedUrl.includes('https://https://') || sanitizedUrl.includes('http://http://') ||
+        sanitizedUrl.includes('https://http://') || sanitizedUrl.includes('http://https://')) {
+      return { 
+        valid: false, 
+        error: 'Invalid URL format detected. Please check your URL and ensure it starts with http:// or https:// (not both).' 
+      };
+    }
     
     // Now validate the sanitized URL
     const urlObj = new URL(sanitizedUrl);
@@ -121,7 +138,11 @@ export function validateUrl(url: string): { valid: boolean; error?: string; sani
     let errorMessage = 'Invalid URL format';
     
     if (error.message.includes('Invalid URL')) {
-      errorMessage = 'Invalid URL format. Please check the URL and try again.';
+      if (url.includes('//') && !url.includes('://')) {
+        errorMessage = 'Invalid URL format. Did you mean to include ":" after "https" or "http"? Example: https://domain.com';
+      } else {
+        errorMessage = 'Invalid URL format. Please check the URL and try again. Example: https://domain.com';
+      }
     } else if (error.message.includes('protocol')) {
       errorMessage = 'URL must start with http:// or https://';
     }

@@ -78,6 +78,20 @@
       "when": 1750254738503,
       "tag": "0010_exotic_magik",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1752061797624,
+      "tag": "0011_custom_collections",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1752062177502,
+      "tag": "0012_add_save_to_knowledge_base",
+      "breakpoints": true
     }
   ]
 }

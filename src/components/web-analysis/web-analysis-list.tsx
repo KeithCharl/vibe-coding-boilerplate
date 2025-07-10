@@ -27,7 +27,6 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
 
 interface WebAnalysisListProps {
   analyses: WebAnalysisData[];
@@ -172,7 +171,7 @@ export function WebAnalysisList({ analyses, tenantId }: WebAnalysisListProps) {
                     {analysis.createdAt && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(analysis.createdAt), { addSuffix: true })}
+                        {new Date(analysis.createdAt).toLocaleDateString()}
                       </span>
                     )}
                   </CardDescription>
@@ -281,7 +280,7 @@ export function WebAnalysisList({ analyses, tenantId }: WebAnalysisListProps) {
                     )}
                     {selectedAnalysis.createdAt && (
                       <span className="text-xs text-muted-foreground">
-                        Analyzed {formatDistanceToNow(new Date(selectedAnalysis.createdAt), { addSuffix: true })}
+                        Analyzed {new Date(selectedAnalysis.createdAt).toLocaleDateString()}
                       </span>
                     )}
                   </div>

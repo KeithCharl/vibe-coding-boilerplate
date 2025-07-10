@@ -21,7 +21,8 @@ export async function initializeAgentSystem() {
     // Initialize core agents in the database
     await AgentRegistryService.initializeCoreAgents();
     
-    revalidatePath("/");
+    // Don't call revalidatePath during render - this causes Next.js errors
+    // revalidatePath("/");
     return { success: true, message: "Agent system initialized successfully" };
   } catch (error) {
     console.error("Failed to initialize agent system:", error);
@@ -34,6 +35,23 @@ export async function initializeAgentSystem() {
 
 // ===== AGENT REGISTRY MANAGEMENT =====
 
+// Type for serializable agent data that can be passed to Client Components
+export interface SerializableAgent {
+  id: string;
+  name: string;
+  type: string;
+  version: string;
+  description: string;
+  baseRoute: string;
+  iconName: string; // Just the icon name, not the component
+  color: string;
+  capabilities: string[];
+  dependencies: string[];
+  isCore: boolean;
+  securityLevel: string;
+  status: string;
+}
+
 export async function getAvailableAgents(): Promise<AgentDefinition[]> {
   try {
     return await AgentRegistryService.getAvailableAgents();
@@ -41,6 +59,48 @@ export async function getAvailableAgents(): Promise<AgentDefinition[]> {
     console.error("Failed to get available agents:", error);
     return [];
   }
+}
+
+export async function getSerializableAgents(): Promise<SerializableAgent[]> {
+  try {
+    const agents = await AgentRegistryService.getAvailableAgents();
+    
+    // Convert to serializable format by removing React components
+    return agents.map(agent => ({
+      id: agent.id,
+      name: agent.name,
+      type: agent.type,
+      version: agent.version,
+      description: agent.description,
+      baseRoute: agent.baseRoute,
+      iconName: getIconName(agent.icon), // Convert icon component to string
+      color: agent.color,
+      capabilities: agent.capabilities,
+      dependencies: agent.dependencies,
+      isCore: agent.isCore,
+      securityLevel: agent.securityLevel,
+      status: agent.status,
+    }));
+  } catch (error) {
+    console.error("Failed to get serializable agents:", error);
+    return [];
+  }
+}
+
+// Helper function to get icon name from component
+function getIconName(IconComponent: any): string {
+  // Map icon components to their names
+  const iconMap: Record<string, string> = {
+    Brain: 'Brain',
+    Shield: 'Shield', 
+    TestTube: 'TestTube',
+    GitBranch: 'GitBranch',
+    BarChart: 'BarChart',
+  };
+  
+  // Try to find the icon name by checking the component's displayName or name
+  const componentName = IconComponent?.displayName || IconComponent?.name || 'Brain';
+  return iconMap[componentName] || 'Brain';
 }
 
 export async function getEnabledAgentsForTenant(tenantId: string): Promise<AgentDefinition[]> {

@@ -29,10 +29,10 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
-import { type AgentDefinition } from "@/lib/agents/agent-registry";
+import { type SerializableAgent } from "@/server/actions/agents";
 
 interface AgentHubProps {
-  agents: AgentDefinition[];
+  agents: SerializableAgent[];
   tenantId?: string;
   userRole?: 'admin' | 'user' | 'viewer';
 }
@@ -77,8 +77,20 @@ const MOCK_HEALTH_DATA: Record<string, AgentHealthStatus> = {
   },
 };
 
+// Helper function to map icon names back to components
+function getIconComponent(iconName: string) {
+  const iconMap = {
+    'Brain': Brain,
+    'Shield': Shield,
+    'TestTube': TestTube,
+    'GitBranch': GitBranch,
+    'BarChart': BarChart,
+  };
+  return iconMap[iconName as keyof typeof iconMap] || Brain;
+}
+
 export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubProps) {
-  const [selectedAgent, setSelectedAgent] = useState<AgentDefinition | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<SerializableAgent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
 
@@ -191,7 +203,7 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
               <AnimatePresence mode="popLayout">
                 {filteredAgents.map((agent, index) => {
                   const health = getHealthStatus(agent.id);
-                  const Icon = agent.icon;
+                  const Icon = getIconComponent(agent.iconName);
                   
                   return (
                     <motion.div

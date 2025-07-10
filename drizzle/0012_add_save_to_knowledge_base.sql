@@ -1,0 +1,1 @@
+ALTER TABLE "web_scraping_jobs" ADD COLUMN "save_to_knowledge_base" boolean DEFAULT true;

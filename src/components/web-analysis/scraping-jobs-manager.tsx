@@ -31,7 +31,8 @@ import {
   Copy,
   Building,
   ExternalLink,
-  Key
+  Key,
+  Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -61,6 +62,7 @@ interface JobFormData {
   excludePatterns: string[];
   credentialId?: string;
   schedule: string;
+  saveToKnowledgeBase: boolean;
   options: {
     maxPages: number;
     delayBetweenRequests: number;
@@ -131,6 +133,7 @@ export function ScrapingJobsManager({ tenantId, jobs: initialJobs, credentials }
     includePatterns: [],
     excludePatterns: [],
     schedule: "0 2 * * *", // Daily at 2 AM
+    saveToKnowledgeBase: true,
     options: {
       maxPages: 100,
       delayBetweenRequests: 1000,
@@ -150,6 +153,7 @@ export function ScrapingJobsManager({ tenantId, jobs: initialJobs, credentials }
         includePatterns: [],
         excludePatterns: [],
         schedule: job.schedule,
+        saveToKnowledgeBase: job.saveToKnowledgeBase,
         options: {
           maxPages: 100,
           delayBetweenRequests: 1000,
@@ -167,6 +171,7 @@ export function ScrapingJobsManager({ tenantId, jobs: initialJobs, credentials }
         includePatterns: [],
         excludePatterns: [],
         schedule: "0 2 * * *",
+        saveToKnowledgeBase: true,
         options: {
           maxPages: 100,
           delayBetweenRequests: 1000,
@@ -222,7 +227,10 @@ export function ScrapingJobsManager({ tenantId, jobs: initialJobs, credentials }
     try {
       setIsLoading(true);
 
-      const result = await saveScrapingJob(tenantId, formData);
+      const result = await saveScrapingJob(tenantId, {
+        ...formData,
+        saveToKnowledgeBase: formData.saveToKnowledgeBase
+      });
       
       if (result.success) {
         // Refresh jobs list
@@ -500,6 +508,25 @@ export function ScrapingJobsManager({ tenantId, jobs: initialJobs, credentials }
               </p>
             )}
           </div>
+        </div>
+
+        {/* Save to Knowledge Base Option */}
+        <div className="flex items-center justify-between py-2">
+          <div className="space-y-0.5">
+            <Label htmlFor="save-to-kb" className="font-medium">
+              Save to Knowledge Base
+            </Label>
+            <div className="text-sm text-gray-500">
+              Automatically add scraped content to your document library
+            </div>
+          </div>
+          <Switch
+            id="save-to-kb"
+            checked={formData.saveToKnowledgeBase}
+            onCheckedChange={(checked) => 
+              setFormData({ ...formData, saveToKnowledgeBase: checked })
+            }
+          />
         </div>
 
         <Separator />

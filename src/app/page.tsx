@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { getUserTenants } from "@/server/actions/auth";
-import { getAvailableAgents, initializeAgentSystem } from "@/server/actions/agents";
+import { getSerializableAgents, type SerializableAgent } from "@/server/actions/agents";
 import { MultiAgentHub } from "@/components/agents/multi-agent-hub";
 import { LandingPage } from "@/components/landing-page";
 import { TenantSelector } from "@/components/agents/tenant-selector";
@@ -14,14 +14,16 @@ export default async function HomePage() {
     return <LandingPage />;
   }
 
-  // Initialize agent system on first load (idempotent)
-  await initializeAgentSystem();
-
   // Get user's tenants and available agents
-  const [userTenants, availableAgents] = await Promise.all([
-    getUserTenants(),
-    getAvailableAgents()
-  ]);
+  const userTenants = await getUserTenants();
+  let availableAgents: SerializableAgent[] = [];
+  
+  try {
+    availableAgents = await getSerializableAgents();
+  } catch (error) {
+    console.error("Failed to get available agents:", error);
+    availableAgents = [];
+  }
 
   // If user has no tenants, show tenant creation flow
   if (userTenants.length === 0) {
@@ -56,21 +58,14 @@ export default async function HomePage() {
     );
   }
 
-  // If user has exactly one tenant, redirect directly to their agent hub
+  // If user has only one tenant, show the multi-agent hub directly
   if (userTenants.length === 1) {
-    const tenant = userTenants[0];
-    return (
-      <MultiAgentHub 
-        agents={availableAgents}
-        tenantId={tenant.tenantId}
-        userRole={tenant.role === 'admin' ? 'admin' : 'user'}
-      />
-    );
+    return <MultiAgentHub tenantId={userTenants[0].tenantId} agents={availableAgents} />;
   }
 
   // If user has multiple tenants, show tenant selector with agent preview
   return (
-    <TenantSelector 
+    <TenantSelector
       userTenants={userTenants}
       availableAgents={availableAgents}
       userEmail={session.user.email || ""}
