@@ -22,6 +22,7 @@ import { submitFeedback } from "@/server/actions/feedback";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PersonaSelector } from "./persona-selector";
+import { Markdown } from "@/components/ui/markdown";
 
 interface Message {
   id: string;
@@ -285,9 +286,15 @@ export function ChatInterface({ sessionId, tenantId, initialMessages, initialTit
                   : "bg-muted"
               }`}>
                 <CardContent className="p-3">
-                  <p className="text-sm whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.role === "assistant" ? (
+                    <Markdown className="text-sm">
+                      {message.content}
+                    </Markdown>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
                   
                   {message.role === "assistant" && (
                     <div className="flex gap-2 mt-2">

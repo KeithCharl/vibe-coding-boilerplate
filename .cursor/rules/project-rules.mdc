@@ -1,40 +1,33 @@
 ---
-description: 
-globs: 
 alwaysApply: true
 ---
-# Project description
-Provide a detailed description of your app, including the most important features.
 
-# Architecture
-- Nextjs 15 with App Router
-- Drizzle ORM for Database Schema
-- Postgres Database
-- Langchain & OpenAI for AI functionality
-- NextAuth for Authentication (with Google Provider)
-- Tailwind & ShadCN for styling
-- Use Server Actions over Route Handlers (APIs)
-- Use Vercel Blob storage with files
+# Project Context Rule
 
-# Project structure
-src/
-src/app/
-src/server/db/ (for all database config and schema)
-src/server/auth.ts (for auth config)
-src/server/actions/ (for all server action logic)
-src/components/ (for all components)
+- On starting a new conversation, load and parse the project scratchpad (/project/SCRATCHPAD.md) file to reconstruct context.
+- After implementing changes, update scratchpad to record new components, packages, or project rules.
+- On starting a new conversation, load the package.json file to understand the libraries used in the project.
 
-# Important
-When making schema changes, remind the user to run the following commands.
-npm run db:generate
-npm run db:migrate
+# Project scratchpad rules
 
-If possible, run these commands yourself.
+- The scratchpad will be added to LLM calls and coding agents for context.
+- The scratchpad should be kept lean and include a concise view of the project, like it's core features, technology and rules.
+- After implementing changes to the project, take the existing SCRATCHPAD content, add the new rules, features, etc. and rewrite the SCRATCHPAD to be lean and concise.
 
-# Additional rules
-- DO NOT install @radix-ui directly. Use shadcn components only.
-- DO NOT use Toast for notifications! Use shadcn Sonner for notifications.
-- The database connection var is called POSTGRES_URL, not DATABASE_URL.
-- DO NOT create a middleware file.  Protect the backend logic within the routes and server actions.
-- Use the existing AUTH config file (src/server/auth.ts). Do not create a new file.
-- Use PostgreSQL full-text search + pg_trgm for advanced search features
+# Use up-to-date documentation and existing patterns
+
+When adding a new feature:
+
+- First, check if similar features or components already exist in the project and follow those patterns.
+- If no clear pattern exists, use Context7 to retrieve the latest technical documentation (e.g., Next.js, shadcn, Langchain, Langgraph, NextAuth, Drizzle ORM) before implementing.
+- Prefer reusing or installing existing components over building from scratch.
+- If a shadcn component is suitable, run the install command to add it instead of building from scratch.
+
+# Deployment
+
+- When asked to deploy the app, first run build to ensure that everything compiles correctly.
+- When asked to deploy the app, run the "vercel --prod" command to do so.
+
+# AI functionality
+
+- If a solution requires RAG (Retrieval Augmented Generation), like if a file is uploaded that needs to be chunked and vectorized in order for an agent to answer questions on it, then use the PGVector extension on PostgreSQL and an OpenAI Embedding model.
