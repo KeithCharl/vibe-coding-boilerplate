@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { getUserTenantRole } from "@/server/actions/auth";
-import { getAvailableAgents, getTenantAgentConfigs, getAgentHealth } from "@/server/actions/agents";
+import { getSerializableAgents, getTenantAgentConfigs, getAgentHealth } from "@/server/actions/agents";
 import { MultiAgentHub } from "@/components/agents/multi-agent-hub";
 import { redirect } from "next/navigation";
 
@@ -27,7 +27,7 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
 
   // Get agent data for this tenant
   const [availableAgents, tenantConfigs, healthData] = await Promise.all([
-    getAvailableAgents(),
+    getSerializableAgents(),
     getTenantAgentConfigs(tenantId),
     getAgentHealth(tenantId)
   ]);
@@ -41,7 +41,7 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
 
   return (
     <MultiAgentHub 
-      agents={agentsWithConfig as any}
+      agents={agentsWithConfig}
       tenantId={tenantId}
       userRole={userRole === 'admin' ? 'admin' : 'user'}
     />

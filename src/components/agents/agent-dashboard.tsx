@@ -14,7 +14,6 @@ import {
   Pause,
   RotateCcw,
   TrendingUp,
-  Shield,
   Zap,
   Database,
   MessageSquare,
@@ -29,10 +28,23 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
-import { type AgentDefinition } from "@/lib/agents/agent-registry";
+import { type SerializableAgent } from "@/server/actions/agents";
+import { Brain, Shield, TestTube, GitBranch, BarChart } from "lucide-react";
+
+// Helper function to map icon names back to components
+function getIconComponent(iconName: string) {
+  const iconMap = {
+    'Brain': Brain,
+    'Shield': Shield,
+    'TestTube': TestTube,
+    'GitBranch': GitBranch,
+    'BarChart': BarChart,
+  };
+  return iconMap[iconName as keyof typeof iconMap] || Brain;
+}
 
 interface AgentDashboardProps {
-  agent: AgentDefinition;
+  agent: SerializableAgent;
   config?: {
     isEnabled: boolean;
     accessLevel: string;
@@ -63,7 +75,7 @@ const statusColors = {
 export function AgentDashboard({ agent, config, health, tenantId, userRole }: AgentDashboardProps) {
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   
-  const Icon = agent.icon;
+  const Icon = getIconComponent(agent.iconName);
   const status = health?.status || 'offline';
   const isEnabled = config?.isEnabled ?? false;
 

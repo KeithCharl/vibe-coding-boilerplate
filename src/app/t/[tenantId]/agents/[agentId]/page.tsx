@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { getUserTenantRole } from "@/server/actions/auth";
-import { getAvailableAgents, getTenantAgentConfigs, getAgentHealth } from "@/server/actions/agents";
+import { getSerializableAgents, getTenantAgentConfigs, getAgentHealth } from "@/server/actions/agents";
 import { redirect } from "next/navigation";
 import { AgentDashboard } from "@/components/agents/agent-dashboard";
 
@@ -28,7 +28,7 @@ export default async function AgentPage({ params }: AgentPageProps) {
 
   // Get agent data
   const [availableAgents, tenantConfigs, healthData] = await Promise.all([
-    getAvailableAgents(),
+    getSerializableAgents(),
     getTenantAgentConfigs(tenantId),
     getAgentHealth(tenantId)
   ]);
