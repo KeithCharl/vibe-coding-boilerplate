@@ -53,10 +53,10 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                      Enterprise Knowledge Platform
+                      bSmart Platform
                     </h1>
                     <p className="text-lg text-muted-foreground">
-                      Intelligent data management and collaborative analytics
+                                              Work smart. Automate everything.
                     </p>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                     <Building2 className="h-10 w-10 text-primary" />
                   </div>
                   <h2 className="text-3xl font-bold text-foreground">
-                    Welcome to Your Enterprise Knowledge Platform
+                    Welcome to Your bSmart Platform
                   </h2>
                   <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                     Begin your journey with intelligent data management and AI-powered analytics. 
@@ -316,6 +316,17 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-16 pt-8 border-t border-border">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              Powered by <span className="font-semibold text-bancon-teal">bSmart</span> • a <span className="font-semibold text-bancon-navy">bancon</span> product
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

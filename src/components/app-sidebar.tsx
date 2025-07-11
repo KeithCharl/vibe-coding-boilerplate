@@ -119,7 +119,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
       roles: ["viewer", "contributor", "admin"],
     },
     {
-      title: "AI Agent Hub",
+      title: "bSmart Agents",
       icon: Shield,
       href: `/t/${currentTenantId}/agents`,
       roles: ["viewer", "contributor", "admin"],
@@ -209,7 +209,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
                       <div className="text-white font-bold text-sm">b</div>
                     </div>
                     <div className="flex flex-col items-start">
-                      <span className="font-bold" style={{ color: '#002C54' }}>bAxis</span>
+                      <span className="font-bold" style={{ color: '#002C54' }}>bSmart</span>
                       <span className="text-xs text-gray-500">by bancon</span>
                     </div>
                   </div>

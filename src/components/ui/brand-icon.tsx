@@ -56,7 +56,7 @@ export function BrandLogo({ size = "md", showText = true, className }: {
       {showText && (
         <div>
           <h1 className={cn("font-bold text-foreground tracking-tight", textSizes[size])}>
-            Enterprise Knowledge Platform
+            bSmart Platform
           </h1>
           <p className="text-sm text-muted-foreground">
             AI-Powered Business Intelligence

@@ -81,7 +81,7 @@ export function CreateTenantForm() {
           Create Your Workspace
         </CardTitle>
         <CardDescription className="text-lg">
-          Set up your bAxis workspace to get started with intelligent automation
+                        Set up your bSmart workspace to get started with intelligent automation
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,7 +106,7 @@ export function CreateTenantForm() {
               Workspace URL *
             </Label>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">baxis.com/t/</span>
+                                <span className="text-sm text-gray-500">bsmart.com/t/</span>
               <Input
                 id="tenantSlug"
                 type="text"
@@ -138,19 +138,9 @@ export function CreateTenantForm() {
 
           <Button
             type="submit"
-            className="w-full text-lg py-6 rounded-lg font-bold transition-all duration-200"
-            style={{ backgroundColor: '#00B3B0', color: 'white' }}
+            variant="ghost"
+            className="w-full btn-bancon-primary btn-lg"
             disabled={isLoading}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.backgroundColor = '#008F8C';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.backgroundColor = '#00B3B0';
-              }
-            }}
           >
             {isLoading ? (
               <>

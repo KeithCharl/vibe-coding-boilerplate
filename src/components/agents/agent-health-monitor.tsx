@@ -177,11 +177,11 @@ export function AgentHealthMonitor({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
-      case 'degraded': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
-      case 'unhealthy': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
-      case 'offline': return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
+          case 'healthy': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+    case 'degraded': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
+    case 'unhealthy': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
+    case 'offline': return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
+    default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
     }
   };
 

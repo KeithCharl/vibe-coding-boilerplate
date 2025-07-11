@@ -58,7 +58,7 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
             </p>
           </div>
           <Button 
-            variant="outline" 
+            variant="ghost" 
             asChild
             className="btn-bancon-outline"
           >
@@ -153,11 +153,8 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
           <CardContent className="grid gap-3">
             <Button 
               asChild 
-              className="justify-start btn-bancon-primary h-12"
-              style={{ 
-                backgroundColor: '#00B3B0',
-                color: 'white'
-              }}
+              variant="ghost"
+              className="justify-start btn-bancon-primary btn-lg"
             >
               <Link href={`/t/${tenantId}/chat`}>
                 <MessageSquare className="h-4 w-4 mr-3" />
@@ -166,11 +163,8 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
             </Button>
             <Button 
               asChild 
-              className="justify-start btn-bancon-outline h-12"
-              style={{ 
-                borderColor: '#002C54',
-                color: '#002C54'
-              }}
+              variant="ghost"
+              className="justify-start btn-bancon-outline btn-lg"
             >
               <Link href={`/t/${tenantId}/kb`}>
                 <Upload className="h-4 w-4 mr-3" />
@@ -179,11 +173,8 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
             </Button>
             <Button 
               asChild 
-              className="justify-start btn-bancon-outline h-12"
-              style={{ 
-                borderColor: '#FF6B00',
-                color: '#FF6B00'
-              }}
+              variant="ghost"
+              className="justify-start btn-bancon-orange btn-lg"
             >
               <Link href={`/t/${tenantId}/users`}>
                 <Users className="h-4 w-4 mr-3" />
@@ -211,11 +202,8 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
                 </p>
                 <Button 
                   asChild 
+                  variant="ghost"
                   className="btn-bancon-primary"
-                  style={{ 
-                    backgroundColor: '#00B3B0',
-                    color: 'white'
-                  }}
                 >
                   <Link href={`/t/${tenantId}/chat`}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -238,12 +226,8 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
                     </div>
                     <Button 
                       asChild 
-                      size="sm" 
-                      className="btn-bancon-outline"
-                      style={{ 
-                        borderColor: '#00B3B0',
-                        color: '#00B3B0'
-                      }}
+                      variant="ghost"
+                      className="btn-bancon-primary btn-sm"
                     >
                       <Link href={`/t/${tenantId}/chat/${session.id}`}>
                         Continue
@@ -256,6 +240,15 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
           </CardContent>
         </Card>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-12 pt-8 border-t border-gray-200">
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            Powered by <span className="font-semibold text-bancon-teal">bSmart</span> • a <span className="font-semibold text-bancon-navy">bancon</span> product
+          </p>
+        </div>
+      </footer>
     </div>
   );
 } 

@@ -33,7 +33,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
         <div className="w-16 h-16 rounded-full bg-bancon-navy mx-auto mb-4 flex items-center justify-center">
           <Sparkles className="h-8 w-8 text-white" />
         </div>
-        <CardTitle className="text-2xl">Welcome to bAxis!</CardTitle>
+                      <CardTitle className="text-2xl">Welcome to bSmart!</CardTitle>
         <CardDescription>
           Let's get you set up with the right access and permissions for your role.
         </CardDescription>
@@ -94,7 +94,7 @@ function RoleExplanationStep({ onNext }: { onNext: () => void }) {
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Understanding Roles & Permissions</CardTitle>
         <CardDescription>
-          Here's what each role can do within bAxis workspaces
+                        Here's what each role can do within bSmart workspaces
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -144,7 +144,7 @@ function CompletionStep() {
   const router = useRouter();
 
   const handleComplete = () => {
-    toast.success("Welcome to bAxis! Redirecting to your dashboard...");
+                  toast.success("Welcome to bSmart! Redirecting to your dashboard...");
     setTimeout(() => {
       router.push("/workspaces");
     }, 1500);
@@ -158,7 +158,7 @@ function CompletionStep() {
         </div>
         <CardTitle className="text-2xl">You're All Set!</CardTitle>
         <CardDescription>
-          Your account is ready and you can start using bAxis.
+                      Your account is ready and you can start using bSmart.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -175,7 +175,7 @@ function CompletionStep() {
         
         <div className="text-center">
           <Button onClick={handleComplete} className="btn-bancon">
-            Enter bAxis <ArrowRight className="ml-2 h-4 w-4" />
+            Enter bSmart <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </CardContent>
@@ -190,7 +190,7 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
     {
       id: "welcome",
       title: "Welcome",
-      description: "Get started with bAxis",
+      description: "Get started with bSmart",
       component: WelcomeStep,
     },
     {

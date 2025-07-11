@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -12,7 +14,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'Source Sans Pro', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -50,7 +52,7 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 8px; /* bancon standard: 8px radius */
   
   /* bancon Brand Colors */
   --bancon-navy: #002C54;
@@ -155,8 +157,10 @@
   }
   body {
     @apply text-foreground;
-    font-family: 'Montserrat', 'Open Sans', system-ui, sans-serif;
+    font-family: 'Source Sans Pro', system-ui, sans-serif;
+    font-size: 16px;
     letter-spacing: -0.01em;
+    color: #4A4A4A;
   }
   
   /* bancon Typography */
@@ -171,67 +175,232 @@
   }
   
   h1 {
-    @apply text-3xl font-bold;
+    font-size: 36px; /* 32-40px range */
+    font-weight: 700; /* Bold */
+    line-height: 1.2;
   }
   
   h2 {
-    @apply text-2xl font-bold;
+    font-size: 26px; /* 24-28px range */
+    font-weight: 700; /* Bold */
+    line-height: 1.3;
   }
   
   h3 {
-    @apply text-xl font-bold;
+    font-size: 20px;
+    font-weight: 600; /* Semi Bold */
+    line-height: 1.4;
   }
   
-  /* bancon Button Styles */
+  /* Caption/Label styles */
+  .caption, .label {
+    font-size: 13px; /* 12-14px range */
+    font-weight: 400; /* Regular */
+    color: #6B6B6B;
+  }
+  
+  /* bancon Layout & Spacing System */
+  .container-bancon {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px; /* Outer margin: 24px */
+  }
+  
+  .grid-bancon {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4-column layout */
+    gap: 16px; /* Internal spacing */
+  }
+  
+  /* bancon Spacing Scale: 4px, 8px, 16px, 32px, 64px */
+  .spacing-xs { margin: 4px; padding: 4px; }
+  .spacing-sm { margin: 8px; padding: 8px; }
+  .spacing-md { margin: 16px; padding: 16px; }
+  .spacing-lg { margin: 32px; padding: 32px; }
+  .spacing-xl { margin: 64px; padding: 64px; }
+  
+  /* Internal padding standard */
+  .padding-internal {
+    padding: 16px;
+  }
+  
+  /* bancon Subheadings - dark gray #4A4A4A, medium weight */
+  .subheading {
+    color: #4A4A4A;
+    @apply font-medium;
+  }
+  
+  .dark .subheading {
+    color: #94A3B8;
+  }
+  
+  /* bancon Link Styles */
+  .link-bancon {
+    color: var(--bancon-teal);
+    @apply font-medium transition-colors duration-200;
+  }
+  
+  .link-bancon:hover {
+    color: #008F8C;
+  }
+  
+  .dark .link-bancon:hover {
+    color: #00D4D1;
+  }
+  
+  /* bancon Highlight Styles */
+  .highlight-bancon {
+    background-color: rgba(0, 179, 176, 0.1);
+    color: var(--bancon-teal);
+    @apply px-1 py-0.5 rounded;
+  }
+  
+  .dark .highlight-bancon {
+    background-color: rgba(0, 179, 176, 0.2);
+  }
+  
+  /* bancon Button Styles - Following Style Guide */
   .btn-bancon-primary {
-    background-color: var(--bancon-teal);
-    color: white;
-    @apply rounded-xl font-bold transition-all duration-200 hover:shadow-lg;
+    background-color: var(--bancon-navy) !important; /* Navy background */
+    color: white !important;
+    border: 1px solid var(--bancon-navy) !important;
+    border-radius: 8px;
+    font-weight: 700; /* Bold font */
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 250ms ease;
+    height: 40px;
+    padding: 0 16px;
   }
   
   .btn-bancon-primary:hover {
-    background-color: #008F8C;
-    transform: translateY(-2px);
+    background-color: #001A35 !important;
+    border-color: #001A35 !important;
+    box-shadow: 0 4px 12px rgba(0, 44, 84, 0.3);
   }
   
   .btn-bancon-secondary {
-    background-color: var(--bancon-navy);
-    color: white;
-    @apply rounded-xl font-bold transition-all duration-200 hover:shadow-lg;
+    background-color: white !important; /* White background */
+    color: var(--bancon-teal) !important; /* Teal text */
+    border: 1px solid var(--bancon-teal) !important; /* Teal border */
+    border-radius: 8px;
+    font-weight: 700; /* Bold font */
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 250ms ease;
+    height: 40px;
+    padding: 0 16px;
   }
   
   .btn-bancon-secondary:hover {
-    background-color: #001A35;
-    transform: translateY(-2px);
+    background-color: var(--bancon-teal) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 179, 176, 0.3);
   }
   
   .btn-bancon-outline {
-    border: 2px solid var(--bancon-navy);
-    color: var(--bancon-navy);
-    background: transparent;
-    @apply rounded-xl font-bold transition-all duration-200;
+    background-color: transparent !important;
+    color: var(--bancon-teal) !important; /* Teal text */
+    border: 1px solid var(--bancon-teal) !important; /* Teal border */
+    border-radius: 8px;
+    font-weight: 700; /* Bold font */
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 250ms ease;
+    height: 40px;
+    padding: 0 16px;
   }
   
   .btn-bancon-outline:hover {
-    background-color: var(--bancon-navy);
-    color: white;
+    background-color: var(--bancon-teal) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 179, 176, 0.3);
+  }
+  
+  /* bancon Danger/Alert Button - Orange for special actions */
+  .btn-bancon-orange {
+    background-color: var(--bancon-orange) !important; /* Orange background */
+    color: white !important;
+    border: 1px solid var(--bancon-orange) !important;
+    border-radius: 8px;
+    font-weight: 700; /* Bold font */
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 250ms ease;
+    height: 40px;
+    padding: 0 16px;
+  }
+  
+  .btn-bancon-orange:hover {
+    background-color: #E5600A !important;
+    border-color: #E5600A !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+  }
+  
+  .btn-bancon-orange-outline {
+    background-color: transparent !important;
+    color: var(--bancon-orange) !important; /* Orange text */
+    border: 1px solid var(--bancon-orange) !important; /* Orange border */
+    border-radius: 8px;
+    font-weight: 700; /* Bold font */
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 250ms ease;
+    height: 40px;
+    padding: 0 16px;
+  }
+  
+  .btn-bancon-orange-outline:hover {
+    background-color: var(--bancon-orange) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+  }
+  
+  /* bancon Button Sizing - Following Style Guide */
+  .btn-sm {
+    height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 13px; /* Caption size */
+  }
+  
+  .btn-lg {
+    height: 48px !important;
+    padding: 0 24px !important;
+    font-size: 16px; /* Body size */
+  }
+  
+  .btn-xl {
+    height: 56px !important;
+    padding: 0 32px !important;
+    font-size: 18px; /* Larger body size */
   }
   
   /* bancon Card Styles */
   .card-bancon {
-    @apply bg-white border-2 rounded-xl shadow-sm transition-all duration-200;
-    border-color: #E5E7EB;
+    background-color: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px; /* bancon standard radius */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 200ms ease;
+    padding: 16px; /* Internal padding */
   }
   
   .card-bancon:hover {
-    @apply shadow-xl;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
     border-color: var(--bancon-teal);
   }
   
+  .card-bancon-alt {
+    background-color: #F4F7FA; /* Alternate card background */
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 200ms ease;
+    padding: 16px;
+  }
+  
   .card-bancon-featured {
-    @apply bg-white border-2 rounded-xl shadow-lg;
-    border-color: var(--bancon-teal);
+    background-color: white;
+    border: 2px solid var(--bancon-teal);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 179, 176, 0.15);
+    padding: 16px;
   }
   
   /* bancon Color Classes */
@@ -306,12 +475,45 @@
   
   /* bancon Business Card Styling */
   .business-card {
-    @apply bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200;
+    background-color: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 250ms ease;
+    padding: 16px;
   }
   
   .business-card:hover {
-    @apply shadow-lg;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-color: var(--bancon-teal);
     transform: translateY(-1px);
   }
+  
+  /* bancon Footer Styling */
+  .footer-bancon {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 12px;
+    font-weight: 400; /* Regular */
+    color: #6B6B6B; /* Mid Gray */
+    text-align: center;
+    padding: 16px;
+  }
+  
+  /* bancon Grid Responsive Design */
+  @media (max-width: 768px) {
+    .grid-bancon {
+      grid-template-columns: 1fr; /* Single column on mobile */
+    }
+    
+    .container-bancon {
+      padding: 0 16px; /* Reduced padding on mobile */
+    }
+  }
+  
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid-bancon {
+      grid-template-columns: repeat(2, 1fr); /* Two columns on tablet */
+    }
+  }
+
 }

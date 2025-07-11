@@ -31,3 +31,74 @@ When adding a new feature:
 # AI functionality
 
 - If a solution requires RAG (Retrieval Augmented Generation), like if a file is uploaded that needs to be chunked and vectorized in order for an agent to answer questions on it, then use the PGVector extension on PostgreSQL and an OpenAI Embedding model.
+
+# UI Style Guide
+1. Brand Identity
+
+- - Brand: bancon (always lowercase)
+- Tone: Confident, modern, pragmatic
+
+2. Colors
+Purpose	Color	Hex Code
+Primary (Brand)	Navy	#002C54
+Accent (Highlight)	Teal	#00B3B0
+Secondary Accent (Alert/CTA)	Orange	#FF6B00
+Background (Neutral)	Soft Light	#F4F7FA
+Text - Primary	Dark Gray	#4A4A4A
+Text - Secondary	Mid Gray	#6B6B6B
+Link Hover	Teal	#00B3B0
+3. Typography
+
+Font: Source Sans Pro (Regular, Semi Bold, Bold)
+Download: https://fonts.google.com/specimen/Source+Sans+Pro
+
+Sizes:
+- H1: 32–40px
+- H2: 24–28px
+- Body: 16px
+- Caption/Label: 12–14px
+
+4. Layout & Spacing
+
+- Grid System: 4-column layout
+- Outer Margin: 24px
+- Internal Padding: 16px
+- Spacing Scale: 4px, 8px, 16px, 32px, 64px
+- Cards: white or #F4F7FA with subtle shadow
+- Rounded Corners: 8px radius
+
+5. Components & UI Elements
+
+Buttons:
+- Primary: Navy background, white text, bold font
+- Secondary: Teal border, teal text, white background
+- Danger (optional): Orange background or border
+
+Hover States:
+- Teal for outlines or text color
+- Transitions: 200–300ms
+
+Icons:
+- Use icon library from bancon PowerPoint or Feather/Lucide
+- Outline style preferred
+
+6. Footer
+
+Footer Text: "Powered by bSmart • a bancon product"
+Font: Source Sans Pro Regular, 12px, #6B6B6B
+
+7. Cursor Project Integration
+
+Add to .cursor/project-rules.yaml:
+
+styleGuide:
+  brand: bancon
+  productName: bSmart
+  font: "Source Sans Pro"
+  primaryColor: "#002C54"
+  accentColor: "#00B3B0"
+  secondaryAccent: "#FF6B00"
+  gridColumns: 4
+  borderRadius: 8
+  iconStyle: outline
+  footerNote: "Powered by bSmart • a bancon product"

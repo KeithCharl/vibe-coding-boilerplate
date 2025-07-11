@@ -85,7 +85,7 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                   className="text-2xl font-bold" 
                   style={{ color: '#002C54' }}
                 >
-                  bAxis
+                  bSmart
                 </h1>
                 <p className="text-sm text-gray-500">by bancon</p>
               </div>
@@ -218,19 +218,8 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                               
                               <Button 
                                 asChild 
-                                className="rounded-xl font-bold transition-all duration-200 hover:shadow-lg"
-                                style={{
-                                  backgroundColor: isSelected ? '#00B3B0' : '#002C54',
-                                  color: 'white'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = isSelected ? '#008F8C' : '#001A35';
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = isSelected ? '#00B3B0' : '#002C54';
-                                  e.currentTarget.style.transform = 'translateY(0)';
-                                }}
+                                variant="ghost"
+                                className={isSelected ? "btn-bancon-primary" : "btn-bancon-secondary"}
                               >
                                 <Link href={`/t/${tenant.tenantId}`} className="flex items-center gap-2">
                                   <span>Enter Workspace</span>
@@ -265,11 +254,8 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                 <CardContent>
                   <Button 
                     asChild 
-                    className="w-full btn-bancon-outline"
-                    style={{ 
-                      borderColor: '#00B3B0',
-                      color: '#00B3B0'
-                    }}
+                    variant="ghost"
+                    className="w-full btn-bancon-primary"
                   >
                     <Link href="/create-tenant">
                       Create Workspace

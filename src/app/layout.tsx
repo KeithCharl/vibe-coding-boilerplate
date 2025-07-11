@@ -4,14 +4,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "bAxis | Enterprise AI Agent Platform",
-  description: "Smart agents for sharper execution. Automate testing, streamline finance, and accelerate business delivery with bAxis by bancon.",
-  keywords: ["AI agents", "enterprise automation", "business intelligence", "bancon", "bAxis"],
+  title: "bSmart | Work smart. Automate everything.",
+  description: "Your smarter way to work. Automate testing, streamline finance, and accelerate business delivery with bSmart by bancon.",
+  keywords: ["AI agents", "enterprise automation", "business intelligence", "bancon", "bSmart"],
   authors: [{ name: "bancon Innovation Hub" }],
   robots: "index, follow",
   openGraph: {
-    title: "bAxis | Enterprise AI Agent Platform",
-    description: "Smart agents for sharper execution. Transform your organization with AI-powered automation.",
+    title: "bSmart | Work smart. Automate everything.",
+    description: "Your smarter way to work. Transform your organization with intelligent automation.",
     type: "website",
   },
 };

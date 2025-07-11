@@ -99,7 +99,7 @@ export function LandingPage({ session }: LandingPageProps) {
             <div className="text-white font-bold text-lg">b</div>
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold" style={{ color: '#002C54' }}>bAxis</span>
+                            <span className="text-xl font-bold" style={{ color: '#002C54' }}>bSmart</span>
             <span className="text-xs text-gray-500">by bancon</span>
           </div>
         </div>
@@ -164,10 +164,10 @@ export function LandingPage({ session }: LandingPageProps) {
         <div className="max-w-4xl mx-auto space-y-8">
           <h1 className="text-5xl md:text-6xl font-bold leading-tight" style={{ color: '#002C54' }}>
             Welcome to
-            <span className="block" style={{ color: '#00B3B0' }}>bAxis</span>
+                          <span className="block" style={{ color: '#00B3B0' }}>bSmart</span>
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-            Smart agents for sharper execution. Automate testing, streamline finance, and accelerate business delivery.
+            Work smart. Automate everything. Your smarter way to work with intelligent automation for testing, finance, and business operations.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {session?.user ? (
@@ -175,34 +175,18 @@ export function LandingPage({ session }: LandingPageProps) {
                 <Button 
                   size="lg" 
                   asChild 
-                  className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                  style={{ 
-                    backgroundColor: '#00B3B0',
-                    color: 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#008F8C';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#00B3B0';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
+                  className="btn-bancon-primary btn-xl"
                 >
                   <Link href="/workspaces">
-                    Enter bAxis
+                    Enter bSmart
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
                 <Button 
                   size="lg" 
-                  variant="outline" 
                   asChild 
-                  className="text-lg px-8 py-6 rounded-xl font-bold border-2 transition-all duration-200"
-                  style={{ 
-                    borderColor: '#FF6B00',
-                    color: '#FF6B00'
-                  }}
+                  variant="ghost"
+                  className="btn-bancon-orange btn-xl"
                 >
                   <Link href="/create-tenant">Launch New Workspace</Link>
                 </Button>
@@ -212,32 +196,17 @@ export function LandingPage({ session }: LandingPageProps) {
                 <Button 
                   size="lg" 
                   onClick={handleGoogleSignIn} 
-                  className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                  style={{ 
-                    backgroundColor: '#00B3B0',
-                    color: 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#008F8C';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#00B3B0';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
+                  variant="ghost"
+                  className="btn-bancon-primary btn-xl"
                 >
-                  Enter bAxis
+                  Enter bSmart
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
                   size="lg" 
-                  variant="outline" 
                   onClick={handleGoogleSignIn} 
-                  className="text-lg px-8 py-6 rounded-xl font-bold border-2 transition-all duration-200"
-                  style={{ 
-                    borderColor: '#002C54',
-                    color: '#002C54'
-                  }}
+                  variant="ghost"
+                  className="btn-bancon-outline btn-xl"
                 >
                   Sign In with Google
                 </Button>
@@ -330,11 +299,7 @@ export function LandingPage({ session }: LandingPageProps) {
                         <Badge 
                           key={capability} 
                           variant="outline" 
-                          className="text-xs rounded-full border"
-                          style={{ 
-                            borderColor: '#00B3B0',
-                            color: '#00B3B0'
-                          }}
+                          className="text-xs rounded-full border border-bancon-teal text-bancon-teal"
                         >
                           {capability}
                         </Badge>
@@ -356,11 +321,8 @@ export function LandingPage({ session }: LandingPageProps) {
               <Button 
                 size="lg" 
                 asChild 
-                className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                style={{ 
-                  backgroundColor: '#00B3B0',
-                  color: 'white'
-                }}
+                variant="ghost"
+                className="btn-bancon-primary btn-xl"
               >
                 <Link href="/workspaces">
                   Access My Agents
@@ -371,11 +333,7 @@ export function LandingPage({ session }: LandingPageProps) {
               <Button 
                 size="lg" 
                 onClick={handleGoogleSignIn} 
-                className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                style={{ 
-                  backgroundColor: '#00B3B0',
-                  color: 'white'
-                }}
+                className="btn-bancon-primary btn-xl"
               >
                 Access All Agents
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -429,22 +387,14 @@ export function LandingPage({ session }: LandingPageProps) {
               {session?.user ? (
                 <Button 
                   asChild 
-                  className="w-full mt-6 rounded-lg font-bold"
-                  style={{ 
-                    backgroundColor: '#002C54',
-                    color: 'white'
-                  }}
+                  className="w-full btn-bancon-secondary"
                 >
                   <Link href="/create-tenant">Launch New Workspace</Link>
                 </Button>
               ) : (
                 <Button 
                   onClick={handleGoogleSignIn} 
-                  className="w-full mt-6 rounded-lg font-bold"
-                  style={{ 
-                    backgroundColor: '#002C54',
-                    color: 'white'
-                  }}
+                  className="w-full btn-bancon-secondary"
                 >
                   Start Free Trial
                 </Button>
@@ -501,22 +451,14 @@ export function LandingPage({ session }: LandingPageProps) {
               {session?.user ? (
                 <Button 
                   asChild 
-                  className="w-full mt-6 rounded-lg font-bold"
-                  style={{ 
-                    backgroundColor: '#00B3B0',
-                    color: 'white'
-                  }}
+                  className="w-full btn-bancon-primary"
                 >
                   <Link href="/create-tenant">Get Started</Link>
                 </Button>
               ) : (
                 <Button 
                   onClick={handleGoogleSignIn} 
-                  className="w-full mt-6 rounded-lg font-bold"
-                  style={{ 
-                    backgroundColor: '#00B3B0',
-                    color: 'white'
-                  }}
+                  className="w-full btn-bancon-primary"
                 >
                   Get Started
                 </Button>
@@ -536,7 +478,7 @@ export function LandingPage({ session }: LandingPageProps) {
             Ready to Transform Your Operations?
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of organizations using bAxis to automate processes, 
+            Join thousands of organizations using bSmart to automate processes, 
             accelerate testing, and optimize business delivery.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -550,14 +492,10 @@ export function LandingPage({ session }: LandingPageProps) {
                   <Button 
                     size="lg" 
                     asChild 
-                    className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                    style={{ 
-                      backgroundColor: '#00B3B0',
-                      color: 'white'
-                    }}
+                    className="btn-bancon-primary btn-xl"
                   >
                     <Link href="/workspaces">
-                      Enter bAxis
+                      Enter bSmart
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
@@ -567,24 +505,15 @@ export function LandingPage({ session }: LandingPageProps) {
                   <Button 
                     size="lg" 
                     onClick={handleGoogleSignIn} 
-                    className="text-lg px-8 py-6 rounded-xl font-bold transition-all duration-200 hover:shadow-xl"
-                    style={{ 
-                      backgroundColor: '#00B3B0',
-                      color: 'white'
-                    }}
+                    className="btn-bancon-primary btn-xl"
                   >
-                    Enter bAxis Now
+                    Enter bSmart Now
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button 
                     size="lg" 
-                    variant="outline" 
                     onClick={handleGoogleSignIn} 
-                    className="text-lg px-8 py-6 rounded-xl font-bold border-2"
-                    style={{ 
-                      borderColor: '#002C54',
-                      color: '#002C54'
-                    }}
+                    className="btn-bancon-outline btn-xl"
                   >
                     Sign In
                   </Button>
@@ -603,13 +532,13 @@ export function LandingPage({ session }: LandingPageProps) {
               <div className="text-white font-bold text-sm">b</div>
             </div>
             <div className="flex flex-col">
-              <span className="font-bold" style={{ color: '#002C54' }}>bAxis</span>
+              <span className="font-bold" style={{ color: '#002C54' }}>bSmart</span>
               <span className="text-xs text-gray-500">by bancon</span>
             </div>
           </div>
           <div className="flex flex-col items-center md:items-end gap-1">
             <p className="text-sm text-gray-500">
-              © 2024 bAxis. Smart automation for business excellence.
+              © 2024 bSmart. Work smart. Automate everything.
             </p>
             <p className="text-xs text-gray-400">
               Part of the bancon Innovation Hub

@@ -36,10 +36,10 @@ export default function SignIn() {
               </div>
               <div className="text-left">
                 <h1 className="text-3xl font-bold text-foreground">
-                  Enterprise Knowledge Platform
+                  bSmart Platform
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  AI-Powered Business Intelligence
+                  Work smart. Automate everything.
                 </p>
               </div>
             </div>
