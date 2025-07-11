@@ -191,60 +191,81 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon" className="border-r" style={{ backgroundColor: '#F4F7FA' }}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="w-full justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    <span className="truncate">
-                      {currentTenant?.tenantName || "Select Workspace"}
-                    </span>
+                <SidebarMenuButton 
+                  className="w-full justify-between rounded-xl font-bold"
+                  style={{ color: '#002C54' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="h-8 w-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: '#002C54' }}
+                    >
+                      <div className="text-white font-bold text-sm">b</div>
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold" style={{ color: '#002C54' }}>bAxis</span>
+                      <span className="text-xs text-gray-500">by bancon</span>
+                    </div>
                   </div>
-                  <Menu className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuItem asChild className="font-medium text-primary">
-                  <Link href="/">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    ← All Workspaces
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent 
+                className="w-56 rounded-xl border-2" 
+                align="start"
+                style={{ borderColor: '#00B3B0' }}
+              >
+                <div className="px-3 py-2 border-b border-gray-200">
+                  <p className="text-sm font-bold" style={{ color: '#002C54' }}>
+                    {currentTenant?.tenantName || "Select Workspace"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {currentTenant?.role && `Role: ${currentTenant.role}`}
+                  </p>
+                </div>
+                
                 {userTenants.map((tenant) => (
-                  <DropdownMenuItem key={tenant.tenantId} asChild>
-                    <Link href={`/t/${tenant.tenantId}`}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{tenant.tenantName}</span>
-                        <span className="text-xs text-muted-foreground">
+                  <DropdownMenuItem 
+                    key={tenant.tenantId} 
+                    asChild
+                    className="rounded-lg m-1 transition-colors hover:bg-bancon-teal/10"
+                  >
+                    <Link 
+                      href={`/t/${tenant.tenantId}`}
+                      className="flex items-center gap-2 p-2"
+                    >
+                      <Building2 className="h-4 w-4" style={{ color: '#00B3B0' }} />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold" style={{ color: '#002C54' }}>
+                          {tenant.tenantName}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
                           {tenant.role}
-                        </span>
+                        </p>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                 ))}
+                
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/create-tenant">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Tenant
+                
+                <DropdownMenuItem 
+                  asChild
+                  className="rounded-lg m-1 transition-colors hover:bg-bancon-orange/10"
+                >
+                  <Link href="/create-tenant" className="flex items-center gap-2 p-2">
+                    <Plus className="h-4 w-4" style={{ color: '#FF6B00' }} />
+                    <span className="font-bold" style={{ color: '#FF6B00' }}>
+                      Create New Workspace
+                    </span>
                   </Link>
                 </DropdownMenuItem>
-                {(globalRole === "super_admin" || globalRole === "tenant_admin") && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Administration
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
@@ -253,69 +274,83 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
 
       <SidebarContent>
         <SidebarMenu>
-          {navigationItems
-            .filter(item => hasPermission(item.roles))
-            .map((item, index) => (
-              <div key={item.href}>
-                <SidebarMenuItem>
-                  {item.sectionId ? (
-                    // Collapsible section with expand/collapse button
-                    <div>
-                      <SidebarMenuButton
-                        onClick={() => toggleSection(item.sectionId!)}
-                        isActive={pathname?.startsWith(item.href)}
-                        tooltip={item.title}
-                        className={cn(
-                          "w-full justify-between",
-                          item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </div>
-                        {expandedSections.has(item.sectionId) ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </SidebarMenuButton>
-                      {item.subItems && item.subItems.length > 0 && expandedSections.has(item.sectionId) && (
-                        <SidebarMenuSub>
-                          {item.subItems
-                            .filter(subItem => hasPermission(subItem.roles))
-                            .map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.href}>
-                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                                  <Link href={subItem.href}>
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                        </SidebarMenuSub>
-                      )}
-                    </div>
-                  ) : (
-                    // Regular navigation item
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.title}
-                      className={item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""}
-                    >
-                      <Link href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+          {navigationItems.map((item: NavigationItem) => {
+            if (!hasPermission(item.roles) && !item.isMainDashboard) {
+              return null;
+            }
+
+            const isActive = pathname === item.href;
+            const isExpanded = item.sectionId ? expandedSections.has(item.sectionId) : false;
+            const Icon = item.icon;
+
+            if (item.subItems) {
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => item.sectionId && toggleSection(item.sectionId)}
+                    className="w-full rounded-lg transition-colors hover:bg-bancon-teal/10"
+                    style={{ 
+                      backgroundColor: isActive ? 'rgba(0, 179, 176, 0.1)' : 'transparent',
+                      color: isActive ? '#00B3B0' : '#002C54'
+                    }}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="font-bold">{item.title}</span>
+                    {isExpanded ? (
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </SidebarMenuButton>
+                  
+                  {isExpanded && (
+                    <SidebarMenuSub>
+                      {item.subItems.map((subItem: { title: string; href: string; roles: string[] }) => {
+                        if (!hasPermission(subItem.roles)) return null;
+                        
+                        const isSubActive = pathname === subItem.href;
+                        
+                        return (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton 
+                              asChild
+                              className="rounded-lg transition-colors hover:bg-bancon-teal/10"
+                              style={{ 
+                                backgroundColor: isSubActive ? 'rgba(0, 179, 176, 0.1)' : 'transparent',
+                                color: isSubActive ? '#00B3B0' : '#002C54'
+                              }}
+                            >
+                              <Link href={subItem.href}>
+                                <span className="font-bold">{subItem.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
                   )}
                 </SidebarMenuItem>
-                {item.isMainDashboard && (
-                  <div className="border-b border-border mb-2"></div>
-                )}
-              </div>
-            ))}
+              );
+            }
+
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild
+                  className="rounded-lg transition-colors hover:bg-bancon-teal/10"
+                  style={{ 
+                    backgroundColor: isActive ? 'rgba(0, 179, 176, 0.1)' : 'transparent',
+                    color: isActive ? '#00B3B0' : '#002C54'
+                  }}
+                >
+                  <Link href={item.href}>
+                    <Icon className="h-4 w-4" />
+                    <span className="font-bold">{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          }).filter(Boolean)}
         </SidebarMenu>
       </SidebarContent>
 
@@ -324,34 +359,65 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton 
+                  className="rounded-lg transition-colors hover:bg-bancon-teal/10"
+                  style={{ color: '#002C54' }}
+                >
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    <AvatarImage src={user?.image || undefined} />
+                    <AvatarFallback 
+                      className="text-white font-bold text-xs"
+                      style={{ backgroundColor: '#002C54' }}
+                    >
+                      {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate">{user?.name || user?.email}</span>
+                  <span className="font-bold truncate">
+                    {user?.name || user?.email || "User"}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="p-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Theme</span>
-                    <ModeToggle />
-                  </div>
+              <DropdownMenuContent 
+                className="w-56 rounded-xl border-2" 
+                align="end"
+                style={{ borderColor: '#00B3B0' }}
+              >
+                <div className="px-3 py-2 border-b border-gray-200">
+                  <p className="text-sm font-bold" style={{ color: '#002C54' }}>
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.email}
+                  </p>
                 </div>
+                
+                <DropdownMenuItem 
+                  className="rounded-lg m-1 transition-colors hover:bg-bancon-teal/10"
+                  disabled
+                >
+                  <UserCog className="h-4 w-4 mr-2" style={{ color: '#00B3B0' }} />
+                  <span className="font-bold" style={{ color: '#002C54' }}>Account Settings</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="rounded-lg m-1 transition-colors hover:bg-bancon-teal/10">
+                  <ModeToggle />
+                </DropdownMenuItem>
+                
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                
+                <DropdownMenuItem 
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="rounded-lg m-1 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  <span className="font-bold">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   );

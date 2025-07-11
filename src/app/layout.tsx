@@ -4,14 +4,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Enterprise Knowledge Platform | AI-Powered Business Intelligence",
-  description: "Advanced multi-tenant knowledge management platform with AI-powered analytics, secure document processing, and enterprise-grade collaboration tools.",
-  keywords: ["enterprise software", "knowledge management", "business intelligence", "AI platform", "document management"],
-  authors: [{ name: "Enterprise Solutions Team" }],
+  title: "bAxis | Enterprise AI Agent Platform",
+  description: "Smart agents for sharper execution. Automate testing, streamline finance, and accelerate business delivery with bAxis by bancon.",
+  keywords: ["AI agents", "enterprise automation", "business intelligence", "bancon", "bAxis"],
+  authors: [{ name: "bancon Innovation Hub" }],
   robots: "index, follow",
   openGraph: {
-    title: "Enterprise Knowledge Platform",
-    description: "Transform your organization's knowledge management with AI-powered insights and secure collaboration.",
+    title: "bAxis | Enterprise AI Agent Platform",
+    description: "Smart agents for sharper execution. Transform your organization with AI-powered automation.",
     type: "website",
   },
 };
@@ -23,7 +23,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body 
+        className="min-h-screen antialiased"
+        style={{
+          background: 'linear-gradient(to right, #F4F7FA, #FFFFFF)',
+          fontFamily: 'Montserrat, "Open Sans", system-ui, sans-serif'
+        }}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

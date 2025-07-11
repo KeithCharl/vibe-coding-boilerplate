@@ -94,13 +94,13 @@ export function LandingPage({ session }: LandingPageProps) {
       {/* Header */}
       <header className="container mx-auto px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          {/* Bancon Logo Placeholder */}
+          {/* bancon Logo Placeholder */}
           <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#002C54' }}>
-            <div className="text-white font-bold text-lg">B</div>
+            <div className="text-white font-bold text-lg">b</div>
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-bold" style={{ color: '#002C54' }}>bAxis</span>
-            <span className="text-xs text-gray-500">by Bancon</span>
+            <span className="text-xs text-gray-500">by bancon</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -600,11 +600,11 @@ export function LandingPage({ session }: LandingPageProps) {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#002C54' }}>
-              <div className="text-white font-bold text-sm">B</div>
+              <div className="text-white font-bold text-sm">b</div>
             </div>
             <div className="flex flex-col">
               <span className="font-bold" style={{ color: '#002C54' }}>bAxis</span>
-              <span className="text-xs text-gray-500">by Bancon</span>
+              <span className="text-xs text-gray-500">by bancon</span>
             </div>
           </div>
           <div className="flex flex-col items-center md:items-end gap-1">
@@ -612,7 +612,7 @@ export function LandingPage({ session }: LandingPageProps) {
               © 2024 bAxis. Smart automation for business excellence.
             </p>
             <p className="text-xs text-gray-400">
-              Part of the Bancon Innovation Hub
+              Part of the bancon Innovation Hub
             </p>
           </div>
         </div>

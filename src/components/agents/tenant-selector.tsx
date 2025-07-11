@@ -62,28 +62,38 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+    <div 
+      className="min-h-screen"
+      style={{
+        background: 'linear-gradient(to right, #F4F7FA, #FFFFFF)',
+        fontFamily: 'Montserrat, "Open Sans", system-ui, sans-serif'
+      }}
+    >
       {/* Header */}
-      <div className="border-b bg-background/80 backdrop-blur-sm shadow-sm">
+      <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Layers className="h-7 w-7 text-white" />
+              <div 
+                className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: '#002C54' }}
+              >
+                <div className="text-white font-bold text-lg">b</div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                  Enterprise Agent Platform
+                <h1 
+                  className="text-2xl font-bold" 
+                  style={{ color: '#002C54' }}
+                >
+                  bAxis
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  Select your workspace to access AI agents
-                </p>
+                <p className="text-sm text-gray-500">by bancon</p>
               </div>
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                <Shield className="h-4 w-4 text-blue-600" />
+              <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+                <Shield className="h-4 w-4" style={{ color: '#00B3B0' }} />
                 <span>Enterprise Security</span>
               </div>
               <ThemeToggleButton />
@@ -99,8 +109,8 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
             {/* Workspace Selection */}
             <div className="lg:col-span-2 space-y-6">
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold text-foreground">Choose Your Workspace</h2>
-                <p className="text-lg text-muted-foreground">
+                <h2 className="text-4xl font-bold" style={{ color: '#002C54' }}>Choose Your Workspace</h2>
+                <p className="text-lg text-gray-600">
                   Select a workspace to access your AI agents and collaborative tools
                 </p>
               </div>
@@ -120,44 +130,61 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                         transition={{ duration: 0.3, delay: index * 0.1 }}
                       >
                         <Card 
-                          className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                          className={`cursor-pointer transition-all duration-300 rounded-xl border-2 ${
                             isSelected 
-                              ? 'ring-2 ring-blue-500 shadow-lg border-blue-200 dark:border-blue-800' 
-                              : 'hover:border-blue-200 dark:hover:border-blue-800'
+                              ? 'shadow-xl border-bancon-teal' 
+                              : 'shadow-sm hover:shadow-lg border-gray-200 hover:border-bancon-teal'
                           }`}
                           onClick={() => setSelectedTenant(tenant.tenantId)}
                         >
                           <CardHeader className="pb-4">
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-xl ${
-                                  tenant.role === 'admin' 
-                                    ? 'bg-red-100 dark:bg-red-900/20' 
-                                    : tenant.role === 'contributor'
-                                    ? 'bg-blue-100 dark:bg-blue-900/20'
-                                    : 'bg-gray-100 dark:bg-gray-900/20'
-                                }`}>
-                                  <Icon className={`h-6 w-6 ${
-                                    tenant.role === 'admin' 
-                                      ? 'text-red-600 dark:text-red-400' 
+                                <div 
+                                  className="p-3 rounded-xl"
+                                  style={{
+                                    backgroundColor: tenant.role === 'admin' 
+                                      ? 'rgba(0, 44, 84, 0.1)' 
                                       : tenant.role === 'contributor'
-                                      ? 'text-blue-600 dark:text-blue-400'
-                                      : 'text-gray-600 dark:text-gray-400'
-                                  }`} />
+                                      ? 'rgba(0, 179, 176, 0.1)'
+                                      : 'rgba(255, 107, 0, 0.1)'
+                                  }}
+                                >
+                                  <Icon 
+                                    className="h-6 w-6" 
+                                    style={{
+                                      color: tenant.role === 'admin' 
+                                        ? '#002C54' 
+                                        : tenant.role === 'contributor'
+                                        ? '#00B3B0'
+                                        : '#FF6B00'
+                                    }}
+                                  />
                                 </div>
                                 <div className="space-y-2">
-                                  <CardTitle className="text-xl font-semibold">
+                                  <CardTitle className="text-xl font-bold" style={{ color: '#002C54' }}>
                                     {tenant.tenantName}
                                   </CardTitle>
                                   <div className="flex items-center gap-3">
                                     <Badge 
-                                      variant="secondary" 
-                                      className={`text-xs font-medium ${roleColors[tenant.role]}`}
+                                      className="text-xs font-bold rounded-full"
+                                      style={{
+                                        backgroundColor: tenant.role === 'admin' 
+                                          ? 'rgba(0, 44, 84, 0.1)' 
+                                          : tenant.role === 'contributor'
+                                          ? 'rgba(0, 179, 176, 0.1)'
+                                          : 'rgba(255, 107, 0, 0.1)',
+                                        color: tenant.role === 'admin' 
+                                          ? '#002C54' 
+                                          : tenant.role === 'contributor'
+                                          ? '#00B3B0'
+                                          : '#FF6B00'
+                                      }}
                                     >
                                       {roleLabels[tenant.role]}
                                     </Badge>
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                                      <CheckCircle className="h-3 w-3" style={{ color: '#00B3B0' }} />
                                       <span>Active</span>
                                     </div>
                                   </div>
@@ -169,7 +196,8 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                                   <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center"
+                                    className="h-6 w-6 rounded-full flex items-center justify-center"
+                                    style={{ backgroundColor: '#00B3B0' }}
                                   >
                                     <CheckCircle className="h-4 w-4 text-white" />
                                   </motion.div>
@@ -179,22 +207,30 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                           </CardHeader>
 
                           <CardContent className="space-y-4">
-                            <CardDescription className="text-base">
+                            <CardDescription className="text-base text-gray-600">
                               Access {availableAgents.length} AI agents including Knowledge Base, Business Rules, Testing, and Analytics capabilities.
                             </CardDescription>
                             
                             <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-sm text-gray-600">
                                 {availableAgents.filter(a => a.isCore).length} Core Agents • {availableAgents.length - availableAgents.filter(a => a.isCore).length} Extended Agents
                               </div>
                               
                               <Button 
                                 asChild 
-                                className={`transition-all duration-300 ${
-                                  isSelected 
-                                    ? 'bg-blue-600 hover:bg-blue-700 shadow-md' 
-                                    : 'bg-primary hover:bg-primary/90'
-                                }`}
+                                className="rounded-xl font-bold transition-all duration-200 hover:shadow-lg"
+                                style={{
+                                  backgroundColor: isSelected ? '#00B3B0' : '#002C54',
+                                  color: 'white'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#008F8C' : '#001A35';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#00B3B0' : '#002C54';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                }}
                               >
                                 <Link href={`/t/${tenant.tenantId}`} className="flex items-center gap-2">
                                   <span>Enter Workspace</span>
@@ -211,20 +247,30 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
               </div>
 
               {/* Create New Workspace */}
-              <Card className="border-2 border-dashed border-blue-300 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
+              <Card className="border-2 border-dashed rounded-xl transition-colors" style={{ borderColor: '#00B3B0' }}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-lg">
-                    <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <CardTitle className="flex items-center gap-3 text-lg" style={{ color: '#002C54' }}>
+                    <div 
+                      className="h-10 w-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(0, 179, 176, 0.1)' }}
+                    >
+                      <Building2 className="h-5 w-5" style={{ color: '#00B3B0' }} />
                     </div>
                     <span>Create New Workspace</span>
                   </CardTitle>
-                  <CardDescription className="text-base">
+                  <CardDescription className="text-base text-gray-600">
                     Set up a new organizational workspace with full AI agent access
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="outline" className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full btn-bancon-outline"
+                    style={{ 
+                      borderColor: '#00B3B0',
+                      color: '#00B3B0'
+                    }}
+                  >
                     <Link href="/create-tenant">
                       Create Workspace
                     </Link>
@@ -236,11 +282,11 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
             {/* Agent Preview Sidebar */}
             <div className="space-y-6">
               <div className="space-y-3">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-blue-600" />
+                <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: '#002C54' }}>
+                  <Sparkles className="h-5 w-5" style={{ color: '#FF6B00' }} />
                   Available AI Agents
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-600">
                   Powerful AI agents available in every workspace
                 </p>
               </div>
@@ -255,25 +301,58 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: 0.1 * index }}
                     >
-                      <Card className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
+                      <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg bg-${agent.color}-100 dark:bg-${agent.color}-900/20`}>
-                              <Icon className={`h-4 w-4 text-${agent.color}-600 dark:text-${agent.color}-400`} />
+                            <div 
+                              className="p-2 rounded-lg"
+                              style={{
+                                backgroundColor: agent.color === 'navy' 
+                                  ? 'rgba(0, 44, 84, 0.1)' 
+                                  : agent.color === 'teal'
+                                  ? 'rgba(0, 179, 176, 0.1)'
+                                  : 'rgba(255, 107, 0, 0.1)'
+                              }}
+                            >
+                              <Icon 
+                                className="h-4 w-4" 
+                                style={{
+                                  color: agent.color === 'navy' 
+                                    ? '#002C54' 
+                                    : agent.color === 'teal'
+                                    ? '#00B3B0'
+                                    : '#FF6B00'
+                                }}
+                              />
                             </div>
                             <div className="flex-1 space-y-1">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium">{agent.name}</h4>
+                                <h4 className="text-sm font-bold" style={{ color: '#002C54' }}>{agent.name}</h4>
                                 {agent.isCore && (
-                                  <Badge variant="outline" className="text-xs">Core</Badge>
+                                  <Badge 
+                                    className="text-xs font-bold" 
+                                    style={{ 
+                                      backgroundColor: 'rgba(0, 179, 176, 0.1)', 
+                                      color: '#00B3B0' 
+                                    }}
+                                  >
+                                    Core
+                                  </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground line-clamp-2">
+                              <p className="text-xs text-gray-600 line-clamp-2">
                                 {agent.description}
                               </p>
                               <div className="flex flex-wrap gap-1">
                                 {agent.capabilities.slice(0, 2).map((cap) => (
-                                  <Badge key={cap} variant="secondary" className="text-xs">
+                                  <Badge 
+                                    key={cap} 
+                                    className="text-xs rounded-full" 
+                                    style={{ 
+                                      backgroundColor: 'rgba(0, 44, 84, 0.1)', 
+                                      color: '#002C54' 
+                                    }}
+                                  >
                                     {cap}
                                   </Badge>
                                 ))}
@@ -290,17 +369,25 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
               <Separator />
 
               {/* User Info */}
-              <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
+              <Card 
+                className="rounded-xl border border-gray-200/50"
+                style={{ 
+                  background: 'linear-gradient(to bottom right, rgba(0, 179, 176, 0.05), rgba(255, 107, 0, 0.05))' 
+                }}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-blue-600 text-white">
+                      <AvatarFallback 
+                        className="text-white font-bold"
+                        style={{ backgroundColor: '#002C54' }}
+                      >
                         {userEmail.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Signed in as</p>
-                      <p className="text-xs text-muted-foreground font-mono">{userEmail}</p>
+                      <p className="text-sm font-bold" style={{ color: '#002C54' }}>Signed in as</p>
+                      <p className="text-xs text-gray-600 font-mono">{userEmail}</p>
                     </div>
                   </div>
                   
@@ -308,12 +395,12 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
                   
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-lg font-bold text-blue-600">{userTenants.length}</p>
-                      <p className="text-xs text-muted-foreground">Workspaces</p>
+                      <p className="text-lg font-bold" style={{ color: '#00B3B0' }}>{userTenants.length}</p>
+                      <p className="text-xs text-gray-600">Workspaces</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-purple-600">{availableAgents.length}</p>
-                      <p className="text-xs text-muted-foreground">AI Agents</p>
+                      <p className="text-lg font-bold" style={{ color: '#FF6B00' }}>{availableAgents.length}</p>
+                      <p className="text-xs text-gray-600">AI Agents</p>
                     </div>
                   </div>
                 </CardContent>
@@ -321,25 +408,25 @@ export function TenantSelector({ userTenants, availableAgents, userEmail }: Tena
 
               {/* Quick Stats */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium flex items-center gap-2">
+                <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: '#002C54' }}>
                   <Clock className="h-4 w-4" />
                   Platform Status
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">System Health</span>
+                    <span className="text-gray-600">System Health</span>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-600 font-medium">Operational</span>
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: '#00B3B0' }}></div>
+                      <span className="font-bold" style={{ color: '#00B3B0' }}>Operational</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Active Agents</span>
-                    <span className="font-medium">{availableAgents.filter(a => a.status === 'active').length}/{availableAgents.length}</span>
+                    <span className="text-gray-600">Active Agents</span>
+                    <span className="font-bold" style={{ color: '#002C54' }}>{availableAgents.filter(a => a.status === 'active').length}/{availableAgents.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Security Level</span>
-                    <span className="font-medium text-blue-600">Enterprise</span>
+                    <span className="text-gray-600">Security Level</span>
+                    <span className="font-bold" style={{ color: '#FF6B00' }}>Enterprise</span>
                   </div>
                 </div>
               </div>

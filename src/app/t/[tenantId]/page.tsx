@@ -52,31 +52,37 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
         />
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-4xl font-bold tracking-tight text-bancon-navy">Dashboard</h1>
+            <p className="text-gray-600 text-lg mt-2">
               Overview of your knowledge base and AI interactions
             </p>
           </div>
-          <Button variant="outline" asChild>
+          <Button 
+            variant="outline" 
+            asChild
+            className="btn-bancon-outline"
+          >
             <Link href="/" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              All Tenants
+              All Workspaces
             </Link>
           </Button>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Link href={`/t/${tenantId}/kb`}>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card className="card-bancon cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Documents</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-bold text-bancon-navy">Documents</CardTitle>
+              <div className="h-10 w-10 rounded-lg bg-bancon-teal/10 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-bancon-teal" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{docStats.totalDocuments}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-bancon-navy">{docStats.totalDocuments}</div>
+              <p className="text-sm text-gray-600 mt-1">
                 {docStats.totalChunks} total chunks
               </p>
             </CardContent>
@@ -84,14 +90,16 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
         </Link>
 
         <Link href={`/t/${tenantId}/chat`}>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card className="card-bancon cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Chat Sessions</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-bold text-bancon-navy">Chat Sessions</CardTitle>
+              <div className="h-10 w-10 rounded-lg bg-bancon-navy/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-bancon-navy" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{chatSessions.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-bancon-navy">{chatSessions.length}</div>
+              <p className="text-sm text-gray-600 mt-1">
                 Total conversations
               </p>
             </CardContent>
@@ -99,30 +107,34 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
         </Link>
 
         <Link href={`/t/${tenantId}/analytics`}>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card className="card-bancon cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-bold text-bancon-navy">Avg Rating</CardTitle>
+              <div className="h-10 w-10 rounded-lg bg-bancon-orange/10 flex items-center justify-center">
+                <Star className="h-5 w-5 text-bancon-orange" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold text-bancon-navy">
                 {feedbackStats.averageRating.toFixed(1)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-gray-600 mt-1">
                 {feedbackStats.totalFeedback} feedback entries
               </p>
             </CardContent>
           </Card>
         </Link>
 
-        <Card>
+        <Card className="card-bancon">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Growth</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-bold text-bancon-navy">Growth</CardTitle>
+            <div className="h-10 w-10 rounded-lg bg-bancon-teal/10 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-bancon-teal" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-bancon-navy">+12%</div>
+            <p className="text-sm text-gray-600 mt-1">
               From last month
             </p>
           </CardContent>
@@ -130,51 +142,81 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="card-bancon">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-bold text-bancon-navy">Quick Actions</CardTitle>
+            <CardDescription className="text-gray-600">
               Common tasks to get you started
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-2">
-            <Button asChild className="justify-start">
+          <CardContent className="grid gap-3">
+            <Button 
+              asChild 
+              className="justify-start btn-bancon-primary h-12"
+              style={{ 
+                backgroundColor: '#00B3B0',
+                color: 'white'
+              }}
+            >
               <Link href={`/t/${tenantId}/chat`}>
-                <MessageSquare className="h-4 w-4 mr-2" />
+                <MessageSquare className="h-4 w-4 mr-3" />
                 Start New Chat
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start">
+            <Button 
+              asChild 
+              className="justify-start btn-bancon-outline h-12"
+              style={{ 
+                borderColor: '#002C54',
+                color: '#002C54'
+              }}
+            >
               <Link href={`/t/${tenantId}/kb`}>
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 mr-3" />
                 Upload Document
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start">
+            <Button 
+              asChild 
+              className="justify-start btn-bancon-outline h-12"
+              style={{ 
+                borderColor: '#FF6B00',
+                color: '#FF6B00'
+              }}
+            >
               <Link href={`/t/${tenantId}/users`}>
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="h-4 w-4 mr-3" />
                 Manage Users
               </Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-bancon">
           <CardHeader>
-            <CardTitle>Recent Chat Sessions</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-bold text-bancon-navy">Recent Chat Sessions</CardTitle>
+            <CardDescription className="text-gray-600">
               Your latest conversations
             </CardDescription>
           </CardHeader>
           <CardContent>
             {recentSessions.length === 0 ? (
-              <div className="text-center py-4">
-                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
+              <div className="text-center py-8">
+                <div className="h-16 w-16 rounded-xl bg-bancon-teal/10 flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-bancon-teal" />
+                </div>
+                <p className="text-gray-600 mb-4">
                   No chat sessions yet
                 </p>
-                <Button asChild className="mt-2" size="sm">
+                <Button 
+                  asChild 
+                  className="btn-bancon-primary"
+                  style={{ 
+                    backgroundColor: '#00B3B0',
+                    color: 'white'
+                  }}
+                >
                   <Link href={`/t/${tenantId}/chat`}>
                     <Plus className="h-4 w-4 mr-2" />
                     Start Chatting
@@ -182,19 +224,27 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {recentSessions.map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-2 rounded border"
+                    className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-bancon-teal transition-all duration-200"
                   >
                     <div>
-                      <p className="font-medium text-sm">{session.title}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-bold text-bancon-navy text-sm">{session.title}</p>
+                      <p className="text-xs text-gray-600 mt-1">
                         {session.updatedAt ? new Date(session.updatedAt).toLocaleDateString() : 'No date'}
                       </p>
                     </div>
-                    <Button asChild size="sm" variant="ghost">
+                    <Button 
+                      asChild 
+                      size="sm" 
+                      className="btn-bancon-outline"
+                      style={{ 
+                        borderColor: '#00B3B0',
+                        color: '#00B3B0'
+                      }}
+                    >
                       <Link href={`/t/${tenantId}/chat/${session.id}`}>
                         Continue
                       </Link>

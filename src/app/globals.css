@@ -50,83 +50,103 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  /* Professional Corporate Color Scheme - Light Theme */
+  --radius: 0.75rem;
+  
+  /* bancon Brand Colors */
+  --bancon-navy: #002C54;
+  --bancon-teal: #00B3B0;
+  --bancon-orange: #FF6B00;
+  --bancon-background: linear-gradient(to right, #F4F7FA, #FFFFFF);
+  
+  /* Professional Corporate Color Scheme - Light Theme with bancon branding */
   --background: oklch(1 0 0);
   --foreground: oklch(0.09 0.005 264);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.09 0.005 264);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.09 0.005 264);
-  /* Professional Blue Primary */
-  --primary: oklch(0.35 0.15 240);
+  
+  /* bancon Navy Primary */
+  --primary: #002C54;
   --primary-foreground: oklch(0.98 0.002 264);
-  /* Sophisticated Gray Secondary */
+  
+  /* bancon Teal Secondary */
   --secondary: oklch(0.96 0.015 264);
-  --secondary-foreground: oklch(0.35 0.15 240);
+  --secondary-foreground: #002C54;
   --muted: oklch(0.97 0.01 264);
   --muted-foreground: oklch(0.47 0.03 264);
-  --accent: oklch(0.95 0.02 264);
-  --accent-foreground: oklch(0.35 0.15 240);
+  
+  /* bancon Teal Accent */
+  --accent: #00B3B0;
+  --accent-foreground: oklch(0.98 0.002 264);
+  
   --destructive: oklch(0.55 0.16 25);
   --destructive-foreground: oklch(0.98 0.002 264);
   --border: oklch(0.90 0.02 264);
   --input: oklch(0.96 0.015 264);
-  --ring: oklch(0.35 0.15 240);
-  /* Professional Chart Colors */
-  --chart-1: oklch(0.35 0.15 240);
-  --chart-2: oklch(0.45 0.12 200);
-  --chart-3: oklch(0.55 0.08 150);
+  --ring: #00B3B0;
+  
+  /* bancon Brand Chart Colors */
+  --chart-1: #002C54;
+  --chart-2: #00B3B0;
+  --chart-3: #FF6B00;
   --chart-4: oklch(0.65 0.10 100);
   --chart-5: oklch(0.75 0.08 50);
-  /* Professional Sidebar */
+  
+  /* bancon Sidebar */
   --sidebar: oklch(0.98 0.005 264);
-  --sidebar-foreground: oklch(0.09 0.005 264);
-  --sidebar-primary: oklch(0.35 0.15 240);
+  --sidebar-foreground: #002C54;
+  --sidebar-primary: #002C54;
   --sidebar-primary-foreground: oklch(0.98 0.002 264);
-  --sidebar-accent: oklch(0.95 0.02 264);
-  --sidebar-accent-foreground: oklch(0.09 0.005 264);
+  --sidebar-accent: #00B3B0;
+  --sidebar-accent-foreground: oklch(0.98 0.002 264);
   --sidebar-border: oklch(0.90 0.02 264);
-  --sidebar-ring: oklch(0.35 0.15 240);
+  --sidebar-ring: #00B3B0;
 }
 
 .dark {
-  /* Professional Dark Theme */
+  /* bancon Dark Theme */
   --background: oklch(0.12 0.008 264);
   --foreground: oklch(0.95 0.004 264);
   --card: oklch(0.15 0.010 264);
   --card-foreground: oklch(0.95 0.004 264);
   --popover: oklch(0.15 0.010 264);
   --popover-foreground: oklch(0.95 0.004 264);
-  /* Sophisticated Light Blue for Dark Mode */
-  --primary: oklch(0.65 0.12 210);
-  --primary-foreground: oklch(0.12 0.008 264);
+  
+  /* bancon Teal Primary for Dark Mode */
+  --primary: #00B3B0;
+  --primary-foreground: #002C54;
   --secondary: oklch(0.20 0.012 264);
   --secondary-foreground: oklch(0.90 0.004 264);
   --muted: oklch(0.18 0.010 264);
   --muted-foreground: oklch(0.65 0.012 264);
-  --accent: oklch(0.22 0.014 264);
-  --accent-foreground: oklch(0.90 0.004 264);
+  
+  /* bancon Orange Accent for Dark Mode */
+  --accent: #FF6B00;
+  --accent-foreground: oklch(0.95 0.004 264);
+  
   --destructive: oklch(0.65 0.18 25);
   --destructive-foreground: oklch(0.95 0.004 264);
   --border: oklch(0.25 0.014 264);
   --input: oklch(0.20 0.012 264);
-  --ring: oklch(0.65 0.12 210);
-  /* Professional Dark Chart Colors */
-  --chart-1: oklch(0.65 0.12 210);
-  --chart-2: oklch(0.70 0.14 180);
-  --chart-3: oklch(0.60 0.10 150);
+  --ring: #00B3B0;
+  
+  /* bancon Dark Chart Colors */
+  --chart-1: #00B3B0;
+  --chart-2: #FF6B00;
+  --chart-3: #002C54;
   --chart-4: oklch(0.75 0.12 120);
   --chart-5: oklch(0.68 0.08 80);
-  /* Professional Dark Sidebar */
+  
+  /* bancon Dark Sidebar */
   --sidebar: oklch(0.10 0.006 264);
   --sidebar-foreground: oklch(0.85 0.004 264);
-  --sidebar-primary: oklch(0.65 0.12 210);
-  --sidebar-primary-foreground: oklch(0.10 0.006 264);
-  --sidebar-accent: oklch(0.18 0.010 264);
-  --sidebar-accent-foreground: oklch(0.85 0.004 264);
+  --sidebar-primary: #00B3B0;
+  --sidebar-primary-foreground: #002C54;
+  --sidebar-accent: #FF6B00;
+  --sidebar-accent-foreground: oklch(0.95 0.004 264);
   --sidebar-border: oklch(0.20 0.012 264);
-  --sidebar-ring: oklch(0.65 0.12 210);
+  --sidebar-ring: #00B3B0;
 }
 
 @layer base {
@@ -134,14 +154,20 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply text-foreground;
+    font-family: 'Montserrat', 'Open Sans', system-ui, sans-serif;
     letter-spacing: -0.01em;
   }
   
-  /* Professional Typography */
+  /* bancon Typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-bold tracking-tight;
     letter-spacing: -0.02em;
+    color: var(--bancon-navy);
+  }
+  
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: var(--bancon-teal);
   }
   
   h1 {
@@ -149,14 +175,106 @@
   }
   
   h2 {
-    @apply text-2xl font-semibold;
+    @apply text-2xl font-bold;
   }
   
   h3 {
-    @apply text-xl font-semibold;
+    @apply text-xl font-bold;
   }
   
-  /* Professional Shadows - Using Tailwind-compatible utilities */
+  /* bancon Button Styles */
+  .btn-bancon-primary {
+    background-color: var(--bancon-teal);
+    color: white;
+    @apply rounded-xl font-bold transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .btn-bancon-primary:hover {
+    background-color: #008F8C;
+    transform: translateY(-2px);
+  }
+  
+  .btn-bancon-secondary {
+    background-color: var(--bancon-navy);
+    color: white;
+    @apply rounded-xl font-bold transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .btn-bancon-secondary:hover {
+    background-color: #001A35;
+    transform: translateY(-2px);
+  }
+  
+  .btn-bancon-outline {
+    border: 2px solid var(--bancon-navy);
+    color: var(--bancon-navy);
+    background: transparent;
+    @apply rounded-xl font-bold transition-all duration-200;
+  }
+  
+  .btn-bancon-outline:hover {
+    background-color: var(--bancon-navy);
+    color: white;
+  }
+  
+  /* bancon Card Styles */
+  .card-bancon {
+    @apply bg-white border-2 rounded-xl shadow-sm transition-all duration-200;
+    border-color: #E5E7EB;
+  }
+  
+  .card-bancon:hover {
+    @apply shadow-xl;
+    transform: translateY(-2px);
+    border-color: var(--bancon-teal);
+  }
+  
+  .card-bancon-featured {
+    @apply bg-white border-2 rounded-xl shadow-lg;
+    border-color: var(--bancon-teal);
+  }
+  
+  /* bancon Color Classes */
+  .text-bancon-navy {
+    color: var(--bancon-navy);
+  }
+  
+  .text-bancon-teal {
+    color: var(--bancon-teal);
+  }
+  
+  .text-bancon-orange {
+    color: var(--bancon-orange);
+  }
+  
+  .bg-bancon-navy {
+    background-color: var(--bancon-navy);
+  }
+  
+  .bg-bancon-teal {
+    background-color: var(--bancon-teal);
+  }
+  
+  .bg-bancon-orange {
+    background-color: var(--bancon-orange);
+  }
+  
+  .border-bancon-navy {
+    border-color: var(--bancon-navy);
+  }
+  
+  .border-bancon-teal {
+    border-color: var(--bancon-teal);
+  }
+  
+  .border-bancon-orange {
+    border-color: var(--bancon-orange);
+  }
+  
+  /* bancon Background Gradient */
+  .bg-bancon-gradient {
+    background: linear-gradient(to right, #F4F7FA, #FFFFFF);
+  }
   
   /* Enterprise Glass Effect */
   .glass-effect {
@@ -170,7 +288,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  /* Professional Animations */
+  /* bancon Animations */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
@@ -186,24 +304,14 @@
     }
   }
   
-  /* Business Card Styling */
+  /* bancon Business Card Styling */
   .business-card {
-    @apply bg-card border border-border/50 rounded-lg shadow-sm transition-all duration-200;
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200;
   }
   
   .business-card:hover {
-    @apply shadow-lg border-border;
+    @apply shadow-lg;
+    border-color: var(--bancon-teal);
     transform: translateY(-1px);
-  }
-  
-  /* Professional Button Variants */
-  .btn-executive {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-md font-medium transition-all duration-200;
-    letter-spacing: 0.01em;
-  }
-  
-  .btn-executive:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
   }
 }
