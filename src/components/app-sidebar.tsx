@@ -18,6 +18,8 @@ import {
   LayoutDashboard,
   FileText,
   Shield,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -66,8 +68,21 @@ interface AppSidebarProps {
 export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole }: AppSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['knowledge-repository']) // Knowledge Repository starts expanded
+  );
 
   const currentTenant = userTenants.find(t => t.tenantId === currentTenantId);
+
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
 
   interface NavigationItem {
     title: string;
@@ -75,6 +90,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
     href: string;
     roles: string[];
     isMainDashboard?: boolean;
+    sectionId?: string; // For collapsible sections
     subItems?: Array<{
       title: string;
       href: string;
@@ -113,6 +129,7 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
       icon: BookOpen,
       href: `/t/${currentTenantId}/kb`,
       roles: ["viewer", "contributor", "admin"],
+      sectionId: "knowledge-repository",
       subItems: [
         {
           title: "Document Library",
@@ -241,31 +258,57 @@ export function AppSidebar({ user, userTenants = [], currentTenantId, globalRole
             .map((item, index) => (
               <div key={item.href}>
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.title}
-                    className={item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""}
-                  >
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                  {item.subItems && item.subItems.length > 0 && (
-                    <SidebarMenuSub>
-                      {item.subItems
-                        .filter(subItem => hasPermission(subItem.roles))
-                        .map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.href}>
-                            <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                              <Link href={subItem.href}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                    </SidebarMenuSub>
+                  {item.sectionId ? (
+                    // Collapsible section with expand/collapse button
+                    <div>
+                      <SidebarMenuButton
+                        onClick={() => toggleSection(item.sectionId!)}
+                        isActive={pathname?.startsWith(item.href)}
+                        tooltip={item.title}
+                        className={cn(
+                          "w-full justify-between",
+                          item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </div>
+                        {expandedSections.has(item.sectionId) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </SidebarMenuButton>
+                      {item.subItems && item.subItems.length > 0 && expandedSections.has(item.sectionId) && (
+                        <SidebarMenuSub>
+                          {item.subItems
+                            .filter(subItem => hasPermission(subItem.roles))
+                            .map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.href}>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                  <Link href={subItem.href}>
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                        </SidebarMenuSub>
+                      )}
+                    </div>
+                  ) : (
+                    // Regular navigation item
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.href}
+                      tooltip={item.title}
+                      className={item.isMainDashboard ? "border-b border-border mb-2 pb-2" : ""}
+                    >
+                      <Link href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>
                 {item.isMainDashboard && (

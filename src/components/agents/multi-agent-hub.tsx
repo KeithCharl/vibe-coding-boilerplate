@@ -30,9 +30,10 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { type SerializableAgent } from "@/server/actions/agents";
+import { AgentHealthMonitor } from "./agent-health-monitor";
 
 interface AgentHubProps {
-  agents: SerializableAgent[];
+  agents: (SerializableAgent & { config?: any; health?: any })[];
   tenantId?: string;
   userRole?: 'admin' | 'user' | 'viewer';
 }
@@ -44,38 +45,7 @@ interface AgentHealthStatus {
   lastCheck: Date;
 }
 
-const MOCK_HEALTH_DATA: Record<string, AgentHealthStatus> = {
-  'knowledge-base': {
-    status: 'healthy',
-    responseTime: 120,
-    uptime: 99.8,
-    lastCheck: new Date(),
-  },
-  'business-rules': {
-    status: 'healthy',
-    responseTime: 85,
-    uptime: 99.9,
-    lastCheck: new Date(),
-  },
-  'testing': {
-    status: 'degraded',
-    responseTime: 250,
-    uptime: 97.5,
-    lastCheck: new Date(),
-  },
-  'workflow': {
-    status: 'healthy',
-    responseTime: 110,
-    uptime: 99.7,
-    lastCheck: new Date(),
-  },
-  'analytics': {
-    status: 'healthy',
-    responseTime: 95,
-    uptime: 99.9,
-    lastCheck: new Date(),
-  },
-};
+// Remove mock data - using real health data from props
 
 // Helper function to map icon names back to components
 function getIconComponent(iconName: string) {
@@ -104,7 +74,17 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
   });
 
   const getHealthStatus = (agentId: string): AgentHealthStatus => {
-    return MOCK_HEALTH_DATA[agentId] || {
+    const agent = agents.find(a => a.id === agentId);
+    if (agent?.health) {
+      return {
+        status: agent.health.status,
+        responseTime: agent.health.responseTime || 0,
+        uptime: agent.health.uptime || 0,
+        lastCheck: agent.health.lastHealthCheck || new Date(),
+      };
+    }
+    
+    return {
       status: 'offline',
       responseTime: 0,
       uptime: 0,
@@ -151,8 +131,18 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
             
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Enterprise-grade AI agents working together to streamline your business operations.
-              Choose an agent to get started or manage your agent ecosystem.
+              Choose an agent to execute tasks, analyze data, or automate workflows.
             </p>
+            
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-medium">Agents are now fully functional!</span>
+              </div>
+              <p className="text-green-700 dark:text-green-300 mt-1 text-sm">
+                Click on any agent below to execute real tasks, monitor performance, and manage configurations.
+              </p>
+            </div>
 
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               <Badge variant="outline" className="px-4 py-2">
@@ -407,6 +397,10 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
                   <Button className="w-full justify-start" variant="outline">
                     <Activity className="h-4 w-4 mr-2" />
                     View Analytics
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Monitor className="h-4 w-4 mr-2" />
+                    Health Monitor
                   </Button>
                   <Button className="w-full justify-start" variant="outline">
                     <Lock className="h-4 w-4 mr-2" />

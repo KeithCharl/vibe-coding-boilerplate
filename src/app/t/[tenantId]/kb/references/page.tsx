@@ -6,6 +6,7 @@ import {
   getPendingReferenceRequests,
   getAvailableTenants 
 } from "@/server/actions/kb-references";
+import { getDocuments } from "@/server/actions/content";
 import { Plus, ExternalLink, Clock, CheckCircle, XCircle, BarChart3 } from "lucide-react";
 import Link from "next/link";
 
@@ -17,12 +18,13 @@ interface PageProps {
 
 export default async function ReferencesPage({ params }: PageProps) {
   const { tenantId } = await params;
-
+  
   // Get data in parallel
-  const [references, pendingRequests, availableTenants] = await Promise.all([
+  const [references, pendingRequests, availableTenants, documents] = await Promise.all([
     getKnowledgeBaseReferences(tenantId),
     getPendingReferenceRequests(tenantId),
     getAvailableTenants(tenantId),
+    getDocuments(tenantId),
   ]);
 
   const getStatusBadge = (status: string, isActive: boolean | null) => {
@@ -40,6 +42,7 @@ export default async function ReferencesPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold">Knowledge Base References</h1>
         <p className="text-muted-foreground">

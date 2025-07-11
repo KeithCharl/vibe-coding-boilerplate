@@ -30,6 +30,7 @@ import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import { type SerializableAgent } from "@/server/actions/agents";
 import { Brain, Shield, TestTube, GitBranch, BarChart } from "lucide-react";
+import { AgentExecutor } from "./agent-executor";
 
 // Helper function to map icon names back to components
 function getIconComponent(iconName: string) {
@@ -207,13 +208,26 @@ export function AgentDashboard({ agent, config, health, tenantId, userRole }: Ag
             </div>
 
             {/* Main Content Tabs */}
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+            <Tabs defaultValue="execute" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="execute">Execute</TabsTrigger>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="execute" className="space-y-6">
+                <AgentExecutor 
+                  agent={agent}
+                  tenantId={tenantId}
+                  userRole={userRole}
+                  onTaskComplete={(result) => {
+                    // Handle task completion if needed
+                    console.log('Task completed:', result);
+                  }}
+                />
+              </TabsContent>
 
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
