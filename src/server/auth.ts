@@ -6,6 +6,7 @@ import {
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
 import GoogleProvider from "next-auth/providers/google";
+import { type JWT } from "next-auth/jwt";
 
 import { db } from "@/server/db";
 import {
@@ -17,6 +18,15 @@ import {
 } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
+// Environment variable validation
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("NEXTAUTH_SECRET must be set in production");
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  console.warn("⚠️  NEXTAUTH_SECRET not set. Using development fallback. Please create a .env file with NEXTAUTH_SECRET for security.");
+}
+
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -27,15 +37,19 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      globalRole?: string;
     } & DefaultSession["user"];
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    globalRole?: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    globalRole?: string;
+  }
 }
 
 /**
@@ -44,14 +58,69 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "development-secret-change-in-production",
+  debug: process.env.NODE_ENV === "development",
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    jwt: async ({ token, user, trigger }) => {
+      try {
+        // If this is a sign-in, get the user's global role
+        if (user) {
+          const userRole = await db
+            .select({ role: globalUserRoles.role })
+            .from(globalUserRoles)
+            .where(eq(globalUserRoles.userId, user.id))
+            .limit(1);
+
+          token.globalRole = userRole[0]?.role || "user";
+        }
+
+        // If session is being updated, refresh the role
+        if (trigger === "update" && token.sub) {
+          const userRole = await db
+            .select({ role: globalUserRoles.role })
+            .from(globalUserRoles)
+            .where(eq(globalUserRoles.userId, token.sub))
+            .limit(1);
+
+          token.globalRole = userRole[0]?.role || "user";
+        }
+
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        // On JWT error, return a minimal valid token
+        return {
+          sub: token.sub || user?.id || "unknown",
+          email: token.email || user?.email,
+          name: token.name || user?.name,
+          globalRole: "user",
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
+        };
+      }
+    },
+    session: ({ session, token }) => {
+      try {
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: token.sub!,
+            globalRole: token.globalRole || "user",
+          },
+        };
+      } catch (error) {
+        console.error("Session callback error:", error);
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: token.sub || session.user?.email || "unknown",
+            globalRole: "user",
+          },
+        };
+      }
+    },
     redirect({ url, baseUrl }) {
       // If the callback URL is relative, prepend the base URL
       if (url.startsWith("/")) {
@@ -66,7 +135,10 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    signIn: async ({ user, account, profile }) => {},
+    signIn: async ({ user, account, profile }) => {
+      // Log successful sign-in for audit purposes
+      console.log(`User ${user.email} signed in via ${account?.provider}`);
+    },
     createUser: async ({ user }) => {
       // Assign default global role to new users
       try {
@@ -81,6 +153,8 @@ export const authOptions: NextAuthOptions = {
             userId: user.id,
             role: "user", // Default role for new users
           });
+          
+          console.log(`Assigned default role 'user' to new user ${user.email}`);
         }
       } catch (error) {
         console.error("Failed to assign global role to new user:", error);
@@ -111,6 +185,9 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: "/auth/signin",
+  },
+  session: {
+    strategy: "jwt",
   },
 };
 
