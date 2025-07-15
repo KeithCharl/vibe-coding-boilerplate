@@ -200,7 +200,8 @@ export function RoleAssignmentForm({
         <Button 
           onClick={handleSubmit} 
           disabled={isSubmitting}
-          className="btn-bancon"
+                      variant="ghost"
+            className="btn-bancon-primary"
         >
           {isSubmitting ? "Assigning..." : (currentRole ? "Update Role" : "Assign Role")}
         </Button>

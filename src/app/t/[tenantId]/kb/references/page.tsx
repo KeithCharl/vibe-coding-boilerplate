@@ -92,21 +92,21 @@ export default async function ReferencesPage({ params }: PageProps) {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <Button asChild>
+        <Button asChild variant="ghost" className="btn-bancon-primary">
           <Link href={`/t/${tenantId}/kb/references/request`}>
             <Plus className="w-4 h-4 mr-2" />
             Request Reference
           </Link>
         </Button>
         {pendingRequests.length > 0 && (
-          <Button variant="outline" asChild>
+          <Button variant="ghost" asChild className="btn-bancon-outline">
             <Link href={`/t/${tenantId}/kb/references/requests`}>
               <Clock className="w-4 h-4 mr-2" />
               Review Requests ({pendingRequests.length})
             </Link>
           </Button>
         )}
-        <Button variant="outline" asChild>
+        <Button variant="ghost" asChild className="btn-bancon-outline">
           <Link href={`/t/${tenantId}/kb/references/analytics`}>
             <BarChart3 className="w-4 h-4 mr-2" />
             Analytics
@@ -156,7 +156,7 @@ export default async function ReferencesPage({ params }: PageProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="ghost" size="sm" asChild className="btn-bancon-outline">
                       <Link href={`/t/${tenantId}/kb/references/${reference.id}`}>
                         Configure
                       </Link>
@@ -188,7 +188,7 @@ export default async function ReferencesPage({ params }: PageProps) {
                       {tenant.description}
                     </p>
                   )}
-                  <Button variant="outline" size="sm" className="mt-3" asChild>
+                  <Button variant="ghost" size="sm" className="mt-3 btn-bancon-outline" asChild>
                     <Link href={`/t/${tenantId}/kb/references/request?target=${tenant.id}`}>
                       Request Access
                     </Link>
@@ -198,7 +198,7 @@ export default async function ReferencesPage({ params }: PageProps) {
             </div>
             {availableTenants.length > 6 && (
               <div className="mt-4 text-center">
-                <Button variant="outline" asChild>
+                <Button variant="ghost" asChild className="btn-bancon-outline">
                   <Link href={`/t/${tenantId}/kb/references/browse`}>
                     View All ({availableTenants.length})
                   </Link>

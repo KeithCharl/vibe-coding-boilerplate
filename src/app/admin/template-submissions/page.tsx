@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { 
   getTemplateSubmissions, 
   reviewTemplateSubmission,
-  getTemplateStats,
-  TEMPLATE_CATEGORIES 
+  getTemplateStats
 } from "@/server/actions/templates";
 import { getCurrentUserRole } from "@/server/actions/user-management";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,7 +191,7 @@ function TemplateSubmissionCard({ submission, onReviewComplete }: {
             <div className="flex space-x-2 pt-4">
               <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="flex-1">
+                  <Button size="sm" variant="ghost" className="flex-1 btn-bancon-primary">
                     <Eye className="h-4 w-4 mr-2" />
                     Review
                   </Button>

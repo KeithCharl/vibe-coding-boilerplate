@@ -190,15 +190,15 @@ async function TemplateSubmissionCard({ submission }: { submission: any }) {
           {/* Action Buttons */}
           {submission.status === "pending" && (
             <div className="flex space-x-2 pt-4">
-              <Button size="sm" className="flex-1">
+              <Button size="sm" variant="ghost" className="flex-1 btn-bancon-primary">
                 <Eye className="h-4 w-4 mr-2" />
                 Review
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
+              <Button size="sm" variant="ghost" className="flex-1 btn-bancon-outline">
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Approve
               </Button>
-              <Button size="sm" variant="destructive" className="flex-1">
+              <Button size="sm" variant="ghost" className="flex-1 btn-bancon-secondary">
                 <XCircle className="h-4 w-4 mr-2" />
                 Reject
               </Button>

@@ -224,7 +224,7 @@ export function UploadDocumentDialog({
                   disabled={isUploading}
                 />
               </div>
-              <Button type="submit" disabled={isUploading} className="w-full">
+              <Button type="submit" disabled={isUploading} variant="ghost" className="w-full btn-bancon-primary">
                 {isUploading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -261,7 +261,7 @@ export function UploadDocumentDialog({
               {/* Authentication Options */}
               <Collapsible open={showAuthOptions} onOpenChange={setShowAuthOptions}>
                 <CollapsibleTrigger asChild>
-                  <Button type="button" variant="outline" className="w-full justify-between">
+                  <Button type="button" variant="ghost" className="w-full justify-between btn-bancon-outline">
                     <span className="flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Authentication Options
@@ -377,7 +377,7 @@ export function UploadDocumentDialog({
                 </CollapsibleContent>
               </Collapsible>
 
-              <Button type="submit" disabled={isScrapingWeb || !url.trim()} className="w-full">
+              <Button type="submit" disabled={isScrapingWeb || !url.trim()} variant="ghost" className="w-full btn-bancon-primary">
                 {isScrapingWeb ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

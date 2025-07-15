@@ -352,7 +352,7 @@ export function CreatePersonaForm({ tenantId, onSuccess }: CreatePersonaFormProp
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={isGenerating} className="flex items-center gap-2">
+                    <Button type="submit" disabled={isGenerating} variant="ghost" className="flex items-center gap-2 btn-bancon-primary">
                       {isGenerating ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (

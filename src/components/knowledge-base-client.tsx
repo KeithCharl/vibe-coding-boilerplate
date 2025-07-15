@@ -755,7 +755,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                 tenantId={tenantId} 
                 onUploadComplete={handleUploadComplete}
                 trigger={
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                  <Button variant="ghost" className="btn-bancon-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Document
                   </Button>
@@ -794,7 +794,7 @@ export function KnowledgeBaseClient({ tenantId, initialDocuments }: KnowledgeBas
                 tenantId={tenantId} 
                 onUploadComplete={handleUploadComplete}
                 trigger={
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button variant="ghost" className="btn-bancon-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Upload First Document
                   </Button>

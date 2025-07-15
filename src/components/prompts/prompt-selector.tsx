@@ -82,7 +82,7 @@ export function PromptSelector({
   };
 
   const defaultTrigger = (
-    <Button variant="outline" className="w-full justify-start">
+            <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
       <FileText className="h-4 w-4 mr-2" />
       {placeholder}
     </Button>

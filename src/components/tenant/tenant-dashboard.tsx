@@ -133,7 +133,7 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           <span>Active & Operational</span>
                         </div>
-                        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm group">
+                        <Button asChild variant="ghost" className="w-full btn-bancon-primary">
                           <Link href={`/t/${tenant.tenantId}`} className="flex items-center justify-center gap-2">
                             <span>Access Workspace</span>
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -168,7 +168,7 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button asChild className="w-full btn-executive">
+                      <Button asChild variant="ghost" className="w-full btn-bancon-primary">
                         <Link href="/create-tenant">
                           Create Workspace
                         </Link>
@@ -237,7 +237,7 @@ export function TenantDashboard({ userTenants, userEmail }: TenantDashboardProps
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button asChild className="w-full btn-executive">
+                      <Button asChild variant="ghost" className="w-full btn-bancon-primary">
                         <Link href="/create-tenant">
                           Initialize Workspace
                         </Link>

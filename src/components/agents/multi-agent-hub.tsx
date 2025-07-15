@@ -276,14 +276,14 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
                           {/* Action Buttons */}
                           <div className="flex gap-2 pt-2">
                             {tenantId ? (
-                              <Button asChild className="flex-1" size="sm">
+                              <Button asChild variant="ghost" className="flex-1 btn-bancon-primary" size="sm">
                                 <Link href={`/t/${tenantId}${agent.baseRoute}`}>
                                   Open Agent
                                   <ArrowRight className="h-4 w-4 ml-2" />
                                 </Link>
                               </Button>
                             ) : (
-                              <Button asChild className="flex-1" size="sm" variant="outline">
+                              <Button asChild variant="ghost" className="flex-1 btn-bancon-outline" size="sm">
                                 <Link href={agent.baseRoute}>
                                   View Details
                                 </Link>
@@ -390,23 +390,23 @@ export function MultiAgentHub({ agents, tenantId, userRole = 'user' }: AgentHubP
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
                     <Users className="h-4 w-4 mr-2" />
                     Manage Access
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
                     <Activity className="h-4 w-4 mr-2" />
                     View Analytics
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
                     <Monitor className="h-4 w-4 mr-2" />
                     Health Monitor
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
                     <Lock className="h-4 w-4 mr-2" />
                     Security Events
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button variant="ghost" className="w-full justify-start btn-bancon-outline">
                     <Clock className="h-4 w-4 mr-2" />
                     Audit Logs
                   </Button>

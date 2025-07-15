@@ -186,7 +186,7 @@ export function LandingPage({ session }: LandingPageProps) {
                   size="lg" 
                   asChild 
                   variant="ghost"
-                  className="btn-bancon-orange btn-xl"
+                  className="btn-bancon-secondary btn-xl"
                 >
                   <Link href="/create-tenant">Launch New Workspace</Link>
                 </Button>

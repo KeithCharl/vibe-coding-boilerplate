@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&family=Roboto+Serif:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -54,9 +54,33 @@
 :root {
   --radius: 8px; /* bancon standard: 8px radius */
   
-  /* bancon Brand Colors */
+  /* bancon Design Tokens - EXACT SPECIFICATIONS */
+  /* greys / text */
+  --bancon-grey-100: #E9E9E9;
+  --bancon-grey-400: #909090;
+  --bancon-grey-600: #595959;
+  --bancon-grey-800: #383838;
+  --bancon-black: #222222;   /* default text */
+
+  /* brand blues */
+  --bancon-blue-50: #4D66CF;
+  --bancon-blue-100: #4055A9;
+  --bancon-blue-200: #344382;
+  --bancon-blue-300: #27315C;
+
+  /* accent amber */
+  --bancon-amber: #FFA600;
+  --bancon-amber-300: #FFB50D;
+  --bancon-amber-200: #FFC51A;
+
+  /* brights & purple */
+  --bancon-bright-blue: #009AC3;
+  --bancon-teal: #00A9B7;
+  --bancon-cyan: #0FD7FF;
+  --bancon-purple: #AC57FD;
+  
+  /* Legacy bancon colors for backward compatibility */
   --bancon-navy: #002C54;
-  --bancon-teal: #00B3B0;
   --bancon-orange: #FF6B00;
   --bancon-background: linear-gradient(to right, #F4F7FA, #FFFFFF);
   
@@ -68,42 +92,42 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.09 0.005 264);
   
-  /* bancon Navy Primary */
-  --primary: #002C54;
+  /* bancon Blue Primary */
+  --primary: var(--bancon-blue-50);
   --primary-foreground: oklch(0.98 0.002 264);
   
-  /* bancon Teal Secondary */
+  /* bancon Secondary */
   --secondary: oklch(0.96 0.015 264);
-  --secondary-foreground: #002C54;
+  --secondary-foreground: var(--bancon-black);
   --muted: oklch(0.97 0.01 264);
   --muted-foreground: oklch(0.47 0.03 264);
   
-  /* bancon Teal Accent */
-  --accent: #00B3B0;
-  --accent-foreground: oklch(0.98 0.002 264);
+  /* bancon Amber Accent */
+  --accent: var(--bancon-amber);
+  --accent-foreground: var(--bancon-black);
   
   --destructive: oklch(0.55 0.16 25);
   --destructive-foreground: oklch(0.98 0.002 264);
   --border: oklch(0.90 0.02 264);
   --input: oklch(0.96 0.015 264);
-  --ring: #00B3B0;
+  --ring: var(--bancon-teal);
   
-  /* bancon Brand Chart Colors */
-  --chart-1: #002C54;
-  --chart-2: #00B3B0;
-  --chart-3: #FF6B00;
-  --chart-4: oklch(0.65 0.10 100);
+  /* bancon Brand Chart Colors - in specified order */
+  --chart-1: var(--bancon-blue-50);
+  --chart-2: var(--bancon-purple);
+  --chart-3: var(--bancon-teal);
+  --chart-4: var(--bancon-amber);
   --chart-5: oklch(0.75 0.08 50);
   
   /* bancon Sidebar */
   --sidebar: oklch(0.98 0.005 264);
-  --sidebar-foreground: #002C54;
-  --sidebar-primary: #002C54;
+  --sidebar-foreground: var(--bancon-black);
+  --sidebar-primary: var(--bancon-blue-50);
   --sidebar-primary-foreground: oklch(0.98 0.002 264);
-  --sidebar-accent: #00B3B0;
-  --sidebar-accent-foreground: oklch(0.98 0.002 264);
+  --sidebar-accent: var(--bancon-amber);
+  --sidebar-accent-foreground: var(--bancon-black);
   --sidebar-border: oklch(0.90 0.02 264);
-  --sidebar-ring: #00B3B0;
+  --sidebar-ring: var(--bancon-teal);
 }
 
 .dark {
@@ -115,40 +139,40 @@
   --popover: oklch(0.15 0.010 264);
   --popover-foreground: oklch(0.95 0.004 264);
   
-  /* bancon Teal Primary for Dark Mode */
-  --primary: #00B3B0;
-  --primary-foreground: #002C54;
+  /* bancon Amber Primary for Dark Mode */
+  --primary: var(--bancon-amber);
+  --primary-foreground: var(--bancon-black);
   --secondary: oklch(0.20 0.012 264);
   --secondary-foreground: oklch(0.90 0.004 264);
   --muted: oklch(0.18 0.010 264);
   --muted-foreground: oklch(0.65 0.012 264);
   
-  /* bancon Orange Accent for Dark Mode */
-  --accent: #FF6B00;
-  --accent-foreground: oklch(0.95 0.004 264);
+  /* bancon Teal Accent for Dark Mode */
+  --accent: var(--bancon-teal);
+  --accent-foreground: var(--bancon-black);
   
   --destructive: oklch(0.65 0.18 25);
   --destructive-foreground: oklch(0.95 0.004 264);
   --border: oklch(0.25 0.014 264);
   --input: oklch(0.20 0.012 264);
-  --ring: #00B3B0;
+  --ring: var(--bancon-teal);
   
   /* bancon Dark Chart Colors */
-  --chart-1: #00B3B0;
-  --chart-2: #FF6B00;
-  --chart-3: #002C54;
-  --chart-4: oklch(0.75 0.12 120);
+  --chart-1: var(--bancon-amber);
+  --chart-2: var(--bancon-purple);
+  --chart-3: var(--bancon-teal);
+  --chart-4: var(--bancon-blue-50);
   --chart-5: oklch(0.68 0.08 80);
   
   /* bancon Dark Sidebar */
   --sidebar: oklch(0.10 0.006 264);
   --sidebar-foreground: oklch(0.85 0.004 264);
-  --sidebar-primary: #00B3B0;
-  --sidebar-primary-foreground: #002C54;
-  --sidebar-accent: #FF6B00;
+  --sidebar-primary: var(--bancon-amber);
+  --sidebar-primary-foreground: var(--bancon-black);
+  --sidebar-accent: var(--bancon-teal);
   --sidebar-accent-foreground: oklch(0.95 0.004 264);
   --sidebar-border: oklch(0.20 0.012 264);
-  --sidebar-ring: #00B3B0;
+  --sidebar-ring: var(--bancon-teal);
 }
 
 @layer base {
@@ -160,43 +184,112 @@
     font-family: 'Source Sans Pro', system-ui, sans-serif;
     font-size: 16px;
     letter-spacing: -0.01em;
-    color: #4A4A4A;
+    color: var(--bancon-black);
   }
   
-  /* bancon Typography */
+  /* bancon Typography Hierarchy - EXACT SPECIFICATIONS */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
+    font-family: 'Source Sans Pro', 'ui-sans-serif', 'system-ui';
+    font-weight: 600;
+    color: var(--bancon-black);
     letter-spacing: -0.02em;
-    color: var(--bancon-navy);
   }
   
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-    color: var(--bancon-teal);
+    color: var(--bancon-amber);
   }
   
+  /* H1 page title - headline 600, 3xl, bancon-black */
   h1 {
-    font-size: 36px; /* 32-40px range */
-    font-weight: 700; /* Bold */
+    font-size: 1.875rem; /* 30px = 3xl */
+    font-weight: 600;
     line-height: 1.2;
   }
   
+  /* H2 section header - headline 600, 2xl, bancon-black */
   h2 {
-    font-size: 26px; /* 24-28px range */
-    font-weight: 700; /* Bold */
+    font-size: 1.5rem; /* 24px = 2xl */
+    font-weight: 600;
     line-height: 1.3;
   }
   
-  h3 {
-    font-size: 20px;
-    font-weight: 600; /* Semi Bold */
+  /* Body text - body 400, base, bancon-black */
+  p, .body-text {
+    font-family: 'Roboto Serif', 'ui-serif', 'Georgia';
+    font-size: 1rem; /* 16px = base */
+    font-weight: 400;
+    color: var(--bancon-black);
+    line-height: 1.5;
+  }
+  
+  /* Caption - body 400, sm, bancon-grey-600 */
+  .caption, .text-caption {
+    font-family: 'Roboto Serif', 'ui-serif', 'Georgia';
+    font-size: 0.875rem; /* 14px = sm */
+    font-weight: 400;
+    color: var(--bancon-grey-600);
     line-height: 1.4;
   }
   
-  /* Caption/Label styles */
-  .caption, .label {
-    font-size: 13px; /* 12-14px range */
-    font-weight: 400; /* Regular */
-    color: #6B6B6B;
+  /* bancon Layout & Spacing System - Min gutter 24px, section padding 64px */
+  .container-bancon {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px; /* Min gutter: 24px */
+  }
+  
+  .section-padding {
+    padding-top: 64px; /* Section vertical padding: 64px */
+    padding-bottom: 64px;
+  }
+  
+  /* bancon Component Conventions - EXACT SPECIFICATIONS */
+  
+  /* 1. Buttons - primary bg-bancon-amber hover:bg-bancon-amber-300 text-bancon-black font-headline rounded-xl */
+  .btn-bancon-primary {
+    background-color: var(--bancon-amber) !important;
+    color: var(--bancon-black) !important;
+    border: 1px solid var(--bancon-amber) !important;
+    border-radius: 0.75rem !important; /* rounded-xl */
+    font-family: 'Source Sans Pro', 'ui-sans-serif', 'system-ui' !important; /* font-headline */
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
+  }
+  
+  .btn-bancon-primary:hover:not(:disabled) {
+    background-color: var(--bancon-amber-300) !important; /* hover:bg-bancon-amber-300 */
+    border-color: var(--bancon-amber-300) !important;
+    color: var(--bancon-black) !important;
+  }
+  
+  /* 2. Cards/Panels - white bg, rounded-2xl shadow-md p-8 (32px), gap-6 */
+  .card-bancon {
+    background-color: white;
+    border-radius: 1rem; /* rounded-2xl */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+    padding: 2rem; /* p-8 = 32px */
+    gap: 1.5rem; /* gap-6 */
+    transition: all 200ms ease;
+  }
+  
+  /* 3. Links - text-bancon-bright underline hover:no-underline */
+  .link-bancon {
+    color: var(--bancon-bright-blue) !important; /* text-bancon-bright */
+    text-decoration: underline !important; /* underline */
+    transition: all 200ms ease;
+  }
+  
+  .link-bancon:hover {
+    text-decoration: none !important; /* hover:no-underline */
+  }
+  
+  /* bancon Spacing - Min gutter: 24px, section vertical padding: 64px */
+  .spacing-gutter {
+    padding-left: 24px;
+    padding-right: 24px;
   }
   
   /* bancon Layout & Spacing System */
@@ -259,115 +352,135 @@
     background-color: rgba(0, 179, 176, 0.2);
   }
   
-  /* bancon Button Styles - Following Style Guide */
-  .btn-bancon-primary {
-    background-color: var(--bancon-navy) !important; /* Navy background */
-    color: white !important;
-    border: 1px solid var(--bancon-navy) !important;
-    border-radius: 8px;
-    font-weight: 700; /* Bold font */
-    font-family: 'Source Sans Pro', sans-serif;
-    transition: all 250ms ease;
-    height: 40px;
-    padding: 0 16px;
-  }
+  /* bancon Global Layout & Tone Rules */
+  /* No gradients, glows, or drop-shadows heavier than shadow-md */
+  /* Brand always lowercase: bancon */
+  /* Avoid italics; switch weight instead */
   
-  .btn-bancon-primary:hover {
-    background-color: #001A35 !important;
-    border-color: #001A35 !important;
-    box-shadow: 0 4px 12px rgba(0, 44, 84, 0.3);
-  }
+  /* bancon Chart Colors - EXACT ORDER: bancon-blue-50, bancon-purple, bancon-teal, bancon-amber */
+  /* Never mix amber + purple in one stacked bar */
+  .chart-series-1 { color: var(--bancon-blue-50); fill: var(--bancon-blue-50); }
+  .chart-series-2 { color: var(--bancon-purple); fill: var(--bancon-purple); }
+  .chart-series-3 { color: var(--bancon-teal); fill: var(--bancon-teal); }
+  .chart-series-4 { color: var(--bancon-amber); fill: var(--bancon-amber); }
   
+  /* Legacy button styles - Updated to match bancon rules */
   .btn-bancon-secondary {
-    background-color: white !important; /* White background */
-    color: var(--bancon-teal) !important; /* Teal text */
-    border: 1px solid var(--bancon-teal) !important; /* Teal border */
-    border-radius: 8px;
-    font-weight: 700; /* Bold font */
-    font-family: 'Source Sans Pro', sans-serif;
-    transition: all 250ms ease;
-    height: 40px;
-    padding: 0 16px;
+    background-color: var(--bancon-teal) !important;
+    color: var(--bancon-black) !important;
+    border: 1px solid var(--bancon-teal) !important;
+    border-radius: 0.75rem !important; /* rounded-xl */
+    font-family: 'Source Sans Pro', 'ui-sans-serif', 'system-ui' !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
   }
   
-  .btn-bancon-secondary:hover {
-    background-color: var(--bancon-teal) !important;
+  .btn-bancon-secondary:hover:not(:disabled) {
+    background-color: var(--bancon-blue-50) !important;
+    border-color: var(--bancon-blue-50) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(0, 179, 176, 0.3);
   }
   
   .btn-bancon-outline {
     background-color: transparent !important;
-    color: var(--bancon-teal) !important; /* Teal text */
-    border: 1px solid var(--bancon-teal) !important; /* Teal border */
-    border-radius: 8px;
-    font-weight: 700; /* Bold font */
-    font-family: 'Source Sans Pro', sans-serif;
-    transition: all 250ms ease;
-    height: 40px;
-    padding: 0 16px;
+    color: var(--bancon-blue-50) !important;
+    border: 1px solid var(--bancon-blue-50) !important;
+    border-radius: 0.75rem !important; /* rounded-xl */
+    font-family: 'Source Sans Pro', 'ui-sans-serif', 'system-ui' !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
   }
   
-  .btn-bancon-outline:hover {
-    background-color: var(--bancon-teal) !important;
+  .btn-bancon-outline:hover:not(:disabled) {
+    background-color: var(--bancon-blue-50) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(0, 179, 176, 0.3);
   }
   
-  /* bancon Danger/Alert Button - Orange for special actions */
-  .btn-bancon-orange {
-    background-color: var(--bancon-orange) !important; /* Orange background */
-    color: white !important;
-    border: 1px solid var(--bancon-orange) !important;
-    border-radius: 8px;
-    font-weight: 700; /* Bold font */
-    font-family: 'Source Sans Pro', sans-serif;
-    transition: all 250ms ease;
-    height: 40px;
-    padding: 0 16px;
+  .btn-bancon-secondary:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
   }
   
-  .btn-bancon-orange:hover {
-    background-color: #E5600A !important;
-    border-color: #E5600A !important;
-    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
-  }
-  
-  .btn-bancon-orange-outline {
+  .btn-bancon-outline {
     background-color: transparent !important;
-    color: var(--bancon-orange) !important; /* Orange text */
-    border: 1px solid var(--bancon-orange) !important; /* Orange border */
-    border-radius: 8px;
-    font-weight: 700; /* Bold font */
-    font-family: 'Source Sans Pro', sans-serif;
-    transition: all 250ms ease;
-    height: 40px;
-    padding: 0 16px;
+    color: #00B3B0 !important; /* teal text */
+    border: 1px solid #00B3B0 !important; /* teal border */
+    border-radius: 8px !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
   }
   
-  .btn-bancon-orange-outline:hover {
-    background-color: var(--bancon-orange) !important;
+  .btn-bancon-outline:hover:not(:disabled) {
+    background-color: #00B3B0 !important; /* teal background hover */
     color: white !important;
-    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
   }
   
-  /* bancon Button Sizing - Following Style Guide */
+  .btn-bancon-outline:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+  }
+  
+  /* bancon Button Size Variants - Maintain Design System */
   .btn-sm {
-    height: 32px !important;
-    padding: 0 12px !important;
-    font-size: 13px; /* Caption size */
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
+    font-weight: 600 !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
   }
   
   .btn-lg {
-    height: 48px !important;
-    padding: 0 24px !important;
-    font-size: 16px; /* Body size */
+    font-size: 18px !important;
+    padding: 16px 32px !important;
+    border-radius: 8px !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
+    font-weight: 600 !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
   }
   
   .btn-xl {
-    height: 56px !important;
-    padding: 0 32px !important;
-    font-size: 18px; /* Larger body size */
+    font-size: 20px !important;
+    padding: 20px 40px !important;
+    border-radius: 8px !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
+    font-weight: 600 !important;
+    transition: all 200ms ease-in-out !important;
+    height: auto !important;
+  }
+  
+  /* Size variants maintain consistent hover behavior */
+  .btn-sm.btn-bancon-primary:hover:not(:disabled),
+  .btn-lg.btn-bancon-primary:hover:not(:disabled),
+  .btn-xl.btn-bancon-primary:hover:not(:disabled) {
+    background-color: #00B3B0 !important; /* teal hover */
+    border-color: #00B3B0 !important;
+  }
+  
+  .btn-sm.btn-bancon-secondary:hover:not(:disabled),
+  .btn-lg.btn-bancon-secondary:hover:not(:disabled),
+  .btn-xl.btn-bancon-secondary:hover:not(:disabled) {
+    background-color: #e55b00 !important; /* darker orange hover */
+    border-color: #e55b00 !important;
+  }
+  
+  .btn-sm.btn-bancon-outline:hover:not(:disabled),
+  .btn-lg.btn-bancon-outline:hover:not(:disabled),
+  .btn-xl.btn-bancon-outline:hover:not(:disabled) {
+    background-color: #00B3B0 !important; /* teal hover */
+    color: white !important;
   }
   
   /* bancon Card Styles */
@@ -515,5 +628,4 @@
       grid-template-columns: repeat(2, 1fr); /* Two columns on tablet */
     }
   }
-
 }

@@ -32,73 +32,85 @@ When adding a new feature:
 
 - If a solution requires RAG (Retrieval Augmented Generation), like if a file is uploaded that needs to be chunked and vectorized in order for an agent to answer questions on it, then use the PGVector extension on PostgreSQL and an OpenAI Embedding model.
 
-# UI Style Guide
-1. Brand Identity
+## bancon visual-identity rules (single-source)
 
-- - Brand: bancon (always lowercase)
-- Tone: Confident, modern, pragmatic
+### 1  Design tokens – use these CSS variables in all UI code
+```scss
+:root {
+  /* greys / text */
+  --bancon-grey-100:#E9E9E9;
+  --bancon-grey-400:#909090;
+  --bancon-grey-600:#595959;
+  --bancon-grey-800:#383838;
+  --bancon-black:     #222222;   /* default text */
 
-2. Colors
-Purpose	Color	Hex Code
-Primary (Brand)	Navy	#002C54
-Accent (Highlight)	Teal	#00B3B0
-Secondary Accent (Alert/CTA)	Orange	#FF6B00
-Background (Neutral)	Soft Light	#F4F7FA
-Text - Primary	Dark Gray	#4A4A4A
-Text - Secondary	Mid Gray	#6B6B6B
-Link Hover	Teal	#00B3B0
-3. Typography
+  /* brand blues */
+  --bancon-blue-50: #4D66CF;
+  --bancon-blue-100:#4055A9;
+  --bancon-blue-200:#344382;
+  --bancon-blue-300:#27315C;
 
-Font: Source Sans Pro (Regular, Semi Bold, Bold)
-Download: https://fonts.google.com/specimen/Source+Sans+Pro
+  /* accent amber */
+  --bancon-amber:#FFA600;
+  --bancon-amber-300:#FFB50D;
+  --bancon-amber-200:#FFC51A;
 
-Sizes:
-- H1: 32–40px
-- H2: 24–28px
-- Body: 16px
-- Caption/Label: 12–14px
+  /* brights & purple */
+  --bancon-bright-blue:#009AC3;
+  --bancon-teal:#00A9B7;
+  --bancon-cyan:#0FD7FF;
+  --bancon-purple:#AC57FD;
+}
+```
 
-4. Layout & Spacing
+### 2  Tailwind extension – assume this lives in *tailwind.config.js*  
+*(Cursor should reference these classes; if the file isn’t present, create it.)*
+```js
+extend: {
+  fontFamily:{
+    headline:['"Source Sans Pro"','ui-sans-serif','system-ui'],
+    body:['"Roboto Serif"','ui-serif','Georgia'],
+  },
+  colors:{
+    'bancon-black':'#222222',
+    'bancon-grey-100':'#E9E9E9',
+    'bancon-grey-400':'#909090',
+    'bancon-grey-600':'#595959',
+    'bancon-grey-800':'#383838',
 
-- Grid System: 4-column layout
-- Outer Margin: 24px
-- Internal Padding: 16px
-- Spacing Scale: 4px, 8px, 16px, 32px, 64px
-- Cards: white or #F4F7FA with subtle shadow
-- Rounded Corners: 8px radius
+    'bancon-blue-50':'#4D66CF',
+    'bancon-blue-100':'#4055A9',
+    'bancon-blue-200':'#344382',
+    'bancon-blue-300':'#27315C',
 
-5. Components & UI Elements
+    'bancon-amber':'#FFA600',
+    'bancon-purple':'#AC57FD',
+    'bancon-bright':'#009AC3',
+    'bancon-teal':'#00A9B7',
+  },
+}
+```
 
-Buttons:
-- Primary: Navy background, white text, bold font
-- Secondary: Teal border, teal text, white background
-- Danger (optional): Orange background or border
+### 3  Typography & hierarchy (always sentence-case)
+| Role              | Font family / weight | Size | Colour            |
+|-------------------|----------------------|------|-------------------|
+| H1 page title     | headline 600         | 3xl  | bancon-black      |
+| H2 section header | headline 600         | 2xl  | bancon-black      |
+| Body text         | body 400             | base | bancon-black      |
+| Caption           | body 400             | sm   | bancon-grey-600   |
 
-Hover States:
-- Teal for outlines or text color
-- Transitions: 200–300ms
+### 4  Component conventions Cursor must follow
+1. **Buttons** – primary `bg-bancon-amber hover:bg-bancon-amber-300 text-bancon-black font-headline rounded-xl`.  
+2. **Cards/Panels** – white bg, `rounded-2xl shadow-md p-8` (32 px), gap-6.  
+3. **Links** – `text-bancon-bright underline hover:no-underline`.  
+4. **Charts** – series colours in order: bancon-blue-50, bancon-purple, bancon-teal, bancon-amber. Never mix amber + purple in one stacked bar.
 
-Icons:
-- Use icon library from bancon PowerPoint or Feather/Lucide
-- Outline style preferred
+### 5  Global layout & tone rules
+- Min gutter: 24 px; section vertical padding: 64 px.  
+- No gradients, glows, or drop-shadows heavier than `shadow-md`.  
+- Brand is always written lowercase: **bancon**.  
+- Avoid italics; switch weight instead.  
+- Limit the “full-stop” brand motif to one per view.
 
-6. Footer
-
-Footer Text: "Powered by bSmart • a bancon product"
-Font: Source Sans Pro Regular, 12px, #6B6B6B
-
-7. Cursor Project Integration
-
-Add to .cursor/project-rules.yaml:
-
-styleGuide:
-  brand: bancon
-  productName: bSmart
-  font: "Source Sans Pro"
-  primaryColor: "#002C54"
-  accentColor: "#00B3B0"
-  secondaryAccent: "#FF6B00"
-  gridColumns: 4
-  borderRadius: 8
-  iconStyle: outline
-  footerNote: "Powered by bSmart • a bancon product"
+> **Implementation reminder for humans:**  
+> Cursor will *reference* the tokens and classes, but your build still needs the real `tailwind.config.js` and a CSS file that imports the variables (or a PostCSS plugin that injects them). Keep those files in the repo to prevent runtime breakage.

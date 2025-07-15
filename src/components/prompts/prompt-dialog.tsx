@@ -472,7 +472,7 @@ export function PromptDialog({
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleAIGenerate} disabled={isGenerating} className="flex items-center gap-2">
+                  <Button onClick={handleAIGenerate} disabled={isGenerating} variant="ghost" className="flex items-center gap-2 btn-bancon-secondary">
                     {isGenerating ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

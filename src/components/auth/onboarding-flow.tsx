@@ -55,7 +55,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
         </div>
         
         <div className="text-center">
-          <Button onClick={onNext} className="btn-bancon">
+          <Button onClick={onNext} variant="ghost" className="btn-bancon-primary">
             Get Started <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -131,7 +131,7 @@ function RoleExplanationStep({ onNext }: { onNext: () => void }) {
         </div>
         
         <div className="text-center">
-          <Button onClick={onNext} className="btn-bancon">
+          <Button onClick={onNext} variant="ghost" className="btn-bancon-primary">
             Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -174,7 +174,7 @@ function CompletionStep() {
         </div>
         
         <div className="text-center">
-          <Button onClick={handleComplete} className="btn-bancon">
+          <Button onClick={handleComplete} variant="ghost" className="btn-bancon-primary">
             Enter bSmart <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

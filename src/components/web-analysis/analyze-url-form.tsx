@@ -196,7 +196,7 @@ export function AnalyzeUrlForm({ tenantId }: AnalyzeUrlFormProps) {
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={isAnalyzing} className="flex-1">
+              <Button type="submit" disabled={isAnalyzing} variant="ghost" className="flex-1 btn-bancon-primary">
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

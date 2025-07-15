@@ -143,16 +143,17 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
               size="sm"
               onClick={handleSaveTitle}
               disabled={isUpdatingTitle}
-              className="shrink-0"
+              variant="ghost"
+              className="shrink-0 btn-bancon-primary"
             >
               <Check className="h-4 w-4" />
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               onClick={handleCancelEditTitle}
               disabled={isUpdatingTitle}
-              className="shrink-0"
+              className="shrink-0 btn-bancon-outline"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -216,7 +217,7 @@ export function ChatSessionCard({ session, tenantId }: ChatSessionCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button asChild className="w-full">
+        <Button asChild variant="ghost" className="w-full btn-bancon-primary">
           <Link href={`/t/${tenantId}/chat/${session.id}`}>
             Continue Chat
           </Link>

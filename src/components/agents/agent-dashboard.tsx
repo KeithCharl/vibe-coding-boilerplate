@@ -408,20 +408,20 @@ export function AgentDashboard({ agent, config, health, tenantId, userRole }: Ag
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button variant="ghost" size="sm" className="w-full justify-start btn-bancon-outline">
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Chat with Agent
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button variant="ghost" size="sm" className="w-full justify-start btn-bancon-outline">
                   <FileText className="h-4 w-4 mr-2" />
                   View Documentation
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button variant="ghost" size="sm" className="w-full justify-start btn-bancon-outline">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Usage Reports
                 </Button>
                 {userRole === 'admin' && (
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button variant="ghost" size="sm" className="w-full justify-start btn-bancon-secondary">
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Restart Agent
                   </Button>

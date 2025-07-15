@@ -174,7 +174,7 @@ export default async function TenantDashboard({ params }: TenantDashboardProps) 
             <Button 
               asChild 
               variant="ghost"
-              className="justify-start btn-bancon-orange btn-lg"
+              className="justify-start btn-bancon-secondary btn-lg"
             >
               <Link href={`/t/${tenantId}/users`}>
                 <Users className="h-4 w-4 mr-3" />

@@ -85,7 +85,8 @@ export default function ClearSessionPage() {
               <Button 
                 onClick={handleClearSession}
                 disabled={isClearing}
-                className="w-full btn-bancon"
+                variant="ghost"
+          className="w-full btn-bancon-primary"
               >
                 {isClearing ? (
                   <>

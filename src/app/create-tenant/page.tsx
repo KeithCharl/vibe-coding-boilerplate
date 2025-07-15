@@ -148,7 +148,7 @@ export default function CreateTenantPage() {
                             required
                             className="h-11"
                           />
-                          <Button type="button" variant="outline" onClick={handleSlugGenerate} className="px-6">
+                          <Button type="button" variant="ghost" onClick={handleSlugGenerate} className="px-6 btn-bancon-outline">
                             Generate
                           </Button>
                         </div>
@@ -200,10 +200,10 @@ export default function CreateTenantPage() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-4 pt-6 border-t border-border">
-                      <Button type="submit" disabled={isLoading} className="flex-1 h-11 btn-executive">
+                      <Button type="submit" disabled={isLoading} variant="ghost" className="flex-1 h-11 btn-bancon-primary">
                         {isLoading ? "Initializing Workspace..." : "Initialize Workspace"}
                       </Button>
-                      <Button type="button" variant="outline" asChild className="h-11 px-8">
+                                              <Button type="button" variant="ghost" asChild className="h-11 px-8 btn-bancon-outline">
                         <Link href="/">Cancel</Link>
                       </Button>
                     </div>
